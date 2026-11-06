@@ -1,7 +1,7 @@
 // run_tests.prg — запуск всех (или выбранных) test_*.prg одним вызовом и итог.
 //
 // Использование:
-//   qodeqt run_tests.prg                       — все test_*.prg в этом каталоге
+//   qodeqt run_tests.prg                       — все test_*.prg в qt/sample
 //   qodeqt run_tests.prg test_json*.prg        — только по шаблону (glob)
 //   qodeqt run_tests.prg test_fileedit.prg test_db_qt.prg   — конкретные имена
 //   qodeqt run_tests.prg --timeout=30000 test_json_file.prg — свой таймаут (мс)
@@ -11,7 +11,7 @@
 // Код возврата раннера: 0 = все прошли, 1 = есть падения.
 // Вывод тестов идёт в общий лог qt/bind/log; итог раннера — в конце.
 
-var sampleDir = file.dirname(system.getcommandline().args[0]);
+var testDir   = file.join(file.dirname(system.getcommandline().args[0]), "..", "sample");
 var qodeqt    = file.normalize(system.getcommandline().app);   // текущий исполняемый файл qodeqt/qodegui
 var timeoutMs = 120000;
 
@@ -33,13 +33,13 @@ var want = #[];
 // собрать список файлов тестов
 var tests = #[];
 if (want.size() == 0) {
-    var all = file.glob(file.join(sampleDir, "test_*.prg"));
+    var all = file.glob(file.join(testDir, "test_*.prg"));
     for (var k = 0; k < all.size(); k++) tests.push(file.basename(all[k]));
 } else {
     for (var w = 0; w < want.size(); w++) {
         var pat = want[w];
         if (str.pos(pat, "*") >= 0 || str.pos(pat, "?") >= 0) {
-            var m = file.glob(file.join(sampleDir, pat));
+            var m = file.glob(file.join(testDir, pat));
             for (var q = 0; q < m.size(); q++) tests.push(file.basename(m[q]));
         } else {
             tests.push(pat);
@@ -57,7 +57,7 @@ for (var t = 0; t < tests.size(); t++) {
     if (!dup) uniq.push(n);
 }
 if (uniq.size() == 0) {
-    print("Нет тестов для запуска (test_*.prg в " + sampleDir + " не найдены)");
+    print("Нет тестов для запуска (test_*.prg в " + testDir + " не найдены)");
     return 0;
 }
 
@@ -66,7 +66,7 @@ var failures = #[];
 print("=== Запуск " + uniq.size() + " тестов, таймаут " + str.toString(timeoutMs) + " мс ===");
 for (var i = 0; i < uniq.size(); i++) {
     var name = uniq[i];
-    var path = file.join(sampleDir, name);
+    var path = file.join(testDir, name);
     if (!file.exists(path)) {
         failCnt++;
         print("FAIL " + name + " (файл не найден)");

@@ -8,7 +8,7 @@
 <script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
 </head>
 <body>
-<header><h1>Структуры данных</h1><p>Stack, Queue, PriorityQueue, Dictionary, DictionaryCI, Mutex, LockGuard</p><div class="lang-switch"><a class="active" href="classes.html">RU</a><a href="en/classes.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+<header><h1>Структуры данных</h1><p>Stack, Queue, PriorityQueue, Dictionary, DictionaryCI, StringSet, StringSetCI, Mutex, LockGuard</p><div class="lang-switch"><a class="active" href="classes.html">RU</a><a href="en/classes.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
 </header>
 <div class="container">
 <p class="breadcrumb"><a href="index.html">Главная</a> / Структуры данных</p>
@@ -23,17 +23,18 @@ s.push(<span class="num">30</span>);
 print(s.top());    <span class="cmt">// 30</span>
 print(s.pop());    <span class="cmt">// 30</span>
 print(s.peek());   <span class="cmt">// 20</span>
-print(s.size);     <span class="cmt">// 2</span></code></pre>
+print(s.size());   <span class="cmt">// 2</span></code></pre>
 <table>
 <tr><th>Свойство/Метод</th><th>Описание</th></tr>
-<tr><td><code>s.size</code></td><td>Количество элементов (свойство)</td></tr>
-<tr><td><code>s.empty</code></td><td>true если пуст (свойство)</td></tr>
+<tr><td><code>s.size()</code></td><td>Количество элементов</td></tr>
+<tr><td><code>s.empty()</code></td><td>true если пуст</td></tr>
 <tr><td><code>s[i]</code></td><td>Доступ по индексу (0 = верх)</td></tr>
 <tr><td><code>s.push(val)</code></td><td>Добавление наверх</td></tr>
 <tr><td><code>s.top()</code></td><td>Возврат верхнего без удаления</td></tr>
 <tr><td><code>s.peek()</code></td><td>Алиас top()</td></tr>
 <tr><td><code>s.pop()</code></td><td>Удаление и возврат верхнего</td></tr>
 <tr><td><code>s.clear()</code></td><td>Очистка</td></tr>
+<tr><td><code>s.resize(n)</code></td><td>Изменение размера (добавление/удаление)</td></tr>
 <tr><td><code>s.reserve(n)</code></td><td>Резервирование памяти</td></tr>
 </table>
 </div>
@@ -57,8 +58,9 @@ print(q.back());   <span class="cmt">// 30</span></code></pre>
 <tr><td><code>q.front()</code></td><td>Первый элемент</td></tr>
 <tr><td><code>q.back()</code></td><td>Последний элемент</td></tr>
 <tr><td><code>q[i]</code></td><td>Доступ по индексу</td></tr>
-<tr><td><code>q.size</code></td><td>Количество элементов</td></tr>
-<tr><td><code>q.empty</code></td><td>true если пуст</td></tr>
+<tr><td><code>q.size()</code></td><td>Количество элементов</td></tr>
+<tr><td><code>q.empty()</code></td><td>true если пуст</td></tr>
+<tr><td><code>q.resize(n)</code></td><td>Изменение размера очереди</td></tr>
 </table>
 </div>
 
@@ -78,8 +80,8 @@ print(pq.pop());   <span class="cmt">// "medium" (приоритет 5)</span></
 <tr><td><code>pq.push(val, priority)</code></td><td>Добавление с приоритетом (по умолчанию 0)</td></tr>
 <tr><td><code>pq.pop()</code></td><td>Извлечение с наивысшим приоритетом</td></tr>
 <tr><td><code>pq.peek()</code></td><td>Просмотр без удаления</td></tr>
-<tr><td><code>pq.size</code></td><td>Количество элементов</td></tr>
-<tr><td><code>pq.empty</code></td><td>true если пуст</td></tr>
+<tr><td><code>pq.size()</code></td><td>Количество элементов</td></tr>
+<tr><td><code>pq.empty()</code></td><td>true если пуст</td></tr>
 <tr><td><code>pq.clear()</code></td><td>Очистка</td></tr>
 </table>
 </div>
@@ -92,7 +94,7 @@ d.set(<span class="str">"name"</span>, <span class="str">"Иван"</span>);
 d.set(<span class="str">"age"</span>, <span class="num">25</span>);
 print(d.get(<span class="str">"name"</span>));    <span class="cmt">// "Иван"</span>
 print(d.has(<span class="str">"age"</span>));     <span class="cmt">// true</span>
-print(d.size);            <span class="cmt">// 2</span>
+print(d.size());           <span class="cmt">// 2</span>
 
 <span class="cmt">// Доступ через точку</span>
 print(d.name);            <span class="cmt">// "Иван"</span>
@@ -101,6 +103,8 @@ print(d.name);            <span class="cmt">// "Иван"</span>
 print(d.contains(<span class="str">"name"</span>));  <span class="cmt">// true</span></code></pre>
 <table>
 <tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>d.size()</code></td><td>Количество пар</td></tr>
+<tr><td><code>d.empty()</code></td><td>true если пуст</td></tr>
 <tr><td><code>d.set(key, val)</code></td><td>Установка значения</td></tr>
 <tr><td><code>d.get(key)</code></td><td>Получение значения</td></tr>
 <tr><td><code>d.getdefault(key, def)</code></td><td>С значением по умолчанию</td></tr>
@@ -123,6 +127,46 @@ print(d.contains(<span class="str">"name"</span>));  <span class="cmt">// true</
 <pre><code><span class="kw">var</span> d = DictionaryCI();
 d.set(<span class="str">"Name"</span>, <span class="str">"Иван"</span>);
 print(d.get(<span class="str">"name"</span>));  <span class="cmt">// "Иван" — регистр не важен</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>StringSet</h2>
+<p>Множество уникальных строк (регистрозависимое). Хранение и проверка наличия с учётом регистра.</p>
+<p>Создание: конструктор <code>StringSet()</code> или со списком значений <code>StringSet("a", "b")</code></p>
+<pre><code><span class="kw">var</span> set = StringSet();
+set.add(<span class="str">"apple"</span>);
+set.add(<span class="str">"Apple"</span>);  <span class="cmt">// другой элемент (регистр важен)</span>
+print(set.size());        <span class="cmt">// 2</span>
+print(set.has(<span class="str">"apple"</span>)); <span class="cmt">// true</span>
+print(set.has(<span class="str">"APPLE"</span>)); <span class="cmt">// false</span></code></pre>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>set.size()</code></td><td>Количество элементов</td></tr>
+<tr><td><code>set.empty()</code></td><td>true если пуст</td></tr>
+<tr><td><code>set.add(val)</code></td><td>Добавление (true если добавлен, false если уже был)</td></tr>
+<tr><td><code>set.insert(val...)</code></td><td>Добавление нескольких значений</td></tr>
+<tr><td><code>set.remove(val)</code></td><td>Удаление (true если был)</td></tr>
+<tr><td><code>set.discard(val)</code></td><td>Удаление (аналог remove)</td></tr>
+<tr><td><code>set.has(val)</code></td><td>Наличие элемента</td></tr>
+<tr><td><code>set.contains(val)</code></td><td>Алиас has()</td></tr>
+<tr><td><code>set.toList()</code></td><td>Массив всех элементов</td></tr>
+<tr><td><code>set.values()</code></td><td>Алиас toList()</td></tr>
+<tr><td><code>set.pop()</code></td><td>Удаление и возврат произвольного элемента</td></tr>
+<tr><td><code>set.update(other)</code></td><td>Объединение с другим множеством</td></tr>
+<tr><td><code>set.clear()</code></td><td>Очистка</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>StringSetCI (case-insensitive)</h2>
+<p>Множество уникальных строк без учёта регистра. <code>"Name"</code>, <code>"NAME"</code> и <code>"name"</code> — один элемент.</p>
+<p>Создание: конструктор <code>StringSetCI()</code> или со списком значений <code>StringSetCI("a", "b")</code></p>
+<pre><code><span class="kw">var</span> set = StringSetCI();
+set.add(<span class="str">"apple"</span>);
+set.add(<span class="str">"APPLE"</span>);  <span class="cmt">// тот же элемент (регистр не важен)</span>
+print(set.size());        <span class="cmt">// 1</span>
+print(set.has(<span class="str">"Apple"</span>)); <span class="cmt">// true</span></code></pre>
+<p>API аналогичен StringSet.</p>
 </div>
 
 <div class="doc-section">
@@ -169,6 +213,8 @@ synchronized(m, <span class="kw">function</span>() {
 <tr><td>Приоритетная очередь</td><td>PriorityQueue</td></tr>
 <tr><td>Ассоциативный массив</td><td>Dictionary</td></tr>
 <tr><td>Ключи без регистра</td><td>DictionaryCI</td></tr>
+<tr><td>Множество уникальных строк</td><td>StringSet</td></tr>
+<tr><td>Строки без регистра</td><td>StringSetCI</td></tr>
 <tr><td>Потокобезопасная блокировка</td><td>Mutex + LockGuard</td></tr>
 <tr><td>Простой атомарный блок</td><td>synchronized()</td></tr>
 </table>

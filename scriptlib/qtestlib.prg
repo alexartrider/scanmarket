@@ -9,8 +9,7 @@
 //   qt_group(name)                         — печатает заголовок группы
 //   qt_check(desc, actual, expected)       — сравнение через '=='
 //   qt_checkJson(desc, actual, expected)   — сравнение через json.stringify
-//   qt_checkExact(desc, actual, expected)  — регистрозависимое сравнение строк
-//                                            (== в Script не различает регистр)
+//   qt_checkExact(desc, actual, expected)  — строгое сравнение строк после toString
 //   qt_ok(desc, cond)                     — проверка булева
 //   qt_fail(desc, msg)                    — безусловный FAIL
 //   qt_throws(desc, fn, [pattern])        — fn должен выбросить исключение
@@ -59,7 +58,7 @@ function qt_checkJson(desc, actual, expected) {
     else { __qt_fail++; __qt_fail_all++; print("  FAIL: " + desc + "  expected=" + e + "  actual=" + a); }
 }
 
-// Регистрозависимое сравнение строк (обычный == в Script не различает регистр).
+// Строгое сравнение строк после преобразования аргументов в строку.
 // Годится для проверки маркеров/содержимого, где "DONE" != "done".
 function qt_checkExact(desc, actual, expected) {
     __qt_total++; __qt_total_all++;

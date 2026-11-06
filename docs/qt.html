@@ -76,6 +76,7 @@ if (str.toString(qt.platformName()) != <span class="str">"offscreen"</span>) { �
 <tr><td><code>qt.currentDateTime()</code></td><td>Текущая дата/время</td></tr>
 <tr><td><code>qt.hash(data, algorithm)</code></td><td>Криптографический хеш</td></tr>
 <tr><td><code>qt.supportedImageFormats()</code></td><td>Поддерживаемые форматы изображений</td></tr>
+<tr><td><code>qt.imageToPng(bytes, width, height)</code></td><td>Декодирует изображение (JPEG/PNG/WEBP и др., формат определяется по данным), масштабирует с сохранением пропорций и помещает по центру на прозрачный холст width x height, затем кодирует в PNG. Возвращает ByteArray или null при ошибке (битые данные, null, неверные аргументы) — без исключений. Лимиты: вход ≤ 64 MiB, сторона декодируемого изображения ≤ 32768 px, пикселей после декодирования ≤ 64 Мп, выходной холст ≤ 4096 px по каждой стороне и ≤ 16 Мп</td></tr>
 </table>
 </div>
 
@@ -331,6 +332,7 @@ db.connect(db.QSQLITE, <span class="str">"app.sqlite"</span>);
 <table>
 <tr><th>Метод</th><th>Описание</th></tr>
 <tr><td><code>label.setPixmapFromFile(path)</code></td><td>Загрузить картинку</td></tr>
+<tr><td><code>label.setPixmapFromBytes(bytes)</code></td><td>Загрузить картинку из памяти (ByteArray). Возвращает true при успехе; false при null/пустых/битых данных, без исключений. Существующий pixmap заменяется только при успешной загрузке</td></tr>
 <tr><td><code>label.setMovieFromFile(path)</code></td><td>Загрузить GIF/анимацию</td></tr>
 </table>
 

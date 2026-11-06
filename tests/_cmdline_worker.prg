@@ -1,4 +1,4 @@
-// _cmdline_worker.prg — вспомогательный воркер для тестов getcommandline().
+// _cmdline_worker.prg — вспомогательный воркер для тестов getcommandline() (qt/test).
 //
 // Запуск: qodeqt _cmdline_worker.prg <аргументы...> <маркер>
 // Маркер — ПОСЛЕДНИЙ позиционный аргумент. В него пишется JSON результата

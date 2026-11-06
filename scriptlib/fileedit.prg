@@ -156,12 +156,10 @@ function __fe_join_lines(kept) {
     return next;
 }
 
-// Точное (регистрозависимое) равенство строк. Оператор == в Script сравнивает
-// строки БЕЗ учёта регистра (CompareNoCase), а для свежести файла, no-op и
-// подсчёта изменений нужна точная проверка байт: "Ab" != "ab".
+// Точное (регистрозависимое) равенство строк. Для свежести файла, no-op и
+// подсчёта изменений важны все символы: "Ab" != "ab".
 function __fe_streq(a, b) {
-    if (str.len(a) != str.len(b)) return 0;
-    return str.pos(a, b) == 0;
+    return a == b;
 }
 
 fileedit.planReplaceAll = function(path, old, new) {

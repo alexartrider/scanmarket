@@ -8,7 +8,7 @@
 <script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
 </head>
 <body>
-<header><h1>Data structures</h1><p>Stack, Queue, PriorityQueue, Dictionary, DictionaryCI, Mutex, LockGuard</p><div class="lang-switch"><a href="../classes.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="classes.html">EN</a></div>
+<header><h1>Data structures</h1><p>Stack, Queue, PriorityQueue, Dictionary, DictionaryCI, StringSet, StringSetCI, Mutex, LockGuard</p><div class="lang-switch"><a href="../classes.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="classes.html">EN</a></div>
 </header>
 <div class="container">
 <p class="breadcrumb"><a href="index.html">Home</a> / Data structures</p>
@@ -23,17 +23,18 @@ s.push(<span class="num">30</span>);
 print(s.top());    <span class="cmt">// 30</span>
 print(s.pop());    <span class="cmt">// 30</span>
 print(s.peek());   <span class="cmt">// 20</span>
-print(s.size);     <span class="cmt">// 2</span></code></pre>
+print(s.size());   <span class="cmt">// 2</span></code></pre>
 <table>
 <tr><th>Property/Method</th><th>Description</th></tr>
-<tr><td><code>s.size</code></td><td>Number of elements (property)</td></tr>
-<tr><td><code>s.empty</code></td><td>true if empty (property)</td></tr>
+<tr><td><code>s.size()</code></td><td>Number of elements</td></tr>
+<tr><td><code>s.empty()</code></td><td>true if empty</td></tr>
 <tr><td><code>s[i]</code></td><td>Indexed access (0 = top)</td></tr>
 <tr><td><code>s.push(val)</code></td><td>Push onto the top</td></tr>
 <tr><td><code>s.top()</code></td><td>Return the top element without removing it</td></tr>
 <tr><td><code>s.peek()</code></td><td>Alias of top()</td></tr>
 <tr><td><code>s.pop()</code></td><td>Remove and return the top element</td></tr>
 <tr><td><code>s.clear()</code></td><td>Clear</td></tr>
+<tr><td><code>s.resize(n)</code></td><td>Resize (add/remove elements)</td></tr>
 <tr><td><code>s.reserve(n)</code></td><td>Reserve memory</td></tr>
 </table>
 </div>
@@ -57,8 +58,9 @@ print(q.back());   <span class="cmt">// 30</span></code></pre>
 <tr><td><code>q.front()</code></td><td>First element</td></tr>
 <tr><td><code>q.back()</code></td><td>Last element</td></tr>
 <tr><td><code>q[i]</code></td><td>Indexed access</td></tr>
-<tr><td><code>q.size</code></td><td>Number of elements</td></tr>
-<tr><td><code>q.empty</code></td><td>true if empty</td></tr>
+<tr><td><code>q.size()</code></td><td>Number of elements</td></tr>
+<tr><td><code>q.empty()</code></td><td>true if empty</td></tr>
+<tr><td><code>q.resize(n)</code></td><td>Resize the queue</td></tr>
 </table>
 </div>
 
@@ -78,8 +80,8 @@ print(pq.pop());   <span class="cmt">// "medium" (priority 5)</span></code></pre
 <tr><td><code>pq.push(val, priority)</code></td><td>Push with a priority (default 0)</td></tr>
 <tr><td><code>pq.pop()</code></td><td>Extract the highest-priority element</td></tr>
 <tr><td><code>pq.peek()</code></td><td>Look at the top element without removing it</td></tr>
-<tr><td><code>pq.size</code></td><td>Number of elements</td></tr>
-<tr><td><code>pq.empty</code></td><td>true if empty</td></tr>
+<tr><td><code>pq.size()</code></td><td>Number of elements</td></tr>
+<tr><td><code>pq.empty()</code></td><td>true if empty</td></tr>
 <tr><td><code>pq.clear()</code></td><td>Clear</td></tr>
 </table>
 </div>
@@ -92,7 +94,7 @@ d.set(<span class="str">"name"</span>, <span class="str">"Ivan"</span>);
 d.set(<span class="str">"age"</span>, <span class="num">25</span>);
 print(d.get(<span class="str">"name"</span>));    <span class="cmt">// "Ivan"</span>
 print(d.has(<span class="str">"age"</span>));     <span class="cmt">// true</span>
-print(d.size);            <span class="cmt">// 2</span>
+print(d.size());           <span class="cmt">// 2</span>
 
 <span class="cmt">// Dot access</span>
 print(d.name);            <span class="cmt">// "Ivan"</span>
@@ -101,6 +103,8 @@ print(d.name);            <span class="cmt">// "Ivan"</span>
 print(d.contains(<span class="str">"name"</span>));  <span class="cmt">// true</span></code></pre>
 <table>
 <tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>d.size()</code></td><td>Number of pairs</td></tr>
+<tr><td><code>d.empty()</code></td><td>true if empty</td></tr>
 <tr><td><code>d.set(key, val)</code></td><td>Set a value</td></tr>
 <tr><td><code>d.get(key)</code></td><td>Get a value</td></tr>
 <tr><td><code>d.getdefault(key, def)</code></td><td>Get with a default value</td></tr>
@@ -123,6 +127,46 @@ print(d.contains(<span class="str">"name"</span>));  <span class="cmt">// true</
 <pre><code><span class="kw">var</span> d = DictionaryCI();
 d.set(<span class="str">"Name"</span>, <span class="str">"Ivan"</span>);
 print(d.get(<span class="str">"name"</span>));  <span class="cmt">// "Ivan" — case does not matter</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>StringSet</h2>
+<p>A set of unique strings (case-sensitive). Storage and lookup respect case.</p>
+<p>Creation: the <code>StringSet()</code> constructor or with a list of values <code>StringSet("a", "b")</code></p>
+<pre><code><span class="kw">var</span> set = StringSet();
+set.add(<span class="str">"apple"</span>);
+set.add(<span class="str">"Apple"</span>);  <span class="cmt">// a different element (case matters)</span>
+print(set.size());        <span class="cmt">// 2</span>
+print(set.has(<span class="str">"apple"</span>)); <span class="cmt">// true</span>
+print(set.has(<span class="str">"APPLE"</span>)); <span class="cmt">// false</span></code></pre>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>set.size()</code></td><td>Number of elements</td></tr>
+<tr><td><code>set.empty()</code></td><td>true if empty</td></tr>
+<tr><td><code>set.add(val)</code></td><td>Add (true if added, false if already present)</td></tr>
+<tr><td><code>set.insert(val...)</code></td><td>Add multiple values</td></tr>
+<tr><td><code>set.remove(val)</code></td><td>Remove (true if present)</td></tr>
+<tr><td><code>set.discard(val)</code></td><td>Remove (alias of remove)</td></tr>
+<tr><td><code>set.has(val)</code></td><td>Element presence</td></tr>
+<tr><td><code>set.contains(val)</code></td><td>Alias of has()</td></tr>
+<tr><td><code>set.toList()</code></td><td>Array of all elements</td></tr>
+<tr><td><code>set.values()</code></td><td>Alias of toList()</td></tr>
+<tr><td><code>set.pop()</code></td><td>Remove and return an arbitrary element</td></tr>
+<tr><td><code>set.update(other)</code></td><td>Union with another set</td></tr>
+<tr><td><code>set.clear()</code></td><td>Clear</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>StringSetCI (case-insensitive)</h2>
+<p>A set of unique strings without case sensitivity. <code>"Name"</code>, <code>"NAME"</code> and <code>"name"</code> are one element.</p>
+<p>Creation: the <code>StringSetCI()</code> constructor or with a list of values <code>StringSetCI("a", "b")</code></p>
+<pre><code><span class="kw">var</span> set = StringSetCI();
+set.add(<span class="str">"apple"</span>);
+set.add(<span class="str">"APPLE"</span>);  <span class="cmt">// the same element (case does not matter)</span>
+print(set.size());        <span class="cmt">// 1</span>
+print(set.has(<span class="str">"Apple"</span>)); <span class="cmt">// true</span></code></pre>
+<p>API is the same as StringSet.</p>
 </div>
 
 <div class="doc-section">
@@ -169,6 +213,8 @@ synchronized(m, <span class="kw">function</span>() {
 <tr><td>Priority queue</td><td>PriorityQueue</td></tr>
 <tr><td>Associative array</td><td>Dictionary</td></tr>
 <tr><td>Case-insensitive keys</td><td>DictionaryCI</td></tr>
+<tr><td>Set of unique strings</td><td>StringSet</td></tr>
+<tr><td>Case-insensitive strings</td><td>StringSetCI</td></tr>
 <tr><td>Thread-safe locking</td><td>Mutex + LockGuard</td></tr>
 <tr><td>Simple atomic block</td><td>synchronized()</td></tr>
 </table>
