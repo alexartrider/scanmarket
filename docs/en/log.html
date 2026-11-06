@@ -25,6 +25,7 @@
 <tr><td><code>Log.writeToRemote</code></td><td>bool</td><td>Write to the remote file</td></tr>
 <tr><td><code>Log.writeToLocal</code></td><td>bool</td><td>Write to the local file</td></tr>
 </table>
+<p>Setting <code>Log.localFilePath</code> or <code>Log.remoteFilePath</code> recursively creates the directory if it does not exist: logging starts immediately, with no manual <code>file.mkdirrecursive</code>. The default path (<code>qt/bin/log</code>) is still created automatically. The file name is <code>&lt;filePrefix&gt;_DDMMYYYY.log</code> (default <code>log_DDMMYYYY.log</code>).</p>
 </div>
 
 <div class="doc-section">

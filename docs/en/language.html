@@ -110,6 +110,9 @@
 <span class="str">"Multi-line\
 string"</span></code></pre>
 <p>Line continuation via <code>\</code> at the end of a line, or concatenation of adjacent literals.</p>
+<p>Interpolation <code>\(expression)</code> substitutes the value of an expression; arbitrary expressions
+are allowed inside, including nested string literals and balanced parentheses:
+<code>"\(coalesce(name, "none"))"</code>, <code>"\(str.format("%.2f", x))"</code>.</p>
 
 <h3>Escape Sequences</h3>
 <table>

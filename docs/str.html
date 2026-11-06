@@ -21,6 +21,9 @@
 <tr><td><code>str.empty(s)</code></td><td>true если строка пуста</td></tr>
 <tr><td><code>str.toString(val)</code></td><td>Преобразование в строку</td></tr>
 <tr><td><code>str.toInt(s)</code></td><td>Преобразование в целое</td></tr>
+<tr><td><code>str.parseInt(s)</code></td><td>Строгий разбор целого; невалидно → <code>null</code></td></tr>
+<tr><td><code>str.parseFloat(s)</code></td><td>Строгий разбор числа (вкл. <code>1e3</code>, <code>.5</code>); невалидно → <code>null</code></td></tr>
+<tr><td><code>str.parseBool(s)</code></td><td>Строгий разбор <code>true/false/1/0/yes/no/on/off</code> (регистр не важен); невалидно → <code>null</code></td></tr>
 <tr><td><code>str.toDouble(s)</code></td><td>Преобразование в вещественное</td></tr>
 <tr><td><code>str.ord(s)</code></td><td>Код первого символа</td></tr>
 </table>
@@ -128,6 +131,9 @@ print(str.center(<span class="str">"hi"</span>, <span class="num">6</span>));   
 <tr><th>Функция</th><th>Описание</th></tr>
 <tr><td><code>str.toString(val)</code></td><td>В строку</td></tr>
 <tr><td><code>str.toInt(s)</code></td><td>В целое число</td></tr>
+<tr><td><code>str.parseBool(s)</code></td><td>Строгое логическое (<code>true/false/1/0/yes/no/on/off</code>)</td></tr>
+<tr><td><code>str.parseInt(s)</code></td><td>Строгое целое (невалидно → <code>null</code>)</td></tr>
+<tr><td><code>str.parseFloat(s)</code></td><td>Строгое число (невалидно → <code>null</code>)</td></tr>
 <tr><td><code>str.toDouble(s)</code></td><td>В вещественное</td></tr>
 <tr><td><code>str.itoa(n)</code></td><td>Целое → строка</td></tr>
 <tr><td><code>str.atof(s)</code></td><td>Строка → вещественное</td></tr>

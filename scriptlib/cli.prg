@@ -45,10 +45,14 @@
 //     ("-o value"); форма "-o=value" не поддержана;
 //   - значение для длинного флага — либо "--name=value", либо "--name value"
 //     (отдельный аргумент); если следующим идёт флаг или "--" — ошибка;
+//   - булев параметр принимает значение ТОЛЬКО через "--name=value" (или просто
+//     "--name" — true); отдельное значение после флага НЕ потребляется и уходит
+//     в позиционные ("--verbose false file" => verbose=true, "false" — позиционный);
 //   - повтор параметра по умолчанию: последнее значение побеждает (как в
 //     argparse); можно задать "repeat": "error" или "first" у конкретного параметра;
-//   - типизированная проверка: int/float проверяются посимвольной маской
-//     (пределы возможностей Script), bool принимает true/false/1/0/yes/no/on/off;
+//   - типизированная проверка делегируется ядру: int/float/bool приводятся через
+//     str.parseInt/parseFloat/parseBool (единый источник семантики, без ручных масок);
+//     bool принимает true/false/1/0/yes/no/on/off (регистр не важен);
 //   - поле параметра, совпадающее со встроенным методом tuple (size, has, get,
 //     set, remove, keys, values, contains), недоступно через opts.имя — это
 //     ограничение языка (см. language.html).
@@ -67,75 +71,29 @@ function __cli_find_spec(schema, flagName) {
     return null;
 }
 
-// Целое ли число (маска [+-]? цифры).
-function __cli_is_int(s) {
-    var n = str.len(s);
-    if (n == 0) return 0;
-    var i = 0;
-    var c0 = str.mid(s, 0, 1);
-    if (c0 == "-" || c0 == "+") { i = 1; if (n == 1) return 0; }
-    for (; i < n; i++) {
-        var c = str.mid(s, i, 1);
-        if (c < "0" || c > "9") return 0;
-    }
-    return 1;
-}
-
-// Число ли с плавающей точкой (маска [+-]? digits [.digits] [e[+-]digits]).
-function __cli_is_float(s) {
-    if (__cli_is_int(s)) return 1;
-    var low = str.lower(s);
-    var n = str.len(low);
-    if (n == 0) return 0;
-    var i = 0;
-    var c0 = str.mid(low, 0, 1);
-    if (c0 == "-" || c0 == "+") { i = 1; if (n == 1) return 0; }
-    var digits = 0, dot = 0, exp = 0;
-    for (; i < n; i++) {
-        var c = str.mid(low, i, 1);
-        if (c >= "0" && c <= "9") { digits = 1; continue; }
-        if (c == ".") {
-            if (dot || exp) return 0;
-            dot = 1;
-            continue;
-        }
-        if (c == "e") {
-            if (exp || !digits) return 0;
-            exp = 1;
-            digits = 0;   // после "e" нужны цифры
-            if (i + 1 < n) {
-                var nxt = str.mid(low, i + 1, 1);
-                if (nxt == "-" || nxt == "+") i++;
-            }
-            continue;
-        }
-        return 0;
-    }
-    return digits == 1;
-}
-
-// Булево значение из строки (true/false/1/0/yes/no/on/off, регистр не важен).
-function __cli_to_bool(s, flagName) {
-    var low = str.lower(s);
-    if (low == "true" || low == "1" || low == "yes" || low == "on") return 1;
-    if (low == "false" || low == "0" || low == "no" || low == "off") return 0;
-    throw "cli: параметр '--" + flagName + "' — некорректное булево значение '" + s + "'";
-}
-
 // Приведение значения по типу параметра (строка из "=" или отдельного аргумента).
+// Строгую проверку/конвертацию выполняют str.parse* (ядро) — единый источник
+// семантики без ручных масок в скрипте. Возвращают null при невалидном значении.
 function __cli_coerce(spec, rawVal) {
     var typ = (spec.type == null) ? "string" : str.toString(spec.type);
     var key = str.toString(spec.name);
-    if (typ == "bool") return __cli_to_bool(rawVal, key);
+    if (typ == "bool") {
+        var b = str.parseBool(rawVal);
+        if (b == null)
+            throw "cli: параметр '--" + key + "' — некорректное булево значение '" + rawVal + "'";
+        return b;
+    }
     if (typ == "int") {
-        if (!__cli_is_int(rawVal))
+        var v = str.parseInt(rawVal);
+        if (v == null)
             throw "cli: параметр '--" + key + "' ожидает целое число, получено '" + rawVal + "'";
-        return str.toInt(rawVal);
+        return v;
     }
     if (typ == "float") {
-        if (!__cli_is_float(rawVal))
+        var v = str.parseFloat(rawVal);
+        if (v == null)
             throw "cli: параметр '--" + key + "' ожидает число, получено '" + rawVal + "'";
-        return str.toDouble(rawVal);
+        return v;
     }
     return str.toString(rawVal);   // "string" и всё прочее
 }
@@ -184,7 +142,7 @@ function __cli_parse_tokens(schema, parsed) {
 
             if (typ == "bool") {
                 var b = 1;
-                if (inline) b = __cli_to_bool(str.toString(t.value), key);
+                if (inline) b = __cli_coerce(spec, str.toString(t.value));
                 opts.set(key, b);
                 i++;
             } else {

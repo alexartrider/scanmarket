@@ -33,7 +33,8 @@ loadModule(file.join(scriptlib, "xlsxedit.prg"));</code></pre>
 <h2>Safe file editing (fileedit)</h2>
 <p>Instant atomic edits (temp file + replace, like <code>file.writeatom</code>) that are also idempotent;
 <code>opts</code> are the same keys as for <code>writeatom</code>: <code>{"enc","overwrite","backup","verify"}</code>.
-Without <code>opts</code>, the write follows the old rules (UTF-8 without BOM).</p>
+Without <code>opts</code>, the write follows the old rules (UTF-8 without BOM).
+If there is nothing to change, the instant edits return <b>0</b> and do not write the file (mtime is untouched).</p>
 <table>
 <tr><th>Function</th><th>Description</th></tr>
 <tr><td><code>fileedit.replaceAll(path, old, new, [opts])</code></td><td>Replace all occurrences → 1 (found) / 0 (none)</td></tr>
@@ -123,23 +124,25 @@ types <code>string/int/float/bool</code> with value validation; required options
 <code>"repeat": "error"</code> (error on a repeat) or <code>"repeat": "first"</code> (ignore repeats).
 ⚠️ Unlike <code>system.getcommandline().flags</code> (there the first value wins because of tuple/emplace).</p>
 <p><b>Limitations</b>: a short flag with a value is only supported as a separate argument (<code>-o value</code>),
-the <code>-o=value</code> form is not supported; a parameter field that collides with a built-in tuple method
+the <code>-o=value</code> form is not supported; a boolean parameter takes the value only via <code>--name=value</code>
+(a separate value after the flag is not consumed and becomes positional); a parameter field that collides with a built-in tuple method
 (<code>size/has/get/set/...</code>) is not accessible via <code>opts.name</code> (a language limitation).</p>
 </div>
 
 <div class="doc-section">
 <h2>Editing functions in source code (funcedit)</h2>
-<p>Finds <code>function Name(...) { ... }</code> declarations (including inside classes); <code>"function"</code> inside strings
+<p>Finds <code>function Name(...) [export|local] { ... }</code> declarations (including inside classes),
+as well as expression bodies <code>function Name(...) return &lt;exp&gt;;</code> without braces; <code>"function"</code> inside strings
 and comments is ignored. Changes are made only at the found boundaries. <code>source</code> is the source text.</p>
 <table>
 <tr><th>Function</th><th>Description</th></tr>
 <tr><td><code>funcedit.find(source, name)</code></td><td>Exactly one function → <code>#{"start","bodyStart","bodyClose","end"}</code>, otherwise a clear exception</td></tr>
 <tr><td><code>funcedit.exists(source, name)</code></td><td>Whether a match exists → 0/1</td></tr>
 <tr><td><code>funcedit.isUnique(source, name)</code></td><td>Exactly one match → 0/1</td></tr>
-<tr><td><code>funcedit.getBody(source, name)</code></td><td>Body text (between <code>{</code> and <code>}</code>)</td></tr>
+<tr><td><code>funcedit.getBody(source, name)</code></td><td>Body text (between <code>{</code> and <code>}</code>; for <code>return</code>-functions — “return …” up to the “;”)</td></tr>
 <tr><td><code>funcedit.replaceBody(source, name, newBody)</code></td><td>New source with the replaced body</td></tr>
 <tr><td><code>funcedit.replace(source, name, newFuncSource)</code></td><td>Replace the whole function</td></tr>
-<tr><td><code>funcedit.insertBefore / insertAfter(source, name, snippet)</code></td><td>Insert a snippet before <code>function</code> / after the closing <code>}</code></td></tr>
+<tr><td><code>funcedit.insertBefore / insertAfter(source, name, snippet)</code></td><td>Insert a snippet before <code>function</code> / after the closing <code>}</code> (for <code>return</code>-functions — after the “;”)</td></tr>
 <tr><td><code>funcedit.balanced(source)</code></td><td>Balance of <code>() [] {}</code> accounting for strings/comments → 0/1</td></tr>
 </table>
 </div>
@@ -181,6 +184,7 @@ and comments is ignored. Changes are made only at the found boundaries. <code>so
 <tr><td><code>qt_group(name)</code></td><td>Group heading</td></tr>
 <tr><td><code>qt_check(desc, actual, expected)</code></td><td>Comparison via <code>==</code></td></tr>
 <tr><td><code>qt_checkJson(desc, actual, expected)</code></td><td>Comparison via <code>json.stringify</code></td></tr>
+<tr><td><code>qt_checkExact(desc, actual, expected)</code></td><td>Case-sensitive string comparison (the ordinary <code>==</code> does not distinguish case)</td></tr>
 <tr><td><code>qt_ok(desc, cond)</code> / <code>qt_fail(desc, [msg])</code></td><td>Boolean check / unconditional FAIL</td></tr>
 <tr><td><code>qt_throws(desc, fn, [pattern])</code></td><td>The function must throw an exception (by substring)</td></tr>
 <tr><td><code>qt_tempdir([prefix])</code></td><td>Unique temporary directory (all file tests work only there)</td></tr>
@@ -197,8 +201,9 @@ qt\bind\qodeqt.exe qt\sample\run_tests.prg --timeout=30000 test_fileedit.prg</co
 <div class="doc-section">
 <h2>Rules for a robust loop (verified empirically)</h2>
 <ul>
-<li><b>Exit code</b>: end the program with <code>return 0;</code> (or <code>return rc;</code>). Without an explicit <code>return</code> the process returns <code>AsInt()</code> of the last expression — randomly.</li>
-<li><b>Output</b>: <code>print</code> goes to the log <code>qt/bin/log/log_DDMMYYYY.log</code>, not to stdout. Check the child run result with a <b>marker file</b> + <code>res.code</code>, not <code>res.stdout</code>.</li>
+<li><b>Exit code</b>: end the program with <code>return 0;</code> (or <code>return rc;</code>) — <code>return N;</code> yields code N. A syntax error in the file returns code <b>1</b>, an unhandled exception during execution returns code <b>2</b> (previously these failures were masked by code 0). Without an explicit <code>return</code> the code is <code>AsInt()</code> of the last expression.</li>
+<li><b>Output</b>: <code>print</code> writes to the console window and to the log <code>qt/bin/log/log_DDMMYYYY.log</code> (in parallel), but NOT to the redirectable OS stdout — capturing a child’s stdout yields empty. Check the child run result with a <b>marker file</b> + <code>res.code</code>, not <code>res.stdout</code>.</li>
+<li><b>Log location</b>: configurable from the script via <code>Log.localFilePath</code> (and <code>Log.remoteFilePath</code>); if the directory does not exist, it is created recursively automatically (the default path <code>qt/bin/log</code> is still created as before). The log file name prefix is <code>Log.filePrefix</code>.</li>
 <li><b>Shell-less launch</b> (paths with spaces/Unicode are safe): <code>system.execArgv(#[exe, arg1, arg2], #{"cwd","timeout","outfile"})</code>.</li>
 <li><b>Headless</b>: forms and tables are created without GUI — <code>file.setenv("QT_QPA_PLATFORM","offscreen")</code> BEFORE <code>execArgv</code>.</li>
 <li><b>Container mutations inside function parameters are not visible to the caller</b> (COW) — helpers must return a new value.</li>

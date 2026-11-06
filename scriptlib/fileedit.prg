@@ -11,6 +11,7 @@
 //   fileedit.filter(path, lineFn, [opts])          — построчно: lineFn(строка) -> строка (null — удалить)
 //   fileedit.prepend(path, text, [opts])           — вставить текст в начало
 //   fileedit.append(path, text, [opts])            — дописать текст в конец (с переводом строки)
+// Мгновенные правки (кроме replace*) возвращают 0, если меня нечего — файл не трогается.
 //
 // Планирование + применение (безопасный цикл «сначала посмотреть, потом записать»):
 //   fileedit.planReplaceAll(path, old, new)        → план
@@ -73,38 +74,43 @@ fileedit.edit = function(path, editFn, opts) {
     var text = file.read(path);
     var next = editFn(text);
     if (next == null) throw "fileedit.edit: editFn вернул null для " + path;
-    file.writeatom(path, str.toString(next), opts);
+    var nextStr = str.toString(next);
+    if (__fe_streq(nextStr, text)) return 0;   // менять нечего — файл не трогаем
+    file.writeatom(path, nextStr, opts);
     return 1;
 };
 
 fileedit.filter = function(path, lineFn, opts) {
     var text = file.read(path);
-    var lines = str.split(text, "\n");
+    var sp = __fe_split(text);
     var kept = #[];
-    for (var i = 0; i < lines.size(); i++) {
-        var out = lineFn(lines[i]);
+    for (var i = 0; i < sp.lines.size(); i++) {
+        var out = lineFn(sp.lines[i]);
         if (out != null) kept.push(str.toString(out));
     }
-    var next = "";
-    for (var k = 0; k < kept.size(); k++) {
-        if (k > 0) next += "\n";
-        next += kept[k];
-    }
-    if (kept.size() > 0) next += "\n";     // как writeLines
+    // Идемпотентность: результат всегда оканчивается ровно на один "\n"
+    // (если что-то осталось); "фантомная" пустая строка в lineFn не попадает.
+    var next = __fe_join_lines(kept);
+    if (__fe_streq(next, text)) return 0;   // нечего менять — файл не трогаем
     file.writeatom(path, next, opts);
     return kept.size();
 };
 
 fileedit.prepend = function(path, text, opts) {
     var cur = file.exists(path) ? file.read(path) : "";
-    file.writeatom(path, str.toString(text) + cur, opts);
+    var next = str.toString(text) + cur;
+    if (__fe_streq(next, cur)) return 0;    // нечего менять — файл не трогаем
+    file.writeatom(path, next, opts);
     return 1;
 };
 
 fileedit.append = function(path, text, opts) {
-    var base = file.exists(path) ? file.read(path) : "";
+    var orig = file.exists(path) ? file.read(path) : "";
+    var base = orig;
     if (base != "" && !str.endswith(base, "\n")) base += "\n";
-    file.writeatom(path, base + str.toString(text) + "\n", opts);
+    var next = base + str.toString(text) + "\n";
+    if (__fe_streq(next, orig)) return 0;   // нечего менять — файл не трогаем
+    file.writeatom(path, next, opts);
     return 1;
 };
 
@@ -127,10 +133,16 @@ function __fe_make_plan(path, kind, orig, next, count, old, newText, diag, meta)
     };
 }
 
-// Построчное деление для filter/planFilter: по "\n", "\r" остаётся в строке
-// (CRLF не теряется). Совпадает с прежним fileedit.filter.
-function __fe_split_lines(text) {
-    return str.split(text, "\n");
+// Построчное деление для filter/planFilter. Возвращает lines — реальные строки
+// (БЕЗ «фантомной» пустой строки от завершающего "\n") и hadNL — был ли в конце
+// файла перевод строки. CR/LF не теряются, пустые строки в середине сохраняются.
+function __fe_split(text) {
+    if (text == "") return #{"lines": #[], "hadNL": 0};
+    var hadNL = str.endswith(text, "\n");
+    var lines = str.split(text, "\n");
+    if (hadNL && lines.size() > 0 && str.len(lines[lines.size() - 1]) == 0)
+        lines.pop();                       // убрать пустой элемент от финального "\n"
+    return #{"lines": lines, "hadNL": hadNL};
 }
 
 // Склеить строки обратно (как filter/writeLines).
@@ -183,14 +195,18 @@ fileedit.planEdit = function(path, editFn) {
 fileedit.planFilter = function(path, lineFn) {
     var meta = file.readmeta(path);
     var orig = meta.text;
-    var lines = __fe_split_lines(orig);
+    var sp = __fe_split(orig);
     var kept = #[];
-    for (var i = 0; i < lines.size(); i++) {
-        var out = lineFn(lines[i]);
-        if (out != null) kept.push(str.toString(out));
+    var changed = 0;                       // число изменённых/удалённых строк
+    for (var i = 0; i < sp.lines.size(); i++) {
+        var inp = sp.lines[i];
+        var out = lineFn(inp);
+        if (out == null) { changed++; continue; }
+        if (!__fe_streq(str.toString(out), inp)) changed++;
+        kept.push(str.toString(out));
     }
     var next = __fe_join_lines(kept);
-    return __fe_make_plan(path, "filter", orig, next, kept.size(), "", "", "", meta);
+    return __fe_make_plan(path, "filter", orig, next, changed, "", "", "", meta);
 };
 
 fileedit.planPrepend = function(path, text) {

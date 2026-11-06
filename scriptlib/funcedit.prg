@@ -15,7 +15,9 @@
 //   funcedit.insertAfter(source, name, snippet)  — вставка фрагмента после закрывающей "}"
 //   funcedit.balanced(source)              — баланс () [] {} с учётом строк и комментариев
 //
-// Находит объявления вида "function Имя(...) { ... }" (в т.ч. внутри классов).
+// Находит объявления вида "function Имя(...) [export|local] { ... }" (в т.ч. внутри
+// классов) и тела-выражения "function Имя(...) [export|local] return <exp>;" (без
+// фигурных скобок). Для return-функций bodyStart — позиция 'return', bodyClose — ';'.
 // Подстроки "function" внутри строк/комментариев игнорируются.
 // Изменение исходника никогда не выполняется серией str.replace(): только по найденным границам.
 
@@ -83,19 +85,42 @@ function __fec_balanced_end(source, from, open, close, mask) {
     return -1;
 }
 
+// Первый символ имени — буква или '_' (как LABEL в лексере), далее буквы/цифры/'_'.
+function __fec_is_ident_char(ch) {
+    return (ch >= "a" && ch <= "z") || (ch >= "A" && ch <= "Z") || (ch >= "0" && ch <= "9") || ch == "_";
+}
+function __fec_is_ident_start(ch) {
+    return (ch >= "a" && ch <= "z") || (ch >= "A" && ch <= "Z") || ch == "_";
+}
+function __fec_isspace(c) {
+    return c == " " || c == "\t" || c == "\r" || c == "\n";
+}
+
 // identifier сразу после ключевого слова function
 function __fec_read_name(source, pos, mask) {
     var n = str.len(source);
     var j = pos + FUNC_KW_LEN;
-    while (j < n && (str.mid(source, j, 1) == " " || str.mid(source, j, 1) == "\t" || str.mid(source, j, 1) == "\r" || str.mid(source, j, 1) == "\n")) j++;
+    while (j < n && __fec_isspace(str.mid(source, j, 1))) j++;
     var s = j;
-    while (j < n) {
-        var ch = str.mid(source, j, 1);
-        if ((ch >= "a" && ch <= "z") || (ch >= "A" && ch <= "Z") || (ch >= "0" && ch <= "9") || ch == "_") j++;
-        else break;
-    }
-    if (j == s) return null;
+    if (s >= n || !__fec_is_ident_start(str.mid(source, s, 1))) return null;
+    j = s + 1;
+    while (j < n && __fec_is_ident_char(str.mid(source, j, 1))) j++;
     return #{"name": str.mid(source, s, j - s), "nameEnd": j};
+}
+
+// Индекс ';', завершающего выражение с позиции from (mask == 1), с учётом
+// вложенности () [] {}. Строки и комментарии учитывает маска mask.
+function __fec_stmt_end(source, from, mask) {
+    var n = str.len(source);
+    var depth = 0;
+    for (var i = from; i < n; i++) {
+        if (mask[i] != 1) continue;
+        var c = str.mid(source, i, 1);
+        if (c == "(" || c == "[" || c == "{") { depth++; continue; }
+        if (c == ")" || c == "]" || c == "}") { depth--; continue; }
+        if (c == ";" && depth <= 0) return i;
+    }
+    return -1;
 }
 
 // Все функции вида function name(...) { ... }
@@ -113,30 +138,52 @@ function __fec_find_all(source) {
         if (!prevOk) continue;
         var nm = __fec_read_name(source, pi, mask);
         if (nm == null) continue;
-        // после имени: пропустить пробелы и (если задан) 'export', затем '(' ... ')' и '{'
+        // после имени: '(', затем ')' и ОПЦИОНАЛЬНЫЙ модификатор export|local
+        // (грамматика языка: function name(...) [export|local] тело).
         var j = nm.nameEnd;
-        var skip = 1;
-        while (j < n && skip) {
-            var w = str.mid(source, j, 7);
-            if (str.mid(source, j, 1) == " " || str.mid(source, j, 1) == "\t" || str.mid(source, j, 1) == "\r" || str.mid(source, j, 1) == "\n") j++;
-            else if (j + 6 <= n && w == "export") { j += 6; }
-            else break;
-        }
+        while (j < n && __fec_isspace(str.mid(source, j, 1))) j++;
         if (j >= n || str.mid(source, j, 1) != "(") continue;
         var parenEnd = __fec_balanced_end(source, j, "(", ")", mask);
         if (parenEnd < 0) continue;
         j = parenEnd + 1;
-        while (j < n && (str.mid(source, j, 1) == " " || str.mid(source, j, 1) == "\t" || str.mid(source, j, 1) == "\r" || str.mid(source, j, 1) == "\n")) j++;
-        if (j >= n || str.mid(source, j, 1) != "{") continue;
-        var braceClose = __fec_balanced_end(source, j, "{", "}", mask);
-        if (braceClose < 0) continue;
-        found.push(#{
-            "name":       nm.name,
-            "start":      pi,
-            "bodyStart":  j + 1,
-            "bodyClose":  braceClose,
-            "end":        braceClose + 1
-        });
+        while (j < n && __fec_isspace(str.mid(source, j, 1))) j++;
+        // модификатор после аргументов: export / local (только одно слово)
+        var modStart = j;
+        if (j < n && __fec_is_ident_start(str.mid(source, j, 1))) {
+            while (j < n && __fec_is_ident_char(str.mid(source, j, 1))) j++;
+            var mod = str.lower(str.mid(source, modStart, j - modStart));
+            if (mod == "export" || mod == "local") {
+                while (j < n && __fec_isspace(str.mid(source, j, 1))) j++;
+            } else {
+                j = modStart;   // не модификатор — вернуться к началу слова
+            }
+        }
+        if (j >= n) continue;
+
+        // Тело: либо "{...}", либо одиночный "return <exp>;" (без фигурных скобок).
+        if (str.mid(source, j, 1) == "{") {
+            var braceClose = __fec_balanced_end(source, j, "{", "}", mask);
+            if (braceClose < 0) continue;
+            found.push(#{
+                "name":       nm.name,
+                "start":      pi,
+                "bodyStart":  j + 1,
+                "bodyClose":  braceClose,
+                "end":        braceClose + 1
+            });
+            continue;
+        }
+        if (j + 6 <= n && str.lower(str.mid(source, j, 6)) == "return") {
+            var semi = __fec_stmt_end(source, j, mask);
+            if (semi < 0) continue;
+            found.push(#{
+                "name":       nm.name,
+                "start":      pi,
+                "bodyStart":  j,          // позиция 'return'
+                "bodyClose":  semi,       // позиция ';'
+                "end":        semi + 1
+            });
+        }
     }
     return found;
 }

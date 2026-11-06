@@ -33,7 +33,8 @@ loadModule(file.join(scriptlib, "xlsxedit.prg"));</code></pre>
 <h2>Безопасное редактирование файлов (fileedit)</h2>
 <p>Мгновенные атомарные правки (temp-файл + замена, как <code>file.writeatom</code>) и идемпотентны;
 <code>opts</code> — те же, что у <code>writeatom</code>: <code>{"enc","overwrite","backup","verify"}</code>.
-Без <code>opts</code> запись по старым правилам (UTF-8 без BOM).</p>
+Без <code>opts</code> запись по старым правилам (UTF-8 без BOM).
+Если менять нечего, мгновенные правки возвращают <b>0</b> и не пишут файл (mtime не меняется).</p>
 <table>
 <tr><th>Функция</th><th>Описание</th></tr>
 <tr><td><code>fileedit.replaceAll(path, old, new, [opts])</code></td><td>Заменить все вхождения → 1 (было найдено) / 0 (нет)</td></tr>
@@ -123,23 +124,25 @@ print("files=" + json.stringify(r.args));</code></pre>
 <code>"repeat": "error"</code> (ошибка на повтор) или <code>"repeat": "first"</code> (игнорировать повторы).
 ⚠️ В отличие от <code>system.getcommandline().flags</code> (там первое значение из-за tuple/emplace).</p>
 <p><b>Ограничения</b>: короткий флаг со значением — только отдельным аргументом (<code>-o value</code>),
-форма <code>-o=value</code> не поддержана; поле параметра, совпадающее со встроенным методом tuple
-(<code>size/has/get/set/...</code>), недоступно через <code>opts.имя</code> (ограничение языка).</p>
+форма <code>-o=value</code> не поддержана; булев параметр принимает значение только через <code>--name=value</code>
+(отдельное значение после флага не потребляется и уходит в позиционные); поле параметра, совпадающее
+со встроенным методом tuple (<code>size/has/get/set/...</code>), недоступно через <code>opts.имя</code> (ограничение языка).</p>
 </div>
 
 <div class="doc-section">
 <h2>Правка функций в исходнике (funcedit)</h2>
-<p>Находит объявления <code>function Имя(...) { ... }</code> (в т.ч. в классах); <code>"function"</code> внутри строк
+<p>Находит объявления <code>function Имя(...) [export|local] { ... }</code> (в т.ч. в классах), а также
+тела-выражения <code>function Имя(...) return &lt;exp&gt;;</code> без фигурных скобок; <code>"function"</code> внутри строк
 и комментариев игнорируется. Изменения делаются только по найденным границам. <code>source</code> — текст исходника.</p>
 <table>
 <tr><th>Функция</th><th>Описание</th></tr>
 <tr><td><code>funcedit.find(source, name)</code></td><td>Ровно одна функция → <code>#{"start","bodyStart","bodyClose","end"}</code>, иначе понятное исключение</td></tr>
 <tr><td><code>funcedit.exists(source, name)</code></td><td>Есть ли совпадение → 0/1</td></tr>
 <tr><td><code>funcedit.isUnique(source, name)</code></td><td>Ровно одно совпадение → 0/1</td></tr>
-<tr><td><code>funcedit.getBody(source, name)</code></td><td>Текст тела (между <code>{</code> и <code>}</code>)</td></tr>
+<tr><td><code>funcedit.getBody(source, name)</code></td><td>Текст тела (между <code>{</code> и <code>}</code>; у <code>return</code>-функций — «return …» до «;»)</td></tr>
 <tr><td><code>funcedit.replaceBody(source, name, newBody)</code></td><td>Новый исходник с заменённым телом</td></tr>
 <tr><td><code>funcedit.replace(source, name, newFuncSource)</code></td><td>Замена всей функции целиком</td></tr>
-<tr><td><code>funcedit.insertBefore / insertAfter(source, name, snippet)</code></td><td>Вставка фрагмента перед <code>function</code> / после закрывающей <code>}</code></td></tr>
+<tr><td><code>funcedit.insertBefore / insertAfter(source, name, snippet)</code></td><td>Вставка фрагмента перед <code>function</code> / после закрывающей <code>}</code> (для <code>return</code>-функций — после «;»)</td></tr>
 <tr><td><code>funcedit.balanced(source)</code></td><td>Баланс <code>() [] {}</code> с учётом строк/комментариев → 0/1</td></tr>
 </table>
 </div>
@@ -181,6 +184,7 @@ print("files=" + json.stringify(r.args));</code></pre>
 <tr><td><code>qt_group(name)</code></td><td>Заголовок группы</td></tr>
 <tr><td><code>qt_check(desc, actual, expected)</code></td><td>Сравнение через <code>==</code></td></tr>
 <tr><td><code>qt_checkJson(desc, actual, expected)</code></td><td>Сравнение через <code>json.stringify</code></td></tr>
+<tr><td><code>qt_checkExact(desc, actual, expected)</code></td><td>Регистрозависимое сравнение строк (обычный <code>==</code> регистр не различает)</td></tr>
 <tr><td><code>qt_ok(desc, cond)</code> / <code>qt_fail(desc, [msg])</code></td><td>Булева проверка / безусловный FAIL</td></tr>
 <tr><td><code>qt_throws(desc, fn, [pattern])</code></td><td>Функция должна выбросить исключение (по подстроке)</td></tr>
 <tr><td><code>qt_tempdir([prefix])</code></td><td>Уникальная временная директория (все файловые тесты работают только там)</td></tr>
@@ -197,8 +201,9 @@ qt\bind\qodeqt.exe qt\sample\run_tests.prg --timeout=30000 test_fileedit.prg</co
 <div class="doc-section">
 <h2>Правила устойчивого цикла (проверено эмпирически)</h2>
 <ul>
-<li><b>Код возврата</b>: заканчивайте программу <code>return 0;</code> (или <code>return rc;</code>). Без явного <code>return</code> процесс возвращает <code>AsInt()</code> последнего выражения — случайно.</li>
-<li><b>Вывод</b>: <code>print</code> идёт в лог <code>qt/bin/log/log_DDMMYYYY.log</code>, а не в stdout. Результат дочернего запуска проверяйте через <b>файл-маркер</b> + <code>res.code</code>, а не <code>res.stdout</code>.</li>
+<li><b>Код возврата</b>: заканчивайте программу <code>return 0;</code> (или <code>return rc;</code>) — «return N;» даёт код N. Синтаксическая ошибка файла возвращает код <b>1</b>, необработанное исключение при выполнении — код <b>2</b> (раньше эти сбои маскировались кодом 0). Без явного <code>return</code> код — <code>AsInt()</code> последнего выражения.</li>
+<li><b>Вывод</b>: <code>print</code> пишется в консольное окно и в лог <code>qt/bin/log/log_DDMMYYYY.log</code> (параллельно), но НЕ в перенаправляемый OS-stdout — захват stdout дочернего процесса даёт пусто. Результат дочернего запуска проверяйте через <b>файл-маркер</b> + <code>res.code</code>, а не <code>res.stdout</code>.</li>
+<li><b>Место журнала</b>: настраивается из скрипта через <code>Log.localFilePath</code> (и <code>Log.remoteFilePath</code>); каталог, если его нет, создаётся рекурсивно автоматически (прежний дефолтный путь <code>qt/bin/log</code> тоже создаётся как раньше). Префикс имени файла — <code>Log.filePrefix</code>.</li>
 <li><b>Запуск без shell</b> (пути с пробелами/Unicode безопасны): <code>system.execArgv(#[exe, arg1, arg2], #{"cwd","timeout","outfile"})</code>.</li>
 <li><b>Headless</b>: формы и таблицы создаются без GUI — <code>file.setenv("QT_QPA_PLATFORM","offscreen")</code> ДО <code>execArgv</code>.</li>
 <li><b>Мутации контейнеров в функциях-параметрах не видны вызывающему</b> (COW) — помощники должны возвращать новое значение.</li>

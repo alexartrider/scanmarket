@@ -21,6 +21,7 @@
 <tr><td><code>system.exec(cmd, [timeoutMs])</code></td><td>Запуск команды с захватом stdout/stderr. Возвращает {success, code, stdout, stderr}; таймаут по умолчанию 60 секунд</td></tr>
 <tr><td><code>system.systemex(cmd, [workDir], [timeout])</code></td><td>Скрытый запуск с рабочей папкой и таймаутом. Возвращает {success, code, killed}</td></tr>
 <tr><td><code>system.systemasync(cmd, [workDir], [timeout], [options])</code></td><td>Асинхронное. Возвращает объект Process. <code>options</code> управляет связью с консолью (см. ниже)</td></tr>
+<tr><td><code>system.execArgvAsync(argv, [opts])</code></td><td>Асинхронный запуск БЕЗ shell по массиву аргументов. Возвращает объект Process; по завершении <code>result</code> — <code>#{"success","code","killed","stdout","stderr"}</code>. <code>opts</code>: <code>{"cwd","timeout","outfile","errfile","console"}</code></td></tr>
 </table>
 <p>Необязательный аргумент <code>options</code> — кортеж <code>#{"console": "..."}</code>, управляющий связью дочернего
 процесса с консолью родителя:</p>
@@ -34,13 +35,18 @@
 Дочерний процесс без <code>DETACHED_PROCESS</code>/<code>CREATE_NEW_CONSOLE</code> может разделять консоль родителя и менять её
 режимы — диагностику/восстановление см. в модуле <a href="log.html">Log</a> (<code>Log.consoleInfo()</code>/<code>Log.refreshConsole()</code>).</p>
 <p><code>system.exec</code> в текущей реализации Windows запускает команду через <code>cmd.exe /c</code>. При таймауте процесс завершается и <code>success</code> будет false; значение <code>code</code> при принудительном завершении не следует считать кодом завершения команды.</p>
+<p><code>system.execArgvAsync(argv, opts)</code> — асинхронный запуск БЕЗ оболочки по массиву аргументов: <code>argv[0]</code> — исполняемый файл, остальное — аргументы (экранирование не требуется). <code>opts</code> — <code>#{"cwd","timeout"(мс),"console": "inherit"|"new"|"detached","outfile","errfile"}</code> — как у <code>system.execArgv</code>. Возвращает объект Process (<code>isReady</code>, <code>kill()</code>); по завершении <code>Process.result</code> — <code>#{"success","code","killed","stdout","stderr"}</code>. stdout/stderr собираются из <code>outfile</code>/<code>errfile</code>, а если они не заданы — из временных файлов, которые создаются и удаляются автоматически. Ошибка запуска в фоновом потоке не бросается: <code>success=false</code>, а сообщение кладётся в <code>stderr</code>.</p>
+<pre>var proc = system.execArgvAsync(#[exe, "arg1", "arg2"], #{"timeout": 30000});
+while (!proc.isReady) system.sleep(0.05);
+var r = proc.result;
+print("code=" + r.code + " out=" + r.stdout + " err=" + r.stderr);</pre>
 
 <h3>Объект Process</h3>
 <table>
 <tr><th>Свойство/Метод</th><th>Описание</th></tr>
 <tr><td><code>p.isReady</code></td><td>Процесс завершён</td></tr>
 <tr><td><code>p.runtime</code></td><td>Время выполнения (мсек)</td></tr>
-<tr><td><code>p.result</code></td><td>Результат {success, code, killed}</td></tr>
+<tr><td><code>p.result</code></td><td>Результат {success, code, killed}; для <code>execArgvAsync</code> — также <code>stdout</code>/<code>stderr</code></td></tr>
 <tr><td><code>p.kill()</code></td><td>Завершение процесса</td></tr>
 </table>
 </div>

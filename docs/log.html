@@ -25,6 +25,7 @@
 <tr><td><code>Log.writeToRemote</code></td><td>bool</td><td>Запись в удалённый файл</td></tr>
 <tr><td><code>Log.writeToLocal</code></td><td>bool</td><td>Запись в локальный файл</td></tr>
 </table>
+<p>Установка <code>Log.localFilePath</code> или <code>Log.remoteFilePath</code> рекурсивно создаёт каталог, если его нет: лог начинает писаться сразу, без ручного <code>file.mkdirrecursive</code>. Дефолтный путь (<code>qt/bin/log</code>) по-прежнему создаётся автоматически. Имя файла — <code>&lt;filePrefix&gt;_DDMMYYYY.log</code> (по умолчанию <code>log_DDMMYYYY.log</code>).</p>
 </div>
 
 <div class="doc-section">

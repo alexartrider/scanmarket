@@ -21,6 +21,7 @@
 <tr><td><code>system.exec(cmd, [timeoutMs])</code></td><td>Run a command and capture stdout/stderr. Returns {success, code, stdout, stderr}; default timeout is 60 seconds</td></tr>
 <tr><td><code>system.systemex(cmd, [workDir], [timeout])</code></td><td>Hidden launch with a working directory and timeout. Returns {success, code, killed}</td></tr>
 <tr><td><code>system.systemasync(cmd, [workDir], [timeout], [options])</code></td><td>Asynchronous. Returns a Process object. <code>options</code> controls console attachment (see below)</td></tr>
+<tr><td><code>system.execArgvAsync(argv, [opts])</code></td><td>Asynchronous shell-less launch by an argument array. Returns a Process object; on completion <code>result</code> is <code>#{"success","code","killed","stdout","stderr"}</code>. <code>opts</code>: <code>{"cwd","timeout","outfile","errfile","console"}</code></td></tr>
 </table>
 <p>The optional <code>options</code> argument is a tuple <code>#{"console": "..."}</code> that controls the child process
 attachment to the parent console:</p>
@@ -34,13 +35,18 @@ An unknown <code>console</code> value returns a diagnostic error. Existing calls
 A child process without <code>DETACHED_PROCESS</code>/<code>CREATE_NEW_CONSOLE</code> may share the parent console and change its
 modes — see the <a href="log.html">Log</a> module for diagnostics/restore (<code>Log.consoleInfo()</code>/<code>Log.refreshConsole()</code>).</p>
 <p>On Windows, <code>system.exec</code> currently runs the command through <code>cmd.exe /c</code>. On timeout, the process is terminated and <code>success</code> is false; do not treat <code>code</code> as the command's exit code after forced termination.</p>
+<p><code>system.execArgvAsync(argv, opts)</code> — asynchronous shell-less launch by an argument array: <code>argv[0]</code> is the executable, the rest are arguments (no escaping needed). <code>opts</code> — <code>#{"cwd","timeout"(ms),"console": "inherit"|"new"|"detached","outfile","errfile"}</code> — same as <code>system.execArgv</code>. Returns a Process object (<code>isReady</code>, <code>kill()</code>); on completion <code>Process.result</code> is <code>#{"success","code","killed","stdout","stderr"}</code>. stdout/stderr are collected from <code>outfile</code>/<code>errfile</code>, or, when those are not set, from temporary files that are created and removed automatically. A failed launch cannot throw in the background worker: <code>success=false</code> and the message is placed in <code>stderr</code>.</p>
+<pre>var proc = system.execArgvAsync(#[exe, "arg1", "arg2"], #{"timeout": 30000});
+while (!proc.isReady) system.sleep(0.05);
+var r = proc.result;
+print("code=" + r.code + " out=" + r.stdout + " err=" + r.stderr);</pre>
 
 <h3>Process object</h3>
 <table>
 <tr><th>Property/Method</th><th>Description</th></tr>
 <tr><td><code>p.isReady</code></td><td>Process has finished</td></tr>
 <tr><td><code>p.runtime</code></td><td>Execution time (ms)</td></tr>
-<tr><td><code>p.result</code></td><td>Result {success, code, killed}</td></tr>
+<tr><td><code>p.result</code></td><td>Result {success, code, killed}; for <code>execArgvAsync</code> also <code>stdout</code>/<code>stderr</code></td></tr>
 <tr><td><code>p.kill()</code></td><td>Kill the process</td></tr>
 </table>
 </div>

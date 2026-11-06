@@ -21,6 +21,9 @@
 <tr><td><code>str.empty(s)</code></td><td>true if the string is empty</td></tr>
 <tr><td><code>str.toString(val)</code></td><td>Convert to a string</td></tr>
 <tr><td><code>str.toInt(s)</code></td><td>Convert to an integer</td></tr>
+<tr><td><code>str.parseInt(s)</code></td><td>Strict integer parse; invalid → <code>null</code></td></tr>
+<tr><td><code>str.parseFloat(s)</code></td><td>Strict number parse (incl. <code>1e3</code>, <code>.5</code>); invalid → <code>null</code></td></tr>
+<tr><td><code>str.parseBool(s)</code></td><td>Strict <code>true/false/1/0/yes/no/on/off</code> (case-insensitive); invalid → <code>null</code></td></tr>
 <tr><td><code>str.toDouble(s)</code></td><td>Convert to a floating-point number</td></tr>
 <tr><td><code>str.ord(s)</code></td><td>Code of the first character</td></tr>
 </table>
@@ -122,6 +125,9 @@ print(str.center(<span class="str">"hi"</span>, <span class="num">6</span>));   
 <tr><th>Function</th><th>Description</th></tr>
 <tr><td><code>str.toString(val)</code></td><td>To a string</td></tr>
 <tr><td><code>str.toInt(s)</code></td><td>To an integer</td></tr>
+<tr><td><code>str.parseInt(s)</code></td><td>Strict integer (invalid → <code>null</code>)</td></tr>
+<tr><td><code>str.parseFloat(s)</code></td><td>Strict number (invalid → <code>null</code>)</td></tr>
+<tr><td><code>str.parseBool(s)</code></td><td>Strict boolean (<code>true/false/1/0/yes/no/on/off</code>)</td></tr>
 <tr><td><code>str.toDouble(s)</code></td><td>To a floating-point number</td></tr>
 <tr><td><code>str.itoa(n)</code></td><td>Integer → string</td></tr>
 <tr><td><code>str.atof(s)</code></td><td>String → floating-point number</td></tr>
