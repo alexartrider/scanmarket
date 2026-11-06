@@ -2,10 +2,10 @@
 setlocal enabledelayedexpansion
 rem ============================================================
 rem  ScanMarket: Git commit + push helper
-rem  Использование:
-rem    gitpush.bat                     -> коммит с сообщением по умолчанию
-rem    gitpush.bat "сообщение коммита" -> коммит с вашим сообщением
-rem  Приватное (private_data\, bin\log\, log\) игнорируется через .gitignore.
+rem  Usage:
+rem    gitpush.bat                     -> commit with default message
+rem    gitpush.bat "commit message"    -> commit with your message
+rem  Private data (private_data\, bin\log\, log\) is ignored via .gitignore.
 rem ============================================================
 
 set "MSG=%~1"
@@ -16,30 +16,30 @@ cd /d "%~dp0"
 echo [1/4] git add -A ...
 git add -A
 if errorlevel 1 (
-    echo ОШИБКА: git add не удался.
+    echo ERROR: git add failed.
     exit /b 1
 )
 
 echo [2/4] git commit -m "%MSG%" ...
 git commit -m "%MSG%"
 if errorlevel 1 (
-    echo Замечание: могло быть нечего коммитить ^(или коммит не создан^).
-    goto :branch
+    echo Note: nothing to commit (or commit was not created).
+    goto :push
 )
 
-:branch
+:push
 echo [3/4] git push ...
 git push
 
 if errorlevel 1 (
     echo.
-    echo ВНИМАНИЕ: push не удался. Проверьте доступ к NAS/SSH, URL remote
-    echo ^(`git remote -v`^) и что репозиторий существует на сервере.
+    echo WARNING: push failed. Check NAS/SSH access, the remote URL
+    echo (git remote -v) and that the repository exists on the server.
     exit /b 1
 )
 
-echo [4/4] Готово. Проверьте статус:
+echo [4/4] Done. Current status:
 git status -sb
 echo.
-echo Отправлено: "%MSG%"
+echo Pushed: "%MSG%"
 endlocal
