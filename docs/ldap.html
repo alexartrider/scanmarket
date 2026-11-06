@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Плагин LDAP / Active Directory — Script</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Плагин LDAP / Active Directory</h1><p>Корпоративная среда: авторизация пользователей, поиск в каталоге (WinLDAP)</p><div class="lang-switch"><a class="active" href="ldap.html">RU</a><a href="en/ldap.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Главная</a> / <a href="plugins.html">Плагины</a> / LDAP</p>
+
+<div class="doc-section">
+<h2>Загрузка плагина</h2>
+<pre><code>loadPlugin("plugins/ldap.dll");</code></pre>
+<p>Реализация на системной библиотеке <code>wldap32.dll</code>. Работает с Active Directory и любым LDAP-сервером (OpenLDAP, FreeIPA).</p>
+</div>
+
+<div class="doc-section">
+<h2>Авторизация в Active Directory</h2>
+<p>Функция для проверки учётных данных пользователя (корпоративная авторизация):</p>
+<pre><code><span class="kw">var</span> ok = LDAPAuthenticate(server, port, user, password, [secure]);</code></pre>
+<table>
+<tr><th>Аргумент</th><th>Описание</th></tr>
+<tr><td><code>server</code></td><td>Имя или IP контроллера домена (например <code>"dc01.corp.local"</code>)</td></tr>
+<tr><td><code>port</code></td><td><code>389</code> — LDAP, <code>636</code> — LDAPS (TLS)</td></tr>
+<tr><td><code>user</code></td><td>Формат имени пользователя, см. ниже</td></tr>
+<tr><td><code>password</code></td><td>Пароль</td></tr>
+<tr><td><code>secure</code></td><td>1 — соединение по TLS (рекомендуется для паролей)</td></tr>
+</table>
+<p>Допустимые форматы <code>user</code>:</p>
+<ul>
+<li><strong>UPN:</strong> <code>"user@corp.local"</code> — работает по обычному LDAP (389)</li>
+<li><strong>DN:</strong> <code>"CN=Ivanov Ivan,OU=Users,DC=corp,DC=local"</code></li>
+<li><strong>DOMAIN\user:</strong> <code>"CORP\user"</code> — рекомендуется порт 636 (LDAPS)</li>
+</ul>
+<pre><code><span class="cmt">// Обычный LDAP, пользователь в формате UPN</span>
+<span class="kw">if</span> (LDAPAuthenticate(<span class="str">"dc01.corp.local"</span>, <span class="num">389</span>, <span class="str">"ivanov@corp.local"</span>, <span class="str">"password"</span>))
+    print(<span class="str">"Доступ разрешён"</span>);
+<span class="kw">else</span>
+    print(<span class="str">"Отказ в доступе"</span>);
+
+<span class="cmt">// По TLS (LDAPS, порт 636)</span>
+<span class="kw">var</span> ok = LDAPAuthenticate(<span class="str">"dc01.corp.local"</span>, <span class="num">636</span>, <span class="str">"CORP\\ivanov"</span>, <span class="str">"password"</span>, <span class="num">1</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Объектный интерфейс</h2>
+<p>Для поиска и чтения атрибутов удобнее объект <code>LDAP()</code> — соединение открывается один раз.</p>
+
+<h3>Создание объекта</h3>
+<pre><code><span class="cmt">// Без аргументов — соединение открывается позже методом open()</span>
+<span class="kw">var</span> ld = LDAP();
+
+<span class="cmt">// Сразу с подключением к серверу</span>
+<span class="kw">var</span> ld = LDAP(<span class="str">"dc01.corp.local"</span>);              <span class="cmt">// порт по умолчанию 389</span>
+<span class="kw">var</span> ld = LDAP(<span class="str">"dc01.corp.local"</span>, <span class="num">636</span>);        <span class="cmt">// LDAPS (TLS)</span>
+<span class="kw">var</span> ld = LDAP(<span class="str">"dc01.corp.local"</span>, <span class="num">389</span>, <span class="num">1</span>);      <span class="cmt">// 1 — TLS-соединение</span></code></pre>
+
+<h3>Методы объекта</h3>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>open</code> / <code>connect</code></td><td><code>server, [port], [secure]</code></td><td>int (0/1)</td><td>Подключение к серверу. Порт 636 включает TLS автоматически</td></tr>
+<tr><td><code>bind</code></td><td><code>user, password</code></td><td>int (0/1)</td><td>Авторизация (simple bind)</td></tr>
+<tr><td><code>bindAnonymous</code></td><td>—</td><td>int (0/1)</td><td>Анонимное подключение (публичные LDAP-каталоги)</td></tr>
+<tr><td><code>search</code></td><td><code>base, filter, [attrs], [scope]</code></td><td>Array&lt;Tuple&gt;</td><td>Поиск с постраничным обходом (RFC 2696)</td></tr>
+<tr><td><code>escapeFilter</code></td><td><code>value</code></td><td>string</td><td>Экранирование пользовательского ввода для фильтра</td></tr>
+<tr><td><code>errorCode</code></td><td>—</td><td>int</td><td>Код последней ошибки LDAP (0 — успех)</td></tr>
+<tr><td><code>errorText</code></td><td>—</td><td>string</td><td>Текст последней ошибки</td></tr>
+<tr><td><code>isConnected</code></td><td>—</td><td>int (0/1)</td><td>Соединение установлено</td></tr>
+<tr><td><code>close</code> / <code>unbind</code></td><td>—</td><td>null</td><td>Закрытие соединения</td></tr>
+</table>
+
+<h3>Аргументы search</h3>
+<table>
+<tr><th>Аргумент</th><th>Описание</th></tr>
+<tr><td><code>base</code></td><td>База поиска (DN). Пустая строка <code>""</code> — корень каталога (rootDSE)</td></tr>
+<tr><td><code>filter</code></td><td>LDAP-фильтр, например <code>"(&amp;(objectCategory=person)(sAMAccountName=ivanov))"</code></td></tr>
+<tr><td><code>attrs</code></td><td>Array имён атрибутов (необязательно; по умолчанию — все)</td></tr>
+<tr><td><code>scope</code></td><td><code>"base"</code> / <code>"one"</code> / <code>"sub"</code> или число 0/1/2 (по умолчанию <code>"sub"</code>)</td></tr>
+</table>
+
+<h3>Формат результата</h3>
+<p>Каждая найденная запись — кортеж с ключом <code>dn</code> и именами атрибутов:</p>
+<pre><code>{
+    "dn":      "CN=Ivanov Ivan,OU=Users,DC=corp,DC=local",
+    "sAMAccountName": "ivanov",
+    "userPrincipalName": "ivanov@corp.local",
+    "memberOf": #[ "CN=Domain Admins,...", "CN=IT,..." ]  <span class="cmt">// многозначный атрибут — массив</span>
+}</code></pre>
+<ul>
+<li>Многозначные атрибуты (<code>memberOf</code>, <code>proxyAddresses</code>, ...) — <code>Array</code> строк</li>
+<li>Бинарные атрибуты (<code>objectSid</code>, <code>objectGUID</code>, ...) — <code>ByteArray</code></li>
+</ul>
+</div>
+
+<div class="doc-section">
+<h2>Примеры</h2>
+
+<h3>Поиск пользователей по отделу</h3>
+<pre><code><span class="kw">var</span> ld = LDAP(<span class="str">"dc01.corp.local"</span>, <span class="num">389</span>);
+<span class="kw">if</span> (!ld.bind(<span class="str">"svc-script@corp.local"</span>, <span class="str">"password"</span>)) {
+    print(<span class="str">"Ошибка авторизации: "</span> + ld.errorText());
+    system.exit(<span class="num">1</span>);
+}
+
+<span class="kw">var</span> users = ld.search(<span class="str">"DC=corp,DC=local"</span>,
+    <span class="str">"(&amp;(objectCategory=person)(objectClass=user)(department=IT))"</span>,
+    #[ <span class="str">"sAMAccountName"</span>, <span class="str">"mail"</span>, <span class="str">"displayName"</span>, <span class="str">"memberOf"</span> ]);
+
+print(<span class="str">"Найдено: "</span> + users.size());
+<span class="kw">for</span> (<span class="kw">var</span> u : users)
+    print(u.sAMAccountName + <span class="str">"  "</span> + u.mail);</code></pre>
+
+<h3>Получение корня каталога (rootDSE)</h3>
+<pre><code><span class="kw">var</span> root = ld.search(<span class="str">""</span>, <span class="str">"(objectClass=*)"</span>, #[ <span class="str">"defaultNamingContext"</span> ], <span class="str">"base"</span>);
+<span class="kw">if</span> (root.size() &gt; <span class="num">0</span>)
+    <span class="kw">var</span> baseDN = root[<span class="num">0</span>].defaultNamingContext;  <span class="cmt">// "DC=corp,DC=local"</span></code></pre>
+
+<h3>Авторизация + проверка членства в группе</h3>
+<pre><code><span class="cmt">// Шаг 1: авторизация</span>
+<span class="kw">if</span> (!LDAPAuthenticate(server, <span class="num">389</span>, user, password)) {
+    print(<span class="str">"Неверный логин или пароль"</span>);
+    system.exit(<span class="num">1</span>);
+}
+
+<span class="cmt">// Шаг 2: проверка группы (прямые memberOf)</span>
+<span class="kw">var</span> ld = LDAP(server, <span class="num">389</span>);
+ld.bind(user, password);
+<span class="kw">var</span> res = ld.search(<span class="str">"DC=corp,DC=local"</span>,
+    <span class="str">"(&amp;(objectClass=user)(sAMAccountName="</span> + ld.escapeFilter(login) + <span class="str">"))"</span>,
+    #[ <span class="str">"memberOf"</span> ]);
+<span class="kw">var</span> isAdmin = <span class="num">0</span>;
+<span class="kw">for</span> (<span class="kw">var</span> g : res[<span class="num">0</span>].memberOf) {
+    <span class="kw">if</span> (g.pos(<span class="str">"CN=Domain Admins"</span>) &gt;= <span class="num">0</span>) { isAdmin = <span class="num">1</span>; <span class="kw">break</span>; }
+}
+ld.close();</code></pre>
+
+<h3>Экранирование ввода пользователя</h3>
+<p>Всегда экранируйте значение перед подстановкой в фильтр — символы <code>*</code>, <code>(</code>, <code>)</code>, <code>\</code> ломают синтаксис фильтра:</p>
+<pre><code><span class="kw">var</span> name = ld.escapeFilter(userInput);   <span class="cmt">// "ab*(c)" -> "ab\2a\28c\29"</span>
+<span class="kw">var</span> r = ld.search(baseDN, <span class="str">"(&amp;(objectCategory=person)(sAMAccountName="</span> + name + <span class="str">"))"</span>);</code></pre>
+
+<h3>Полный пример</h3>
+<pre><code>loadPlugin(<span class="str">"plugins/ldap.dll"</span>);
+
+<span class="kw">var</span> server = <span class="str">"dc01.corp.local"</span>;
+<span class="kw">var</span> login  = <span class="str">"ivanov@corp.local"</span>;
+<span class="kw">var</span> pass   = <span class="str">"password"</span>;
+
+<span class="cmt">// Авторизация</span>
+<span class="kw">if</span> (!LDAPAuthenticate(server, <span class="num">389</span>, login, pass)) {
+    print(<span class="str">"Отказ в доступе"</span>);
+    system.exit(<span class="num">1</span>);
+}
+print(<span class="str">"Пользователь авторизован"</span>);
+
+<span class="cmt">// Подключение и поиск</span>
+<span class="kw">var</span> ld = LDAP(server, <span class="num">389</span>);
+<span class="kw">if</span> (!ld.isConnected()) { print(ld.errorText()); system.exit(<span class="num">1</span>); }
+ld.bind(login, pass);
+
+<span class="kw">var</span> root = ld.search(<span class="str">""</span>, <span class="str">"(objectClass=*)"</span>, #[ <span class="str">"defaultNamingContext"</span> ], <span class="str">"base"</span>);
+<span class="kw">var</span> baseDN = root[<span class="num">0</span>].defaultNamingContext;
+
+<span class="kw">var</span> found = ld.search(baseDN,
+    <span class="str">"(&amp;(objectCategory=person)(objectClass=user)(sAMAccountName="</span> +
+        ld.escapeFilter(login) + <span class="str">"))"</span>,
+    #[ <span class="str">"dn"</span>, <span class="str">"displayName"</span>, <span class="str">"mail"</span>, <span class="str">"memberOf"</span> ]);
+
+<span class="kw">for</span> (<span class="kw">var</span> u : found) {
+    print(<span class="str">"DN: "</span> + u.dn);
+    print(<span class="str">"Имя: "</span> + u.displayName);
+    print(<span class="str">"Почта: "</span> + u.mail);
+}
+ld.close();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Коды ошибок (основные)</h2>
+<table>
+<tr><th>Код</th><th>Значение</th><th>Описание</th></tr>
+<tr><td><code>0</code></td><td>Success</td><td>Успех</td></tr>
+<tr><td><code>0x31</code></td><td>Invalid credentials</td><td>Неверный логин или пароль</td></tr>
+<tr><td><code>0x32</code></td><td>Account disabled</td><td>Учётная запись заблокирована</td></tr>
+<tr><td><code>0x52</code></td><td>Unavailable</td><td>Каталог недоступен</td></tr>
+<tr><td><code>0x51</code></td><td>Server down</td><td>Нет соединения с сервером</td></tr>
+</table>
+<p>Полный текст ошибки возвращает <code>ld.errorText()</code>.</p>
+</div>
+
+<footer><a href="plugins.html">← К списку плагинов</a></footer>
+</div>
+</body>
+</html>

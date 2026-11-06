@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Excel (XLSX) — Script</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header>
+<h1>Модуль qt — QXlsxDocument</h1>
+<p>Чтение и запись XLSX/CSV файлов через QXlsx</p>
+<div class="lang-switch"><a class="active" href="xlsx.html">RU</a><a href="en/xlsx.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Главная</a> / <a href="qt.html">QT</a> / XLSX</p>
+
+<div class="doc-section">
+    <h2>QXlsxDocument - Работа с Excel-файлами</h2>
+    <p>Класс <code>qt.XlsxDocument()</code> предоставляет API для чтения/записи XLSX-файлов через Qt. Доступен только в GUI-проектах (<code>qodeqt</code>, <code>qodegui</code>).</p>
+
+    <h3>Основные методы</h3>
+    <table>
+        <tr><th>Метод</th><th>Описание</th></tr>
+        <tr><td><code>doc.open(filename)</code></td><td>Открывает существующий XLSX-файл. Поддерживает форматы: .xlsx, .xls (через конвертацию), .csv</td></tr>
+        <tr><td><code>doc.create(filename)</code></td><td>Создает новый файл. Если файл существует - перезаписывает</td></tr>
+        <tr><td><code>doc.save()</code></td><td>Сохраняет в текущий файл</td></tr>
+        <tr><td><code>doc.saveAs(filename)</code></td><td>Сохраняет в другой файл</td></tr>
+        <tr><td><code>doc.saveAsCSV(filename)</code></td><td>Экспортирует данные в CSV-файл (без форматирования)</td></tr>
+    </table>
+
+    <h3>Работа с данными</h3>
+    <table>
+        <tr><td><code>doc.read(row, col)</code></td><td>Чтение ячейки (1-based индексы). Возвращает QVariant</td></tr>
+        <tr><td><code>doc.write(row, col, value)</code></td><td>Запись значения. Поддерживает: числа, строки, даты, логики</td></tr>
+        <tr><td><code>doc.readAll()</code></td><td>Возвращает массив массивов (QVariantList) со всеми данными</td></tr>
+    </table>
+<pre><code>var doc = qt.XlsxDocument();    <span class="cmt">// или</span>
+var doc = qt.QXlsxDocument();</code></pre>
+<p>Возвращает объект QXlsxDocument (через QtAdapter). Доступен только в проектах с GUI (<code>qodeqt</code>, <code>qodegui</code>).</p>
+
+<h3>Методы</h3>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>doc.open(filename)</code></td><td>Открытие существующего XLSX-файла</td></tr>
+<tr><td><code>doc.create(filename)</code></td><td>Создание нового XLSX-файла</td></tr>
+<tr><td><code>doc.save()</code></td><td>Сохранение в текущий файл</td></tr>
+<tr><td><code>doc.saveAs(filename)</code></td><td>Сохранение в другой файл</td></tr>
+<tr><td><code>doc.saveAsCSV(filename)</code></td><td>Сохранение в CSV</td></tr>
+<tr><td><code>doc.read(row, col)</code></td><td>Значение ячейки (1-based индексы)</td></tr>
+<tr><td><code>doc.write(row, col, value)</code></td><td>Запись значения в ячейку</td></tr>
+<tr><td><code>doc.readAll()</code></td><td>Все данные как массив массивов (QVariantList)</td></tr>
+<tr><td><code>doc.rowCount()</code></td><td>Количество строк</td></tr>
+<tr><td><code>doc.columnCount()</code></td><td>Количество столбцов</td></tr>
+<tr><td><code>doc.sheetCount()</code></td><td>Количество листов</td></tr>
+<tr><td><code>doc.sheetNames()</code></td><td>Массив имён листов</td></tr>
+<tr><td><code>doc.addSheet(name)</code></td><td>Добавить лист</td></tr>
+<tr><td><code>doc.selectSheet(index)</code></td><td>Выбрать лист по индексу (0-based)</td></tr>
+<tr><td><code>doc.selectSheet(name)</code></td><td>Выбрать лист по имени. ⚠️ переключает лист, но возвращает <code>null</code> — проверяйте <code>currentSheetName()</code></td></tr>
+</table>
+
+<h3>Примеры использования</h3>
+    <div class="example">
+        <h4>Базовый пример</h4>
+        <pre><code>var doc = qt.XlsxDocument();
+        doc.open("data.xlsx");
+        
+        // Чтение данных
+        var rows = doc.readAll();
+        for (var i = 0; i < rows.size(); i++) {
+            print(rows[i][0] + " | " + rows[i][1]);
+        }
+        
+        // Запись данных
+        doc.write(2, 1, "Новое значение");
+        doc.save();</code></pre>
+    </div>
+    <div class="example">
+        <h4>Работа с листами</h4>
+        <pre><code>doc.addSheet("Отчеты");
+        doc.selectSheet(1);
+        doc.write(1, 1, "Данные из второго листа");</code></pre>
+    </div>
+<pre><code><span class="kw">var</span> doc = qt.XlsxDocument();
+doc.open(<span class="str">"data.xlsx"</span>);
+print(<span class="str">"Строк: "</span> + doc.rowCount());
+print(<span class="str">"Колонок: "</span> + doc.columnCount());
+
+<span class="kw">var</span> rows = doc.readAll();
+<span class="kw">for</span> (<span class="kw">var</span> i = 0; i &lt; rows.size(); i++) {
+    <span class="kw">var</span> row = rows[i];
+    print(row[0] + <span class="str">" | "</span> + row[1] + <span class="str">" | "</span> + row[2]);
+}
+
+<span class="cmt">// Чтение отдельной ячейки</span>
+<span class="kw">var</span> val = doc.read(1, 1);
+
+<span class="cmt">// Запись</span>
+doc.write(1, 1, <span class="str">"Имя"</span>);
+doc.write(1, 2, <span class="str">"Возраст"</span>);
+doc.save();
+
+<span class="cmt">// Создание нового файла</span>
+<span class="kw">var</span> newDoc = qt.XlsxDocument();
+newDoc.create(<span class="str">"new.xlsx"</span>);
+newDoc.write(1, 1, <span class="str">"Hello"</span>);
+newDoc.save();
+
+<span class="cmt">// Листы</span>
+doc.addSheet(<span class="str">"Лист2"</span>);
+doc.selectSheet(1);
+doc.write(1, 1, <span class="str">"Данные листа 2"</span>);
+doc.save();</code></pre>
+</div>
+
+<div class="doc-section">
+    <h3>Пайплайн (библиотека <code>xlsxedit.prg</code>)</h3>
+    <p>Для «данные → xlsx → читать обратно» удобно подключать `xlsxedit` (<code>loadModule</code>):</p>
+    <pre><code>loadModule(file.join(file.dirname(system.getcommandline().args[0]), <span class="str">"xlsxedit.prg"</span>));
+
+var doc = xlsxedit.create(<span class="str">"report.xlsx"</span>);
+xlsxedit.writeMatrix(doc, #[
+    #["Товар", "Цена"],
+    #["Мышь", 450.5],
+    #["Клавиатура", 1250]
+]);
+doc.setColumnWidth(1, 30);
+xlsxedit.save(doc);
+
+var doc2 = xlsxedit.open(<span class="str">"report.xlsx"</span>);
+var all = xlsxedit.readMatrix(doc2);      // массив массивов, 1-based
+var row = xlsxedit.findRow(doc2, 1, "Мышь");  // 2
+xlsxedit.appendRow(doc2, #["Итого", ""]);</code></pre>
+</div>
+
+<div class="doc-section">
+    <h3>Совместимость и ограничения</h3>
+    <ul>
+        <li>Поддерживает XLSX (Office 2007+), CSV, XLS (через конвертацию)</li>
+        <li>Максимальное количество строк: 1,048,576</li>
+        <li>Максимальное количество столбцов: 16,384</li>
+        <li>Форматирование ячеек (цвет, шрифт) не сохраняется при чтении/записи</li>
+    </ul>
+
+    <h3>Типы данных</h3>
+    <p>Поддерживаемые типы:</p>
+    <ul>
+        <li>Числа (целые, дробные)</li>
+        <li>Строки</li>
+        <li>Даты (формат YYYY-MM-DD)</li>
+        <li>Логические значения (true/false)</li>
+    </ul>
+
+    <h3>Советы по производительности</h3>
+    <ul>
+        <li>Используйте <code>readAll()</code> только для небольших файлов (<10k строк)</li>
+        <li>Для массовой записи используйте <code>write(row, col, value)</code> в цикле</li>
+        <li>Избегайте частых вызовов <code>save()</code> - лучше использовать <code>saveAs()</code> при необходимости</li>
+    </ul>
+
+</div>
+<footer>Script Documentation</footer>
+</div>
+</body>
+</html>

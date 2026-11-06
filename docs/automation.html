@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Библиотеки автоматизации — Script</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Библиотеки автоматизации</h1><p>qtestlib, cli, funcedit, jsonedit, fileedit, xlsxedit, run_tests — надёжный цикл «прочитать → изменить → проверить → сохранить → запустить»</p><div class="lang-switch"><a class="active" href="automation.html">RU</a><a href="en/automation.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Главная</a> / Библиотеки автоматизации</p>
+
+<div class="doc-section">
+<h2>Подключение</h2>
+<p>Библиотеки лежат в <code>qt/scriptlib/</code> и подключаются через <code>loadModule</code> —
+только этот способ оставляет функции в <code>Script::Modules</code> (в отличие от <code>execute</code>, который выгружает модуль сразу).
+Путь удобно считать от каталога исполняемого файла (стабилен для Debug <code>qt/bind</code> и Release <code>qt/bin</code>):</p>
+<pre><code>var scriptlib = file.normalize(file.join(file.dirname(system.getcommandline().app), "..", "scriptlib"));
+loadModule(file.join(scriptlib, "qtestlib.prg"));
+loadModule(file.join(scriptlib, "cli.prg"));
+loadModule(file.join(scriptlib, "funcedit.prg"));
+loadModule(file.join(scriptlib, "jsonedit.prg"));
+loadModule(file.join(scriptlib, "fileedit.prg"));
+loadModule(file.join(scriptlib, "xlsxedit.prg"));</code></pre>
+<p>Тесты в <code>qt/sample/</code> подключают библиотеки соседним каталогом:
+<code>file.join(file.dirname(system.getcommandline().args[0]), "..", "scriptlib", "cli.prg")</code>.</p>
+</div>
+
+<div class="doc-section">
+<h2>Безопасное редактирование файлов (fileedit)</h2>
+<p>Мгновенные атомарные правки (temp-файл + замена, как <code>file.writeatom</code>) и идемпотентны;
+<code>opts</code> — те же, что у <code>writeatom</code>: <code>{"enc","overwrite","backup","verify"}</code>.
+Без <code>opts</code> запись по старым правилам (UTF-8 без BOM).</p>
+<table>
+<tr><th>Функция</th><th>Описание</th></tr>
+<tr><td><code>fileedit.replaceAll(path, old, new, [opts])</code></td><td>Заменить все вхождения → 1 (было найдено) / 0 (нет)</td></tr>
+<tr><td><code>fileedit.replaceFirst(path, old, new, [opts])</code></td><td>Заменить только первое вхождение → 1 / 0</td></tr>
+<tr><td><code>fileedit.edit(path, editFn, [opts])</code></td><td><code>editFn(текст) → новый текст</code>, атомарно</td></tr>
+<tr><td><code>fileedit.filter(path, lineFn, [opts])</code></td><td>Построчно: <code>lineFn(строка) → строка</code> или <code>null</code> (удалить)</td></tr>
+<tr><td><code>fileedit.prepend(path, text, [opts])</code></td><td>Вставить текст в начало файла</td></tr>
+<tr><td><code>fileedit.append(path, text, [opts])</code></td><td>Дописать текст в конец (с переводом строки)</td></tr>
+</table>
+<pre><code>fileedit.replaceAll("app.json", "localhost", "192.168.111.7", #{"backup": 1});
+// "отредактировать функцию — одним вызовом, не серией str.replace":
+fileedit.edit("tool.prg", function(text) {
+    return funcedit.replaceBody(text, "compute", " return a * b; ");
+});</code></pre>
+
+<h3>Планирование и применение (plan/apply)</h3>
+<p>Цикл «сначала посмотреть, потом записать» для утилит. <code>plan*</code> читает файл,
+вычисляет новую версию, число совпадений и <code>diff</code> — и <b>ничего не пишет</b>.
+<code>apply(plan)</code> перед записью перечитывает файл и сравнивает с содержимым на момент
+плана: при внешнем изменении — исключение-конфликт без записи. Запись — через
+<code>file.writeatom</code> с сохранением исходной кодировки (см. ниже).</p>
+<table>
+<tr><th>Функция</th><th>Описание</th></tr>
+<tr><td><code>fileedit.planReplaceAll / planReplaceFirst(path, old, new)</code></td><td>План замен (всех / первой)</td></tr>
+<tr><td><code>fileedit.planEdit(path, editFn)</code></td><td>План по функции-редактору</td></tr>
+<tr><td><code>fileedit.planFilter(path, lineFn)</code></td><td>План построчного фильтра</td></tr>
+<tr><td><code>fileedit.planPrepend / planAppend(path, text)</code></td><td>План вставки в начало / конец</td></tr>
+<tr><td><code>fileedit.planContext(path, old, new)</code></td><td>Контекстная замена: только при <b>единственном</b> совпадении; при 0 или нескольких — <code>plan.diagnostics</code> и отказ <code>apply</code></td></tr>
+<tr><td><code>fileedit.apply(plan, [opts])</code></td><td>Применить план → 1 (записано) / 0 (нечего менять). <code>opts</code>: <code>{"enc","backup","verify","overwrite","expect"}</code>; <code>expect</code> — ожидаемое число изменений (сверяется с <code>plan.count</code>)</td></tr>
+</table>
+<p>План — обычное значение <code>#{"path","kind","orig","next","count","diff","enc","bom","old","new","diagnostics"}</code>,
+не зависит от глобального состояния. Повторное применение того же плана не перезаписывает файл молча:
+после первой правки содержимое стало <code>next</code> ≠ <code>orig</code> → конфликт.</p>
+<pre><code>var plan = fileedit.planReplaceAll("cfg.txt", "old", "new");
+if (plan.count != 1) throw "ожидалось ровно одно вхождение";
+fileedit.apply(plan, #{"backup": 1});
+// внешний edit между plan и apply -> fileedit.apply: файл изменился с момента планирования</code></pre>
+
+<h3>Сохранение кодировки исходного файла</h3>
+<p><code>plan*</code> фиксирует кодировку исходного файла через <code>file.readmeta(path)</code>
+(поля <code>plan.enc</code>/<code>plan.bom</code>), <code>apply</code> сохраняет её при записи через
+<code>file.writeatom</code>. Явный <code>opts.enc</code> у <code>apply</code> переопределяет кодировку.
+Переводы строк LF/CRLF <b>не нормализуются</b> — сохраняются как прочитаны.</p>
+<p><b>Политика неоднозначных случаев</b> (задокументирована):</p>
+<ul>
+<li>ASCII/UTF-8 без BOM → запись как UTF-8 без BOM (безопасно: ASCII ⊂ UTF-8);</li>
+<li>BOM-кодировки различаются корректно (UTF-8 BOM, UTF-16 LE/BE);</li>
+<li>UTF-16 BE не поддержано атомарной записью → ошибка <b>до</b> замены файла;</li>
+<li>UTF-16 LE без BOM → запись всегда добавит BOM, поэтому правка запрещена;</li>
+<li>кодировка не распознана (<code>file.ENC_UNKNOWN</code>) → ошибка с требованием передать <code>enc</code> явно.</li>
+</ul>
+<p>Обычный <code>file.writeatom</code> без новых параметров продолжает работать по старым правилам
+(по умолчанию UTF-8 без BOM). Метаданные кодировки доступны и напрямую:
+<code>file.readmeta(path)</code> → <code>#{"text","enc","bom"}</code> (см. <a href="file.html">file</a>).</p>
+</div>
+
+<div class="doc-section">
+<h2>Командная строка утилит (cli)</h2>
+<p>Разбор аргументов по схеме на основе <code>system.getcommandline().parsed</code> (упорядоченные
+токены: флаг/значение/позиционный/<code>--</code>). Схема — кортеж с массивом <code>params</code>:
+<code>#{"name","short","type","default","required","repeat","help"}</code>.</p>
+<table>
+<tr><th>Функция</th><th>Описание</th></tr>
+<tr><td><code>cli.parse(schema, [cmdline])</code></td><td>Разбор → <code>#{"opts","args","help"}</code>; ошибки — исключения. <code>cmdline</code> по умолчанию — <code>system.getcommandline()</code></td></tr>
+<tr><td><code>cli.help(schema)</code></td><td>Справка, сгенерированная из той же схемы</td></tr>
+</table>
+<pre><code>loadModule(file.normalize(file.join(file.dirname(system.getcommandline().app), "..", "scriptlib", "cli.prg")));
+var schema = #{
+    "program": "myutil", "usage": "[опции] FILE", "positional": "FILE — входной файл",
+    "params": #[
+        #{"name": "output", "short": "o", "type": "string", "default": "out.txt", "help": "файл результата"},
+        #{"name": "verbose", "short": "v", "type": "bool", "help": "подробный вывод"},
+        #{"name": "count", "type": "int", "help": "сколько раз"},
+        #{"name": "mode", "type": "string", "required": 1, "help": "режим"}
+    ]
+};
+var r = cli.parse(schema);       // использует getcommandline().parsed
+if (r.help) { print(cli.help(schema)); return 0; }
+print("output=" + r.opts.output + " verbose=" + r.opts.verbose + " count=" + r.opts.count);
+print("files=" + json.stringify(r.args));</code></pre>
+<p><b>Синтаксис</b>: длинные <code>--name</code>/<code>--name=value</code>, короткие <code>-o</code> (группа <code>-abc</code> — булевы),
+значение отдельным аргументом <code>--output result.txt</code> / <code>-o result.txt</code>; <code>--</code> — конец флагов;
+типы <code>string/int/float/bool</code> с проверкой значений; обязательные и значения по умолчанию;
+<code>--help</code>/<code>-h</code> (если схема не объявляет свои) дают <code>r.help=1</code>.</p>
+<p><b>Политика повторных параметров</b> (задокументирована, не случайна): по умолчанию
+<b>последнее значение побеждает</b> (как argparse); у параметра можно задать
+<code>"repeat": "error"</code> (ошибка на повтор) или <code>"repeat": "first"</code> (игнорировать повторы).
+⚠️ В отличие от <code>system.getcommandline().flags</code> (там первое значение из-за tuple/emplace).</p>
+<p><b>Ограничения</b>: короткий флаг со значением — только отдельным аргументом (<code>-o value</code>),
+форма <code>-o=value</code> не поддержана; поле параметра, совпадающее со встроенным методом tuple
+(<code>size/has/get/set/...</code>), недоступно через <code>opts.имя</code> (ограничение языка).</p>
+</div>
+
+<div class="doc-section">
+<h2>Правка функций в исходнике (funcedit)</h2>
+<p>Находит объявления <code>function Имя(...) { ... }</code> (в т.ч. в классах); <code>"function"</code> внутри строк
+и комментариев игнорируется. Изменения делаются только по найденным границам. <code>source</code> — текст исходника.</p>
+<table>
+<tr><th>Функция</th><th>Описание</th></tr>
+<tr><td><code>funcedit.find(source, name)</code></td><td>Ровно одна функция → <code>#{"start","bodyStart","bodyClose","end"}</code>, иначе понятное исключение</td></tr>
+<tr><td><code>funcedit.exists(source, name)</code></td><td>Есть ли совпадение → 0/1</td></tr>
+<tr><td><code>funcedit.isUnique(source, name)</code></td><td>Ровно одно совпадение → 0/1</td></tr>
+<tr><td><code>funcedit.getBody(source, name)</code></td><td>Текст тела (между <code>{</code> и <code>}</code>)</td></tr>
+<tr><td><code>funcedit.replaceBody(source, name, newBody)</code></td><td>Новый исходник с заменённым телом</td></tr>
+<tr><td><code>funcedit.replace(source, name, newFuncSource)</code></td><td>Замена всей функции целиком</td></tr>
+<tr><td><code>funcedit.insertBefore / insertAfter(source, name, snippet)</code></td><td>Вставка фрагмента перед <code>function</code> / после закрывающей <code>}</code></td></tr>
+<tr><td><code>funcedit.balanced(source)</code></td><td>Баланс <code>() [] {}</code> с учётом строк/комментариев → 0/1</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>JSON-формы (jsonedit)</h2>
+<p>Работает со строкой JSON (обычно содержимое <code>*.json</code>-формы). <b>Возвращает НОВУЮ строку</b> — исходник не меняется.</p>
+<table>
+<tr><th>Функция</th><th>Описание</th></tr>
+<tr><td><code>jsonedit.format(jsonText, [indent])</code></td><td>Переформатировать JSON (по умолчанию 4 пробела)</td></tr>
+<tr><td><code>jsonedit.getText(jsonText, path, [def])</code></td><td>Значение по пути (пути вида <code>a.b[0].c</code>)</td></tr>
+<tr><td><code>jsonedit.setText(jsonText, path, value, [indent])</code></td><td>JSON-строка после изменения по пути</td></tr>
+<tr><td><code>jsonedit.validateForm(jsonText)</code></td><td>Проверка структуры RuntimeForm → <code>#{"ok","errors"}</code></td></tr>
+<tr><td><code>jsonedit.collectEvents(jsonText)</code></td><td>Все события формы/виджетов → массив <code>#{"entity","event","handler"}</code></td></tr>
+<tr><td><code>jsonedit.findWidgetPath(jsonText, name)</code></td><td>Путь к виджету (напр. <code>form.widgets[2]</code>) или <code>null</code></td></tr>
+<tr><td><code>jsonedit.handlerFor(jsonText, entityPath, event)</code></td><td>Имя обработчика события</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>XLSX-пайплайн (xlsxedit)</h2>
+<p>Основана на Qt-версии <code>qt.XlsxDocument()</code> (не на слабом плагине excel.dll). Индексы — 1-based.</p>
+<table>
+<tr><th>Функция</th><th>Описание</th></tr>
+<tr><td><code>xlsxedit.create(path)</code></td><td>Новый документ → doc (перезаписывает)</td></tr>
+<tr><td><code>xlsxedit.open(path)</code></td><td>Открыть → doc; не найден — исключение</td></tr>
+<tr><td><code>xlsxedit.save(doc, [path])</code></td><td><code>save()</code> или <code>saveAs(path)</code></td></tr>
+<tr><td><code>xlsxedit.writeMatrix(doc, rows, [sr, sc])</code></td><td>Массив массивов → ячейки (по умолчанию с (1,1))</td></tr>
+<tr><td><code>xlsxedit.readMatrix(doc)</code></td><td>Все строки текущего листа</td></tr>
+<tr><td><code>xlsxedit.appendRow(doc, row)</code></td><td>Дописать строку после последней → номер строки</td></tr>
+<tr><td><code>xlsxedit.findRow(doc, col, value)</code></td><td>Первая строка со значением в столбце (или <code>null</code>)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Тесты (qtestlib) и раннер (run_tests)</h2>
+<table>
+<tr><th>Функция</th><th>Описание</th></tr>
+<tr><td><code>qt_group(name)</code></td><td>Заголовок группы</td></tr>
+<tr><td><code>qt_check(desc, actual, expected)</code></td><td>Сравнение через <code>==</code></td></tr>
+<tr><td><code>qt_checkJson(desc, actual, expected)</code></td><td>Сравнение через <code>json.stringify</code></td></tr>
+<tr><td><code>qt_ok(desc, cond)</code> / <code>qt_fail(desc, [msg])</code></td><td>Булева проверка / безусловный FAIL</td></tr>
+<tr><td><code>qt_throws(desc, fn, [pattern])</code></td><td>Функция должна выбросить исключение (по подстроке)</td></tr>
+<tr><td><code>qt_tempdir([prefix])</code></td><td>Уникальная временная директория (все файловые тесты работают только там)</td></tr>
+<tr><td><code>qt_quoteArg(a)</code> / <code>qt_run(prog, args, [timeout])</code></td><td>Экранирование аргумента / запуск с захватом вывода</td></tr>
+<tr><td><code>qt_done()</code></td><td>Итог по всему прогону → 0/1 (в конце теста: <code>return qt_done();</code>)</td></tr>
+</table>
+<p>Тест — обычный скрипт, который в конце делает <code>return rc;</code> (код возврата процесса = 0/1).
+Запуск всех тестов одним вызовом:</p>
+<pre><code>qt\bind\qodeqt.exe qt\sample\run_tests.prg                              <span class="cmt">// все test_*.prg</span>
+qt\bind\qodeqt.exe qt\sample\run_tests.prg test_json*.prg               <span class="cmt">// по шаблону</span>
+qt\bind\qodeqt.exe qt\sample\run_tests.prg --timeout=30000 test_fileedit.prg</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Правила устойчивого цикла (проверено эмпирически)</h2>
+<ul>
+<li><b>Код возврата</b>: заканчивайте программу <code>return 0;</code> (или <code>return rc;</code>). Без явного <code>return</code> процесс возвращает <code>AsInt()</code> последнего выражения — случайно.</li>
+<li><b>Вывод</b>: <code>print</code> идёт в лог <code>qt/bin/log/log_DDMMYYYY.log</code>, а не в stdout. Результат дочернего запуска проверяйте через <b>файл-маркер</b> + <code>res.code</code>, а не <code>res.stdout</code>.</li>
+<li><b>Запуск без shell</b> (пути с пробелами/Unicode безопасны): <code>system.execArgv(#[exe, arg1, arg2], #{"cwd","timeout","outfile"})</code>.</li>
+<li><b>Headless</b>: формы и таблицы создаются без GUI — <code>file.setenv("QT_QPA_PLATFORM","offscreen")</code> ДО <code>execArgv</code>.</li>
+<li><b>Мутации контейнеров в функциях-параметрах не видны вызывающему</b> (COW) — помощники должны возвращать новое значение.</li>
+</ul>
+</div>
+
+<footer><a href="index.html">← На главную</a></footer>
+</div>
+</body>
+</html>

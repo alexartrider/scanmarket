@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COM Ports Plugin — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>COM Ports Plugin</h1><p>Working with serial COM ports</p><div class="lang-switch"><a href="../comport.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="comport.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / <a href="plugins.html">Plugins</a> / COM ports</p>
+
+<div class="doc-section">
+<h2>Loading the plugin</h2>
+<pre><code>loadPlugin(<span class="str">"plugins/comport.dll"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Creating the object</h2>
+<h3>ComPort([name])</h3>
+<p>Creates a COM port object. If <code>name</code> is specified — a named instance (singleton: a repeat call with the same name returns the same object).</p>
+<pre><code><span class="kw">var</span> port = ComPort();            <span class="cmt">// anonymous</span>
+<span class="kw">var</span> port = ComPort(<span class="str">"myport"</span>);    <span class="cmt">// named</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Properties</h2>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>port</code></td><td>int</td><td>1</td><td>COM port number</td></tr>
+<tr><td><code>baudrate</code></td><td>int</td><td>115200</td><td>Baud rate (bp/s)</td></tr>
+<tr><td><code>bytesize</code></td><td>int</td><td>8</td><td>Byte size (7/8)</td></tr>
+<tr><td><code>stopbits</code></td><td>int</td><td>0</td><td>Stop bits (see constants)</td></tr>
+<tr><td><code>parity</code></td><td>int</td><td>0</td><td>Parity (see constants)</td></tr>
+<tr><td><code>timeout</code></td><td>int</td><td>3000</td><td>Timeout in ms</td></tr>
+<tr><td><code>name</code></td><td>string</td><td>""</td><td>Name of the named instance (R/O)</td></tr>
+</table>
+
+<h3>Constants</h3>
+<table>
+<tr><th>Constant</th><th>Value</th><th>Description</th></tr>
+<tr><td><code>PAR_NONE</code></td><td>0</td><td>No parity</td></tr>
+<tr><td><code>PAR_ODD</code></td><td>1</td><td>Odd parity bit</td></tr>
+<tr><td><code>PAR_EVEN</code></td><td>2</td><td>Even parity bit</td></tr>
+<tr><td><code>PAR_MARK</code></td><td>3</td><td>Mark</td></tr>
+<tr><td><code>PAR_SPACE</code></td><td>4</td><td>Space</td></tr>
+<tr><td><code>PAR_PROGRAM7</code></td><td>-1</td><td>7 data bits + software parity</td></tr>
+<tr><td><code>STOP_1</code></td><td>0</td><td>1 stop bit</td></tr>
+<tr><td><code>STOP_1_5</code></td><td>1</td><td>1.5 stop bits</td></tr>
+<tr><td><code>STOP_2</code></td><td>2</td><td>2 stop bits</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Methods</h2>
+
+<h3>open([overlapped])</h3>
+<p>Opens the port. Returns <code>1</code> on success, <code>0</code> on error.</p>
+<table>
+<tr><th>Argument</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>overlapped</code></td><td>bool</td><td>true</td><td>Asynchronous I/O mode</td></tr>
+</table>
+
+<h3>close()</h3>
+<p>Closes the port. Returns <code>1</code>.</p>
+
+<h3>isopen()</h3>
+<p>Returns <code>1</code> if the port is open, <code>0</code> if it is closed.</p>
+
+<h3>write(data)</h3>
+<p>Writes data to the port.</p>
+<table>
+<tr><th>Argument</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>data</code></td><td>string / ByteArray</td><td>Data to write</td></tr>
+</table>
+<p>Returns the number of bytes written.</p>
+
+<h3>writeline(text)</h3>
+<p>Writes a string + <code>\r\n</code>. Returns the number of bytes written.</p>
+
+<h3>read([maxBytes], [asText])</h3>
+<p>Non-blocking read from the internal queue.</p>
+<table>
+<tr><th>Argument</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>maxBytes</code></td><td>int</td><td>1024</td><td>Maximum bytes</td></tr>
+<tr><td><code>asText</code></td><td>bool</td><td>false</td><td>Return a string instead of a ByteArray</td></tr>
+</table>
+<p>Returns a <code>ByteArray</code> (or <code>string</code>), or <code>null</code> if there is no data.</p>
+
+<h3>readline([timeout])</h3>
+<p>Blocking read of a line up to <code>\n</code>.</p>
+<table>
+<tr><th>Argument</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>timeout</code></td><td>int</td><td>3000</td><td>Timeout in ms</td></tr>
+</table>
+<p>Returns the string, or <code>null</code> on timeout.</p>
+
+<h3>available()</h3>
+<p>Number of bytes in the internal queue (non-blocking).</p>
+
+<h3>getready()</h3>
+<p>Number of bytes in the hardware buffer (via <code>ClearCommError</code>).</p>
+
+<h3>clear()</h3>
+<p>Clears all buffers (hardware + internal queue). Returns <code>1</code>.</p>
+
+<h3>clearrx() / cleartx()</h3>
+<p>Clears only the receive / transmit buffer.</p>
+
+<h3>listports()</h3>
+<p>Returns an array of strings with the names of the available COM ports.</p>
+<pre><code><span class="kw">var</span> ports = ComPort().listports();
+print(ports);  <span class="cmt">// ["COM1", "COM3", "COM5"]</span></code></pre>
+
+<h3>setondata(callback)</h3>
+<p>Sets a callback invoked when data arrives.</p>
+<pre><code>port.setondata(<span class="kw">function</span>(data) {
+    print(<span class="str">"Received: "</span> + data);
+});</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Examples</h2>
+
+<h3>Basic usage</h3>
+<pre><code>loadPlugin(<span class="str">"plugins/comport.dll"</span>);
+
+<span class="kw">var</span> port = ComPort();
+port.port = <span class="num">3</span>;
+port.baudrate = <span class="num">9600</span>;
+port.bytesize = <span class="num">8</span>;
+port.parity = port.PAR_NONE;
+port.stopbits = port.STOP_1;
+
+<span class="kw">if</span> (port.open()) {
+    port.writeline(<span class="str">"Hello"</span>);
+    system.sleep(<span class="num">0.5</span>);
+
+    <span class="kw">var</span> response = port.readline(<span class="num">3000</span>);
+    <span class="kw">if</span> (response != null) {
+        print(<span class="str">"Response: "</span> + response);
+    }
+
+    <span class="kw">var</span> data = port.read(<span class="num">1024</span>, <span class="kw">true</span>);
+    <span class="kw">if</span> (data != null) {
+        print(<span class="str">"Data: "</span> + data);
+    }
+
+    port.close();
+}</code></pre>
+
+<h3>Enumerating ports</h3>
+<pre><code><span class="kw">var</span> ports = ComPort().listports();
+<span class="kw">for</span> (<span class="kw">var</span> p : ports) {
+    print(<span class="str">"Found: "</span> + p);
+}</code></pre>
+
+<h3>Named ports</h3>
+<pre><code><span class="cmt">// Creates a port named "meter"</span>
+<span class="kw">var</span> meter = ComPort(<span class="str">"meter"</span>);
+meter.port = <span class="num">5</span>;
+meter.baudrate = <span class="num">115200</span>;
+meter.open();
+
+<span class="cmt">// Somewhere else in the code — get the same object</span>
+<span class="kw">var</span> m = ComPort(<span class="str">"meter"</span>);
+m.writeline(<span class="str">"READ"</span>);</code></pre>
+
+<h3>Callback on data reception</h3>
+<pre><code><span class="kw">var</span> port = ComPort();
+port.port = <span class="num">3</span>;
+port.baudrate = <span class="num">9600</span>;
+port.open();
+
+port.setondata(<span class="kw">function</span>(data) {
+    print(<span class="str">"Received "</span> + size(data) + <span class="str">" bytes"</span>);
+});</code></pre>
+
+<h3>Software parity (7 bits)</h3>
+<pre><code><span class="kw">var</span> port = ComPort();
+port.parity = port.PAR_PROGRAM7;
+port.open();
+
+<span class="cmt">// Writing: the high bit is the parity bit</span>
+port.write(<span class="str">"Hello"</span>);
+
+<span class="cmt">// Reading: the high bit is discarded</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Service API</h2>
+<p>Named ports are available through the inter-plugin service <code>ComPortService</code>:</p>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>create(name)</code></td><td>Create a named port</td></tr>
+<tr><td><code>get(name)</code></td><td>Get a port by name</td></tr>
+<tr><td><code>open(name)</code></td><td>Open the port</td></tr>
+<tr><td><code>close(name)</code></td><td>Close the port</td></tr>
+<tr><td><code>isopen(name)</code></td><td>Check whether it is open</td></tr>
+<tr><td><code>write(name, data)</code></td><td>Write data</td></tr>
+<tr><td><code>read(name)</code></td><td>Read data</td></tr>
+<tr><td><code>readline(name)</code></td><td>Read a line</td></tr>
+<tr><td><code>available(name)</code></td><td>Bytes in the queue</td></tr>
+<tr><td><code>clear(name)</code></td><td>Clear the buffers</td></tr>
+<tr><td><code>listports()</code></td><td>List of ports</td></tr>
+<tr><td><code>hasport(name)</code></td><td>Whether the port exists</td></tr>
+<tr><td><code>delete(name)</code></td><td>Delete the port</td></tr>
+</table>
+</div>
+
+<footer><a href="plugins.html">← Back to the plugin list</a></footer>
+</div>
+</body>
+</html>

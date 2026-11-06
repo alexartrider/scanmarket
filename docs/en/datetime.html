@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module datetime — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Module datetime</h1><p>Working with date and time — available globally</p><div class="lang-switch"><a href="../datetime.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="datetime.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / datetime</p>
+
+<div class="doc-section">
+<h2>Current time</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>datetime.now()</code></td><td>Current date/time (local)</td></tr>
+<tr><td><code>datetime.utcnow()</code></td><td>Current UTC</td></tr>
+<tr><td><code>datetime.timezone()</code></td><td>Time zone as a string</td></tr>
+<tr><td><code>datetime.timezoneoffset()</code></td><td>Local time offset from UTC in minutes</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Creating a date</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>datetime.makedatetime(y,m,d, [H,M,S])</code></td><td>Date/time from components</td></tr>
+<tr><td><code>datetime.fromtimestamp(ts)</code></td><td>From Unix timestamp</td></tr>
+<tr><td><code>datetime.parse(str)</code></td><td>Automatically detect the date/time format</td></tr>
+<tr><td><code>datetime.parse(str, fmt)</code></td><td>Strictly parse the entire string using a format</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Formatting</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>datetime.strftime(dt, fmt)</code></td><td>Date → string by format</td></tr>
+<tr><td><code>datetime.strptime(str, fmt)</code></td><td>String → date by format; Python-compatible <code>parse</code> variant</td></tr>
+<tr><td><code>datetime.datetostring(dt)</code></td><td>Date as a string</td></tr>
+<tr><td><code>datetime.timetostring(dt)</code></td><td>Time as a string</td></tr>
+<tr><td><code>datetime.datetimetostring(dt)</code></td><td>Date+time as a string</td></tr>
+</table>
+
+<pre><code><span class="kw">var</span> a = datetime.parse(<span class="str">"2024-01-15"</span>);                      <span class="cmt">// automatic detection</span>
+<span class="kw">var</span> b = datetime.parse(<span class="str">"15.01.2024"</span>, <span class="str">"%d.%m.%Y"</span>);       <span class="cmt">// strict format parsing</span>
+<span class="kw">var</span> c = datetime.strptime(<span class="str">"2024-01-15"</span>, <span class="str">"%Y-%m-%d"</span>); <span class="cmt">// same formatted parsing</span></code></pre>
+<p>When a format is supplied, the entire input must match; a mismatch or invalid date raises an exception. Parsing uses <code>std::get_time</code> format directives, whose supported set may vary between C++ standard libraries.</p>
+
+<h3>strftime format specifiers</h3>
+<table>
+<tr><th>%</th><th>Description</th><th>Example</th></tr>
+<tr><td><code>%Y</code></td><td>Year (4 digits)</td><td>2024</td></tr>
+<tr><td><code>%m</code></td><td>Month (01-12)</td><td>01</td></tr>
+<tr><td><code>%d</code></td><td>Day (01-31)</td><td>15</td></tr>
+<tr><td><code>%H</code></td><td>Hour (00-23)</td><td>14</td></tr>
+<tr><td><code>%I</code></td><td>Hour (01-12)</td><td>02</td></tr>
+<tr><td><code>%M</code></td><td>Minute (00-59)</td><td>30</td></tr>
+<tr><td><code>%S</code></td><td>Second (00-59)</td><td>00</td></tr>
+<tr><td><code>%a</code></td><td>Weekday (short)</td><td>Mon</td></tr>
+<tr><td><code>%A</code></td><td>Weekday (full)</td><td>Monday</td></tr>
+<tr><td><code>%b</code></td><td>Month (short)</td><td>Jan</td></tr>
+<tr><td><code>%B</code></td><td>Month (full)</td><td>January</td></tr>
+<tr><td><code>%p</code></td><td>AM/PM</td><td>PM</td></tr>
+<tr><td><code>%j</code></td><td>Day of the year</td><td>015</td></tr>
+<tr><td><code>%w</code></td><td>Weekday (0-6)</td><td>1</td></tr>
+<tr><td><code>%W</code></td><td>Week of the year</td><td>03</td></tr>
+<tr><td><code>%U</code></td><td>Week of the year (Sunday)</td><td>03</td></tr>
+<tr><td><code>%x</code></td><td>Date in locale format</td><td>01/15/2024</td></tr>
+<tr><td><code>%X</code></td><td>Time in locale format</td><td>14:30:00</td></tr>
+<tr><td><code>%%</code></td><td>Literal %</td><td>%</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Arithmetic</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>datetime.addday(dt, n)</code></td><td>+n days</td></tr>
+<tr><td><code>datetime.addmonth(dt, n)</code></td><td>+n months</td></tr>
+<tr><td><code>datetime.addyear(dt, n)</code></td><td>+n years</td></tr>
+<tr><td><code>datetime.addhour(dt, n)</code></td><td>+n hours</td></tr>
+<tr><td><code>datetime.addminute(dt, n)</code></td><td>+n minutes</td></tr>
+<tr><td><code>datetime.addsecond(dt, n)</code></td><td>+n seconds</td></tr>
+<tr><td><code>datetime.subday(dt, n)</code></td><td>-n days</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Difference between dates</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>datetime.daysdiff(d1, d2)</code></td><td>Difference in days</td></tr>
+<tr><td><code>datetime.monthsdiff(d1, d2)</code></td><td>Difference in months</td></tr>
+<tr><td><code>datetime.hoursdiff(d1, d2)</code></td><td>Difference in hours</td></tr>
+<tr><td><code>datetime.minutesdiff(d1, d2)</code></td><td>Difference in minutes</td></tr>
+<tr><td><code>datetime.secondsdiff(d1, d2)</code></td><td>Difference in seconds</td></tr>
+<tr><td><code>datetime.interval(d1, d2)</code></td><td>Interval as a string</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Date components</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>datetime.parts(dt)</code></td><td>{year, month, day, hour, minute, second}</td></tr>
+<tr><td><code>datetime.weekday(dt)</code></td><td>Weekday (0=Mon)</td></tr>
+<tr><td><code>datetime.weekdayname(dt)</code></td><td>Weekday name</td></tr>
+<tr><td><code>datetime.monthname(dt)</code></td><td>Month name</td></tr>
+<tr><td><code>datetime.yearday(dt)</code></td><td>Day of the year</td></tr>
+<tr><td><code>datetime.weeknumber(dt)</code></td><td>Week number</td></tr>
+<tr><td><code>datetime.quarter(dt)</code></td><td>Quarter (1-4)</td></tr>
+<tr><td><code>datetime.timestamp(dt)</code></td><td>Unix timestamp</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Start/end of periods</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>datetime.startofday(dt)</code></td><td>Start of day 00:00:00</td></tr>
+<tr><td><code>datetime.endofday(dt)</code></td><td>End of day 23:59:59</td></tr>
+<tr><td><code>datetime.startofweek(dt)</code></td><td>Start of week (Mon)</td></tr>
+<tr><td><code>datetime.endofweek(dt)</code></td><td>End of week (Sun)</td></tr>
+<tr><td><code>datetime.startofmonth(dt)</code></td><td>1st day of the month</td></tr>
+<tr><td><code>datetime.endofmonth(dt)</code></td><td>Last day of the month</td></tr>
+<tr><td><code>datetime.startofquarter(dt)</code></td><td>Start of quarter</td></tr>
+<tr><td><code>datetime.endofquarter(dt)</code></td><td>End of quarter</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Examples</h2>
+<pre><code><span class="kw">var</span> now = datetime.now();
+print(datetime.datetimetostring(now));
+
+<span class="kw">var</span> d = datetime.makedatetime(<span class="num">2024</span>, <span class="num">12</span>, <span class="num">25</span>, <span class="num">10</span>, <span class="num">30</span>);
+print(datetime.strftime(d, <span class="str">"%d.%m.%Y %H:%M"</span>));  <span class="cmt">// 25.12.2024 10:30</span>
+
+<span class="kw">var</span> future = datetime.addday(now, <span class="num">30</span>);
+print(datetime.daysdiff(now, future));  <span class="cmt">// 30</span></code></pre>
+</div>
+
+<footer><a href="index.html">← Back to home</a></footer>
+</div>
+</body>
+</html>

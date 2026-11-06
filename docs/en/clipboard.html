@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clipboard Plugin — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Clipboard Plugin</h1><p>Reading and writing text and images to the Windows system clipboard</p><div class="lang-switch"><a href="../clipboard.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="clipboard.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / <a href="plugins.html">Plugins</a> / Clipboard</p>
+
+<div class="doc-section">
+<h2>Loading the plugin</h2>
+<p>The plugin uses the Windows system clipboard (Win32). Works in <code>qodeqt</code>, <code>qodegui</code> and <code>qodedesigner</code>.</p>
+<pre><code><span class="kw">var</span> ok = loadPlugin(file.apppath() + <span class="str">"/plugins/clipboard.dll"</span>);
+<span class="kw">if</span> (!ok) throw <span class="str">"Failed to load the clipboard plugin"</span>;</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Text</h2>
+<table>
+<tr><th>Function</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>ClipboardGetText()</code></td><td>—</td><td>string</td><td>Text from the clipboard (UTF-16). Empty string if there is no text</td></tr>
+<tr><td><code>ClipboardSetText(text)</code></td><td><code>text</code></td><td>int (0/1)</td><td>Puts text into the clipboard</td></tr>
+<tr><td><code>ClipboardHasText()</code></td><td>—</td><td>int (0/1)</td><td>Whether there is text in the clipboard</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Images</h2>
+<p>Image exchange happens through <code>ByteArray</code>. The plugin works with DIB (Device-Independent Bitmap):</p>
+<ul>
+<li><code>ClipboardGetImage()</code> returns a <strong>complete BMP file</strong> (with the <code>"BM"</code> header) — it can be saved to disk right away via <code>file.writebytes</code>;</li>
+<li><code>ClipboardSetImage(data)</code> accepts a complete BMP file or a "bare" DIB (data without the file header).</li>
+</ul>
+<p>Reading from the clipboard uses the <code>CF_DIB</code> / <code>CF_DIBV5</code> formats — these are the standard formats that Windows and most applications (Print Screen, browsers, graphics editors) put images into.</p>
+
+<table>
+<tr><th>Function</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>ClipboardHasImage()</code></td><td>—</td><td>int (0/1)</td><td>Whether there is an image in the clipboard</td></tr>
+<tr><td><code>ClipboardGetImage()</code></td><td>—</td><td>ByteArray | null</td><td>Image as a complete BMP file; null — no image</td></tr>
+<tr><td><code>ClipboardGetImageInfo()</code></td><td>—</td><td>Tuple | null</td><td>Image metadata, see below; null — no image</td></tr>
+<tr><td><code>ClipboardSetImage(data)</code></td><td><code>data</code>: ByteArray</td><td>int (0/1)</td><td>Puts an image (BMP file or DIB) into the clipboard</td></tr>
+</table>
+
+<h3>ClipboardGetImageInfo</h3>
+<p>Returns a tuple:</p>
+<table>
+<tr><th>Field</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>width</code></td><td>int</td><td>Image width, pixels</td></tr>
+<tr><td><code>height</code></td><td>int</td><td>Image height, pixels</td></tr>
+<tr><td><code>bpp</code></td><td>int</td><td>Color depth (1, 4, 8, 16, 24, 32)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Clearing</h2>
+<table>
+<tr><th>Function</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>ClipboardClear()</code></td><td>—</td><td>int (0/1)</td><td>Completely clears the clipboard</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Examples</h2>
+
+<h3>Copying and pasting text</h3>
+<pre><code><span class="kw">var</span> oldText = ClipboardGetText();      <span class="cmt">// what was in the clipboard</span>
+ClipboardSetText(<span class="str">"Hello, world!"</span>);
+<span class="kw">if</span> (ClipboardHasText()) {
+    print(<span class="str">"In the clipboard: "</span> + ClipboardGetText());
+}</code></pre>
+
+<h3>Saving an image from the clipboard to a file</h3>
+<pre><code><span class="kw">if</span> (ClipboardHasImage()) {
+    <span class="kw">var</span> info = ClipboardGetImageInfo();
+    print(info.width + <span class="str">"x"</span> + info.height + <span class="str">", "</span> + info.bpp + <span class="str">" bpp"</span>);
+
+    <span class="kw">var</span> img = ClipboardGetImage();        <span class="cmt">// complete BMP file</span>
+    file.writebytes(file.apppath() + <span class="str">"/clipboard.bmp"</span>, img);
+    print(<span class="str">"Saved "</span> + img.size() + <span class="str">" bytes"</span>);
+}</code></pre>
+
+<h3>Putting an image from a file into the clipboard</h3>
+<pre><code><span class="kw">var</span> data = file.readbytes(<span class="str">"picture.bmp"</span>);   <span class="cmt">// ByteArray with a complete BMP file</span>
+ClipboardSetImage(data);
+print(<span class="str">"hasImage: "</span> + ClipboardHasImage());</code></pre>
+
+<h3>Moving an image between applications</h3>
+<pre><code><span class="kw">if</span> (ClipboardHasImage()) {
+    ClipboardSetText(<span class="str">"The screenshot was copied from the clipboard"</span>);
+}</code></pre>
+</div>
+
+<footer><a href="plugins.html">← Back to the plugin list</a></footer>
+</div>
+</body>
+</html>

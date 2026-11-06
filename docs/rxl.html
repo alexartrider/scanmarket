@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Таблица QRXLWidget (rxl) — Script</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Таблица QRXLWidget (rxl)</h1><p>Мини-Excel-виджет форм: загрузка из JSON, чтение/запись ячеек из скрипта, экспорт в XLSX/PDF/PNG</p><div class="lang-switch"><a class="active" href="rxl.html">RU</a><a href="en/rxl.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Главная</a> / <a href="qt.html">QT</a> / RXL таблица</p>
+
+<div class="doc-section">
+<h2>Где взять объект таблицы</h2>
+<table>
+<tr><th>Способ</th><th>Пример</th></tr>
+<tr><td>Виджет формы (рекомендуется)</td><td>В JSON-форме укажите виджет <code>{"class":"QRXLWidget","name":"table1"}</code>, затем <code>var grid = form.findWidget("table1");</code></td></tr>
+<tr><td>Отдельное окно</td><td><code>var w = dialog.newtable(owner, [title]);</code> — окно RXLMainWindow (GUI)</td></tr>
+</table>
+<p>Координаты ячеек в методах — <b>0-based</b> (в отличие от Excel): строка 1 = индекс 0.</p>
+</div>
+
+<div class="doc-section">
+<h2>Загрузка данных (JSON)</h2>
+<p><code>grid.fromMemory(jsonText, tableName)</code> — ищет в документе раздел <code>"rxl"</code> таблицу с указанным именем
+и заполняет ячейки. Формат ячеек: <code>cells[строка][столбец]</code>, каждая ячейка — <code>{"t": текст, "uc": объединение_по_колонкам, "ur": объединение_по_строкам}</code>;
+пустая ячейка — <code>{}</code>. У мастера объединения <code>uc/ur &gt; 0</code>, у подчинённых — отрицательные смещения к мастеру.</p>
+<pre><code>loadModule(file.normalize(file.join(file.dirname(system.getcommandline().app), "..", "scriptlib", "qtestlib.prg")));
+
+var rxlDoc = json.stringify(#{
+    "form": #{},
+    "rxl": #[
+        #{
+            "name": "Прайс",
+            "info": #{"maxCol": 2, "maxRow": 3, "viewGrid": 1},
+            "data": #{
+                "cells": #[
+                    #[ #{"t": "Товар"}, #{"t": "Цена"}, #{"t": "Наличие"} ],
+                    #[ #{"t": "Мышь"}, #{"t": "450.5"}, #{"t": "да"} ],
+                    #[ #{"t": "Клавиатура"}, #{"t": "1250"}, #{"t": "нет"} ],
+                    #[ #{"t": "Итого по прайсу", "uc": 2, "ur": 0},
+                       #{"t": "", "uc": -1, "ur": 0}, #{"t": "", "uc": -2, "ur": 0} ]
+                ]
+            }
+        }
+    ]
+});
+grid.fromMemory(rxlDoc, "Прайс");</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Методы (из скрипта)</h2>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>grid.fromMemory(jsonText, tableName) / fromFile(path, tableName)</code></td><td>Заполнить таблицу из JSON (0/1)</td></tr>
+<tr><td><code>grid.setRow(r) / setCol(c)</code></td><td>Текущая ячейка, 0-based</td></tr>
+<tr><td><code>grid.getText() / setText(s)</code></td><td>Чтение/запись текста текущей ячейки</td></tr>
+<tr><td><code>grid.getLastRow() / getLastCol()</code></td><td>Последняя заполненная строка/столбец</td></tr>
+<tr><td><code>grid.getMaxRow() / getMaxCol()</code></td><td>Максимальные пределы</td></tr>
+<tr><td><code>grid.tableName() / setTableName(n)</code></td><td>Имя таблицы</td></tr>
+<tr><td><code>grid.mergeSelection() / unMergeSelection()</code></td><td>Объединение/разъединение выделенного (выделение — через <code>setSelection</code>)</td></tr>
+<tr><td><code>grid.insertRow() / insertCol() / deleteRows() / deleteCols()</code></td><td>Структурные операции</td></tr>
+<tr><td><code>grid.exportExcel(path)</code></td><td>Экспорт в XLSX (числа из текста преобразуются автоматически; объединения сохраняются)</td></tr>
+<tr><td><code>grid.exportPDF(path)</code></td><td>Экспорт в векторный PDF (страницы A4, колонтитулы, разрывы — как в предпросмотре)</td></tr>
+<tr><td><code>grid.exportFile(path)</code></td><td>Растровые PNG/JPG/BMP/GIF (при нескольких страницах — <code>имя_1.png</code>…)</td></tr>
+</table>
+<pre><code>grid.setRow(1); grid.setCol(2);
+print(grid.getText());             <span class="cmt">// "450.5"</span>
+grid.setRow(3); grid.setCol(0);
+grid.setText("Монитор 4K");
+
+grid.exportExcel(file.join(dir, "прайс.xlsx"));
+grid.exportPDF(file.join(dir, "прайс.pdf"));</code></pre>
+<p>Экспорт можно проверять обратным чтением: XLSX открывается через <code>qt.XlsxDocument()</code> / <code>xlsxedit.open()</code>.</p>
+</div>
+
+<div class="doc-section">
+<h2>Headless-работа</h2>
+<p>Всё перечисленное работает без GUI-сессии: развёрнут платформенный плагин <code>offscreen</code>,
+запускайте с <code>QT_QPA_PLATFORM=offscreen</code> (см. <a href="qt.html">QT интеграция</a>) и проверяйте реальную платформу через <code>qt.platformName()</code>.</p>
+</div>
+
+<footer><a href="index.html">← На главную</a></footer>
+</div>
+</body>
+</html>

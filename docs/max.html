@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Плагин MAX Messenger — Script</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Плагин MAX Messenger</h1><p>Бот-клиент для мессенджера MAX — подключение, отправка и получение сообщений через Long Polling</p><div class="lang-switch"><a class="active" href="max.html">RU</a><a href="en/max.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Главная</a> / <a href="plugins.html">Плагины</a> / MAX</p>
+
+<div class="doc-section">
+<h2>Общее</h2>
+<p>Плагин <code>max.dll</code> — интерфейс к <strong>официальному Bot API MAX</strong> (платформа <code>platform-api2.max.ru</code>). Поддерживает получение информации о боте, отправку текстовых сообщений и чтение входящих сообщений через Long Polling (<code>GET /updates</code>).</p>
+<p><strong>Токен</strong> бота присваивается при создании на платформе <a href="https://business.max.ru/self">business.max.ru</a> (раздел «Чат-боты» → ⋮ → Настройки). Токен передаётся заголовком <code>Authorization</code> — в URL он не вставляется.</p>
+</div>
+
+<div class="doc-section">
+<h2>Зависимости</h2>
+<p>Требуются OpenSSL 3: <code>libssl-3-x64.dll</code>, <code>libcrypto-3-x64.dll</code> (размещаются рядом с бинарником).</p>
+</div>
+
+<div class="doc-section">
+<h2>Загрузка плагина</h2>
+<pre><code>loadPlugin(<span class="str">"plugins/max.dll"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Создание объекта</h2>
+<pre><code><span class="kw">var</span> mx = maxclient();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Методы</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>connect</code></td><td><code>token</code></td><td>bool</td><td>Подключение: проверяет токен через <code>GET /me</code> и запоминает данные бота</td></tr>
+<tr><td><code>disconnect</code></td><td>—</td><td>bool</td><td>Отключение, очистка очереди и маркера</td></tr>
+<tr><td><code>send</code></td><td><code>recipientId</code>, <code>text</code>, <code>[mode]</code></td><td>bool</td><td>Отправка текстового сообщения. По умолчанию получатель — пользователь (<code>POST /messages?user_id=</code>); если <code>mode</code> равен <code>"chat"</code> или <code>"channel"</code> — чат/канал (<code>POST /messages?chat_id=</code>)</td></tr>
+<tr><td><code>recv</code></td><td>—</td><td>tuple|null</td><td>Получение следующего сообщения; при пустой очереди выполняет Long Polling</td></tr>
+<tr><td><code>hasMessage</code></td><td>—</td><td>bool</td><td>Есть ли сообщения в очереди</td></tr>
+<tr><td><code>messageCount</code></td><td>—</td><td>int</td><td>Количество сообщений в очереди</td></tr>
+<tr><td><code>setTimeout</code></td><td><code>[sec]</code></td><td>int</td><td>Таймаут Long Polling (1–90 сек). Без аргументов — геттер</td></tr>
+<tr><td><code>setVerify</code></td><td><code>[bool]</code></td><td>bool</td><td>Проверка SSL-сертификата (по умолчанию выключена)</td></tr>
+<tr><td><code>setCA</code></td><td><code>file</code></td><td>bool</td><td>Файл своего CA для проверки цепочки сертификатов</td></tr>
+<tr><td><code>lastError</code></td><td>—</td><td>string|null</td><td>Последняя ошибка</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Свойства</h2>
+<table>
+<tr><th>Свойство</th><th>Тип</th><th>Описание</th></tr>
+<tr><td><code>connected</code></td><td>int</td><td>1 — есть подключение, 0 — нет</td></tr>
+<tr><td><code>pollTimeout</code></td><td>int</td><td>Текущий таймаут Long Polling в секундах</td></tr>
+<tr><td><code>botUsername</code></td><td>string</td><td>Никнейм бота (поля <code>username</code> или <code>first_name</code> из <code>/me</code>)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Получаемое сообщение (tuple)</h2>
+<p>Метод <code>recv()</code> возвращает кортеж со следующими полями:</p>
+<table>
+<tr><th>Поле</th><th>Тип</th><th>Описание</th></tr>
+<tr><td><code>type</code></td><td>string</td><td>Тип события: <code>message_created</code> или <code>message_edited</code></td></tr>
+<tr><td><code>timestamp</code></td><td>int</td><td>Время события (Unix, миллисекунды)</td></tr>
+<tr><td><code>message_id</code></td><td>int</td><td>Идентификатор сообщения (<code>mid</code>)</td></tr>
+<tr><td><code>text</code></td><td>string</td><td>Текст сообщения</td></tr>
+<tr><td><code>sender_id</code></td><td>int</td><td>ID отправителя</td></tr>
+<tr><td><code>sender_first_name</code></td><td>string</td><td>Имя отправителя</td></tr>
+<tr><td><code>sender_last_name</code></td><td>string</td><td>Фамилия отправителя</td></tr>
+<tr><td><code>sender_username</code></td><td>string</td><td>Никнейм отправителя</td></tr>
+<tr><td><code>sender_is_bot</code></td><td>int</td><td>1 — отправитель бот</td></tr>
+<tr><td><code>chat_id</code></td><td>int</td><td>ID получателя (чата или канала) из <code>recipient.chat_id</code></td></tr>
+<tr><td><code>chat_type</code></td><td>string</td><td>Тип получателя из <code>recipient.chat_type</code></td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Подключение</h2>
+<pre><code><span class="kw">var</span> mx = maxclient();
+
+<span class="kw">if</span> (!mx.connect(<span class="str">"ТОКЕН_ИЗ_BUSINESS.MAX.RU"</span>)) {
+    print(<span class="str">"Ошибка: \(mx.lastError())"</span>);
+    <span class="kw">return</span>;
+}
+
+print(<span class="str">"Подключено как @\(mx.botUsername)"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Отправка сообщения</h2>
+<p>По умолчанию <code>send()</code> отправляет сообщение <strong>пользователю</strong> по его <code>user_id</code> (ID можно получить из поля <code>sender_id</code> входящего сообщения): <code>POST /messages?user_id=</code>.</p>
+<p>Третий аргумент <code>mode</code> задаёт тип получателя. Если он равен <code>"chat"</code> или <code>"channel"</code>, <code>recipientId</code> трактуется как <code>chat_id</code> (чат или канал): <code>POST /messages?chat_id=</code>. Любое другое значение (или отсутствие аргумента) — отправка пользователю через <code>user_id</code>.</p>
+<pre><code><span class="kw">var</span> mx = maxclient();
+mx.connect(<span class="str">"ТОКЕН"</span>);
+
+<span class="cmt">// Отправка текста пользователю (user_id)</span>
+<span class="kw">var</span> ok = mx.send(<span class="num">12345678</span>, <span class="str">"Привет!"</span>);
+<span class="kw">if</span> (!ok) print(<span class="str">"Ошибка: \(mx.lastError())"</span>);
+
+<span class="cmt">// Отправка в чат/канал по chat_id</span>
+mx.send(<span class="num">987654321</span>, <span class="str">"Привет, чат!"</span>, <span class="str">"chat"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Получение сообщений (Long Polling)</h2>
+<p>По умолчанию таймаут опроса — 30 секунд. MAX ограничивает использование Long Polling — для production-окружения рекомендуется Webhook.</p>
+<pre><code><span class="kw">var</span> mx = maxclient();
+mx.connect(<span class="str">"ТОКЕН"</span>);
+mx.setTimeout(<span class="num">30</span>);
+
+<span class="cmt">// Ожидание сообщения (блокирующий вызов до таймаута)</span>
+<span class="kw">var</span> msg = mx.recv();
+<span class="kw">if</span> (!msg.isnull()) {
+    print(<span class="str">"type:    \(msg.type)"</span>);
+    print(<span class="str">"от:      \(msg.sender_first_name) \(msg.sender_last_name) (id:\(msg.sender_id))"</span>);
+    print(<span class="str">"текст:   \(msg.text)"</span>);
+}
+
+<span class="cmt">// Опрос в цикле с ответом на "ping"</span>
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i &lt; <span class="num">5</span>; i++) {
+    <span class="kw">var</span> m = mx.recv();
+    <span class="kw">if</span> (!m.isnull() &amp;&amp; m.text == <span class="str">"ping"</span>) {
+        mx.send(m.sender_id, <span class="str">"pong"</span>);
+    }
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>SSL-сертификаты</h2>
+<pre><code><span class="cmt">// Проверка цепочки сертификатов выключена по умолчанию</span>
+print(mx.setVerify());  <span class="cmt">// 0</span>
+
+<span class="cmt">// Включить проверку</span>
+mx.setVerify(<span class="num">1</span>);
+
+<span class="cmt">// Свой файл CA (например, сертификат Минцифры для доменов max.ru)</span>
+mx.setCA(<span class="str">"C:/certs/cacert.pem"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Полный пример: бот-эхо</h2>
+<pre><code>loadPlugin(<span class="str">"plugins/max.dll"</span>);
+
+<span class="kw">var</span> mx = maxclient();
+mx.setVerify(<span class="num">1</span>);
+mx.setTimeout(<span class="num">30</span>);
+
+<span class="cmt">// Токен из business.max.ru → Чат-боты → Настройки</span>
+<span class="kw">if</span> (!mx.connect(<span class="str">"ТОКЕН"</span>)) {
+    print(<span class="str">"Ошибка подключения: \(mx.lastError())"</span>);
+    system.exit(<span class="num">1</span>);
+}
+
+print(<span class="str">"Бот @\(mx.botUsername) запущен. Напишите ему что-нибудь в MAX."</span>);
+
+<span class="kw">while</span> (mx.connected) {
+    <span class="kw">var</span> msg = mx.recv();
+
+    <span class="kw">if</span> (msg.isnull()) {
+        <span class="kw">continue</span>;  <span class="cmt">// таймаут опроса — повторим</span>
+    }
+
+    print(<span class="str">"\(msg.sender_first_name): \(msg.text)"</span>);
+
+    <span class="kw">if</span> (msg.text == <span class="str">"/stop"</span>) {
+        mx.disconnect();
+        <span class="kw">break</span>;
+    }
+
+    <span class="cmt">// Ответ отправителю</span>
+    mx.send(msg.sender_id, <span class="str">"Вы написали: \"\(msg.text)\""</span>);
+}</code></pre>
+</div>
+
+</div>
+</body>
+</html>

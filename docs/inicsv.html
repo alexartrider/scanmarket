@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Плагин INI/CSV — Script</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Плагин INI/CSV</h1><p>Чтение и запись INI и CSV файлов</p><div class="lang-switch"><a class="active" href="inicsv.html">RU</a><a href="en/inicsv.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Главная</a> / <a href="plugins.html">Плагины</a> / INI/CSV</p>
+
+<div class="doc-section">
+<h2>Загрузка плагина</h2>
+<pre><code>loadPlugin(<span class="str">"plugins/inicsv.dll"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>INI — Чтение</h2>
+
+<h3>iniRead(filename)</h3>
+<p>Читает INI-файл и возвращает кортеж кортежей: <code>#{"section": #{"key": value, ...}, ...}</code></p>
+<ul>
+<li>Числа автоматически преобразуются в <code>int</code> или <code>double</code></li>
+<li>Комментарии (<code>;</code> и <code>#</code>) пропускаются</li>
+<li>Пустые секции/значения допускаются</li>
+</ul>
+<pre><code><span class="kw">var</span> data = iniRead(<span class="str">"config.ini"</span>);
+print(data.database.host);   <span class="cmt">// "localhost"</span>
+print(data.database.port);   <span class="cmt">// 5432 (int)</span>
+print(data.server.bind);     <span class="str">"0.0.0.0"</span></code></pre>
+
+<h3>iniReadValue(filename, section, key)</h3>
+<p>Читает одно конкретное значение. Возвращает <code>null</code> если не найдено.</p>
+<pre><code><span class="kw">var</span> host = iniReadValue(<span class="str">"config.ini"</span>, <span class="str">"database"</span>, <span class="str">"host"</span>);
+print(host);  <span class="cmt">// "localhost"</span>
+
+<span class="kw">var</span> missing = iniReadValue(<span class="str">"config.ini"</span>, <span class="str">"noexist"</span>, <span class="str">"key"</span>);
+print(missing);  <span class="cmt">// null</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>INI — Запись</h2>
+
+<h3>iniWrite(filename, data, [encoding])</h3>
+<p>Записывает кортеж секций в INI-файл. Каждая секция — кортеж значений.</p>
+<table>
+<tr><th>Аргумент</th><th>Тип</th><th>По умолчанию</th><th>Описание</th></tr>
+<tr><td><code>filename</code></td><td>string</td><td>—</td><td>Путь к файлу</td></tr>
+<tr><td><code>data</code></td><td>tuple</td><td>—</td><td><code>#{"section": #{"key": val, ...}, ...}</code></td></tr>
+<tr><td><code>encoding</code></td><td>string</td><td>сохранить кодировку файла</td><td><code>"utf8"</code>, <code>"utf8bom"</code>, <code>"utf16"</code>, <code>"cp1251"</code>; для нового файла по умолчанию <code>"cp1251"</code></td></tr>
+</table>
+<pre><code><span class="kw">var</span> config = #{
+    <span class="str">"database"</span>: #{
+        <span class="str">"host"</span>: <span class="str">"localhost"</span>,
+        <span class="str">"port"</span>: <span class="num">5432</span>,
+        <span class="str">"name"</span>: <span class="str">"mydb"</span>
+    },
+    <span class="str">"server"</span>: #{
+        <span class="str">"bind"</span>: <span class="str">"0.0.0.0"</span>,
+        <span class="str">"timeout"</span>: <span class="num">30</span>
+    }
+};
+iniWrite(<span class="str">"config.ini"</span>, config, <span class="str">"utf8"</span>);</code></pre>
+<p>Результат:</p>
+<pre><code>[database]
+host=localhost
+port=5432
+name=mydb
+
+[server]
+bind=0.0.0.0
+timeout=30
+</code></pre>
+
+<h3>iniWriteValue(filename, section, key, value, [encoding])</h3>
+<p>Записывает/обновляет одно значение. Если файл существует — обновляет in-place. Если нет — создаёт.</p>
+<table>
+<tr><th>Аргумент</th><th>Тип</th><th>Описание</th></tr>
+<tr><td><code>filename</code></td><td>string</td><td>Путь к файлу</td></tr>
+<tr><td><code>section</code></td><td>string</td><td>Имя секции</td></tr>
+<tr><td><code>key</code></td><td>string</td><td>Имя ключа</td></tr>
+<tr><td><code>value</code></td><td>any</td><td>Значение (string/int/double/bool)</td></tr>
+<tr><td><code>encoding</code></td><td>string</td><td>Кодировка; если не указана — сохраняется кодировка существующего файла, для нового файла — cp1251</td></tr>
+</table>
+<pre><code><span class="cmt">// Создаёт файл с нуля</span>
+iniWriteValue(<span class="str">"settings.ini"</span>, <span class="str">"main"</span>, <span class="str">"debug"</span>, <span class="kw">true</span>, <span class="str">"utf8"</span>);
+iniWriteValue(<span class="str">"settings.ini"</span>, <span class="str">"main"</span>, <span class="str">"port"</span>, <span class="num">8080</span>, <span class="str">"utf8"</span>);
+
+<span class="cmt">// Обновляет существующее значение</span>
+iniWriteValue(<span class="str">"settings.ini"</span>, <span class="str">"main"</span>, <span class="str">"port"</span>, <span class="num">9090</span>, <span class="str">"utf8"</span>);
+
+<span class="cmt">// Добавляет новую секцию в существующий файл</span>
+iniWriteValue(<span class="str">"settings.ini"</span>, <span class="str">"network"</span>, <span class="str">"timeout"</span>, <span class="num">30</span>, <span class="str">"utf8"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>CSV — Чтение</h2>
+
+<h3>csvRead(filename, fields, [encoding], [separator])</h3>
+<p>Читает CSV-файл и возвращает массив кортежей. Каждая строка — кортеж с ключями из заголовка.</p>
+<table>
+<tr><th>Аргумент</th><th>Тип</th><th>По умолчанию</th><th>Описание</th></tr>
+<tr><td><code>filename</code></td><td>string</td><td>—</td><td>Путь к файлу</td></tr>
+<tr><td><code>fields</code></td><td>string/array</td><td>—</td><td>Строка <code>"a;b;c"</code> или массив <code>#[a, b, c]</code></td></tr>
+<tr><td><code>encoding</code></td><td>string</td><td>"cp1251"</td><td>Кодировка</td></tr>
+<tr><td><code>separator</code></td><td>string</td><td>";"</td><td>Разделитель (<code>";"</code>, <code>","</code>, <code>"\t"</code>)</td></tr>
+</table>
+<p><strong>Авто-парсинг значений:</strong></p>
+<ul>
+<li><code>null</code> → пустые строки</li>
+<li><code>int</code> → целые числа</li>
+<li><code>double</code> → вещественные числа</li>
+<li><code>true/yes</code> → <code>1</code>, <code>false/no</code> → <code>0</code></li>
+<li>Всё остальное — строка</li>
+</ul>
+<p><strong>Полноценный RFC-подобный разбор:</strong></p>
+<ul>
+<li>поля в кавычках, включая многострочные (перенос строк внутри значения);</li>
+<li>разделители и кавычки внутри поля; <code>""</code> — экранированная кавычка;</li>
+<li>переводы строк <code>CRLF</code>, <code>LF</code>, <code>CR</code>; BOM в начале файла;</li>
+<li>пустые строки игнорируются, пустые и хвостовые поля сохраняются;</li>
+<li>пробелы вокруг поля вне кавычек отбрасываются, внутри кавычек — сохраняются;</li>
+<li>ключи берутся из заголовка файла; недостающие ожидаемые поля заполняются <code>null</code>.</li>
+</ul>
+<pre><code><span class="cmt">// Строка полей через разделитель</span>
+<span class="kw">var</span> rows = csvRead(<span class="str">"data.csv"</span>, <span class="str">"name;age;city"</span>, <span class="str">"utf8"</span>);
+print(rows[0].name);   <span class="cmt">// "Ivan"</span>
+print(rows[0].age);    <span class="cmt">// 30</span>
+
+<span class="cmt">// Массив полей</span>
+<span class="kw">var</span> rows = csvRead(<span class="str">"data.csv"</span>, #[<span class="str">"name"</span>, <span class="str">"age"</span>, <span class="str">"city"</span>], <span class="str">"utf8"</span>);
+
+<span class="cmt">// С запятой как разделитель</span>
+<span class="kw">var</span> rows = csvRead(<span class="str">"data.csv"</span>, #[<span class="str">"x"</span>, <span class="str">"y"</span>], <span class="str">"utf8"</span>, <span class="str">","</span>);
+
+<span class="cmt">// С табуляцией</span>
+<span class="kw">var</span> rows = csvRead(<span class="str">"data.tsv"</span>, <span class="str">"a;b;c"</span>, <span class="str">"utf8"</span>, <span class="str">"\t"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>CSV — Запись</h2>
+
+<h3>csvWrite(filename, fields, data, [encoding], [separator])</h3>
+<p>Записывает массив кортежей в CSV-файл. Возвращает <code>1</code> при успехе, <code>0</code> при ошибке.</p>
+<table>
+<tr><th>Аргумент</th><th>Тип</th><th>Описание</th></tr>
+<tr><td><code>filename</code></td><td>string</td><td>Путь к файлу</td></tr>
+<tr><td><code>fields</code></td><td>string/array</td><td>Строка <code>"a;b;c"</code> или массив <code>#["a","b","c"]</code></td></tr>
+<tr><td><code>data</code></td><td>array</td><td>Массив кортежей <code>#[{...}, {...}]</code></td></tr>
+<tr><td><code>encoding</code></td><td>string</td><td><code>"utf8"</code>, <code>"utf8bom"</code>, <code>"utf16"</code>, <code>"cp1251"</code>; не указана — сохраняется кодировка существующего файла, для нового — cp1251</td></tr>
+<tr><td><code>separator</code></td><td>string</td><td>Разделитель (по умолчанию <code>";"</code>)</td></tr>
+</table>
+<pre><code><span class="kw">var</span> data = #[
+    #<span class="str">{"name": "Ivan"</span>, <span class="str">"age"</span>: <span class="num">30</span>, <span class="str">"city"</span>: <span class="str">"Moscow"</span>},
+    #<span class="str">{"name": "Anna"</span>, <span class="str">"age"</span>: <span class="num">25</span>, <span class="str">"city"</span>: <span class="str">"SPb"</span>}
+];
+
+<span class="cmt">// Точка с запятой (по умолчанию)</span>
+csvWrite(<span class="str">"data.csv"</span>, #[<span class="str">"name"</span>, <span class="str">"age"</span>, <span class="str">"city"</span>], data, <span class="str">"utf8"</span>);
+
+<span class="cmt">// С запятой</span>
+csvWrite(<span class="str">"data.csv"</span>, #[<span class="str">"name"</span>, <span class="str">"age"</span>, <span class="str">"city"</span>], data, <span class="str">"utf8"</span>, <span class="str">","</span>);
+
+<span class="cmt">// Строка полей</span>
+csvWrite(<span class="str">"data.csv"</span>, <span class="str">"name;age;city"</span>, data, <span class="str">"utf8"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>CSV — Вспомогательные</h2>
+
+<h3>csvRowCount(filename)</h3>
+<p>Возвращает количество строк данных (без заголовка).</p>
+<pre><code><span class="kw">var</span> n = csvRowCount(<span class="str">"data.csv"</span>);
+print(<span class="str">"Строк: "</span> + n);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Примеры</h2>
+
+<h3>Конфигурация приложения</h3>
+<pre><code>loadPlugin(<span class="str">"plugins/inicsv.dll"</span>);
+
+<span class="kw">var</span> configFile = <span class="str">"app.ini"</span>;
+
+<span class="cmt">// Создать конфиг</span>
+<span class="kw">var</span> config = #{
+    <span class="str">"app"</span>: #{
+        <span class="str">"name"</span>: <span class="str">"MyApp"</span>,
+        <span class="str">"version"</span>: <span class="str">"1.0"</span>,
+        <span class="str">"debug"</span>: <span class="kw">true</span>
+    },
+    <span class="str">"database"</span>: #{
+        <span class="str">"host"</span>: <span class="str">"localhost"</span>,
+        <span class="str">"port"</span>: <span class="num">5432</span>
+    }
+};
+iniWrite(configFile, config, <span class="str">"utf8"</span>);
+
+<span class="cmt">// Прочитать</span>
+<span class="kw">var</span> cfg = iniRead(configFile);
+print(cfg.app.name);       <span class="cmt">// "MyApp"</span>
+print(cfg.database.port);  <span class="cmt">// 5432</span>
+
+<span class="cmt">// Изменить одно значение</span>
+iniWriteValue(configFile, <span class="str">"database"</span>, <span class="str">"port"</span>, <span class="num">3306</span>, <span class="str">"utf8"</span>);</code></pre>
+
+<h3>Обработка CSV-данных</h3>
+<pre><code>loadPlugin(<span class="str">"plugins/inicsv.dll"</span>);
+
+<span class="cmt">// Чтение данных</span>
+<span class="kw">var</span> users = csvRead(<span class="str">"users.csv"</span>, <span class="str">"name;email;age"</span>, <span class="str">"utf8"</span>);
+print(<span class="str">"Пользователей: "</span> + csvRowCount(<span class="str">"users.csv"</span>));
+
+<span class="kw">for</span> (<span class="kw">var</span> user : users) {
+    print(user.name + <span class="str">" ("</span> + user.email + <span class="str">"), возраст: "</span> + user.age);
+}
+
+<span class="cmt">// Фильтрация и запись</span>
+<span class="kw">var</span> adults = [];
+<span class="kw">for</span> (<span class="kw">var</span> u : users) {
+    <span class="kw">if</span> (u.age >= <span class="num">18</span>) adults.push(u);
+}
+csvWrite(<span class="str">"adults.csv"</span>, <span class="str">"name;email;age"</span>, adults, <span class="str">"utf8"</span>);</code></pre>
+
+<h3>CSV с запятыми</h3>
+<pre><code><span class="cmt">// Чтение standard CSV</span>
+<span class="kw">var</span> rows = csvRead(<span class="str">"export.csv"</span>, #[<span class="str">"id"</span>, <span class="str">"name"</span>, <span class="str">"value"</span>], <span class="str">"utf8"</span>, <span class="str">","</span>);
+
+<span class="cmt">// Запись standard CSV</span>
+csvWrite(<span class="str">"output.csv"</span>, #[<span class="str">"id"</span>, <span class="str">"name"</span>, <span class="str">"value"</span>], rows, <span class="str">"utf8"</span>, <span class="str">","</span>);</code></pre>
+
+<h3>Табличные данные</h3>
+<pre><code><span class="cmt">// TSV (Tab-Separated Values)</span>
+<span class="kw">var</span> data = csvRead(<span class="str">"data.tsv"</span>, <span class="str">"col1;col2;col3"</span>, <span class="str">"utf8"</span>, <span class="str">"\t"</span>);
+
+<span class="cmt">// Запись с авто-определением типов</span>
+<span class="kw">var</span> output = #[
+    #<span class="str">{"id"</span>: <span class="num">1</span>, <span class="str">"name"</span>: <span class="str">"first"</span>, <span class="str">"value"</span>: <span class="num">3.14</span>},
+    #<span class="str">{"id"</span>: <span class="num">2</span>, <span class="str">"name"</span>: <span class="str">"second"</span>, <span class="str">"value"</span>: <span class="num">2.71</span>}
+];
+csvWrite(<span class="str">"result.tsv"</span>, <span class="str">"id;name;value"</span>, output, <span class="str">"utf8"</span>, <span class="str">"\t"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Форматы файлов</h2>
+
+<h3>INI</h3>
+<pre><code><span class="cmt">; комментарии через ; или #</span>
+[section_name]
+key1=value1
+key2=42
+key3=3.14
+
+[another_section]
+host=localhost
+port=5432</code></pre>
+
+<h3>CSV</h3>
+<pre><code>name;age;city
+Ivan;30;Moscow
+Anna;25;SPb
+"He said ""hello""";25;NY</code></pre>
+<p>Значения с кавычками, разделителями, начальными/конечными пробелами или переносами строк автоматически оборачиваются в двойные кавычки. Двойные кавычки внутри значений удваиваются: <code>"</code> → <code>""</code>. Строки разделяются <code>CRLF</code>.</p>
+</div>
+
+<div class="doc-section">
+<h2>Кодировки</h2>
+<table>
+<tr><th>Параметр</th><th>Описание</th></tr>
+<tr><td><code>"utf8"</code></td><td>UTF-8 без BOM</td></tr>
+<tr><td><code>"utf8bom"</code></td><td>UTF-8 с BOM</td></tr>
+<tr><td><code>"utf16"</code></td><td>UTF-16 LE</td></tr>
+<tr><td><code>"cp1251"</code></td><td>Windows-1251 (по умолчанию)</td></tr>
+</table>
+<p>Чтение автоматически определяет кодировку (BOM + эвристика).</p>
+<p>Если при записи кодировка не указана (или передана <code>"auto"</code>) и файл уже существует — сохраняется его кодировка; для нового файла используется <code>"cp1251"</code>. Это позволяет обновлять UTF-8/UTF-16 файлы без указания кодировки при каждом вызове.</p>
+</div>
+
+<div class="doc-section">
+<h2>Примечания</h2>
+<ul>
+<li><strong>Числа:</strong> десятичный разделитель всегда точка (<code>.</code>), независимо от системной локали</li>
+<li><strong>Типы:</strong> пустые строки → <code>null</code>, целые числа → <code>int</code>, вещественные → <code>double</code>, <code>true/yes</code> → <code>1</code>, <code>false/no</code> → <code>0</code></li>
+<li><strong>CSV-кавычки:</strong> значения с разделителями, кавычками или переносами строк автоматически оборачиваются в <code>"</code></li>
+<li><strong>INI-комментарии:</strong> строки, начинающиеся с <code>;</code> или <code>#</code>, пропускаются; заголовок секции может заканчиваться комментарием: <code>[section] ; note</code>. Внутри значений комментарии не вырезаются</li>
+</ul>
+</div>
+
+<footer><a href="plugins.html">← К списку плагинов</a></footer>
+</div>
+</body>
+</html>

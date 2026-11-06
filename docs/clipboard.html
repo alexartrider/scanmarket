@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Плагин Clipboard — Script</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Плагин Clipboard (буфер обмена)</h1><p>Чтение и запись текста и изображений в системный буфер обмена Windows</p><div class="lang-switch"><a class="active" href="clipboard.html">RU</a><a href="en/clipboard.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Главная</a> / <a href="plugins.html">Плагины</a> / Clipboard</p>
+
+<div class="doc-section">
+<h2>Загрузка плагина</h2>
+<p>Плагин использует системный буфер обмена Windows (Win32). Работает в <code>qodeqt</code>, <code>qodegui</code> и <code>qodedesigner</code>.</p>
+<pre><code><span class="kw">var</span> ok = loadPlugin(file.apppath() + <span class="str">"/plugins/clipboard.dll"</span>);
+<span class="kw">if</span> (!ok) throw <span class="str">"Не удалось загрузить плагин clipboard"</span>;</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Текст</h2>
+<table>
+<tr><th>Функция</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>ClipboardGetText()</code></td><td>—</td><td>string</td><td>Текст из буфера обмена (UTF-16). Пустая строка, если текста нет</td></tr>
+<tr><td><code>ClipboardSetText(text)</code></td><td><code>text</code></td><td>int (0/1)</td><td>Помещает текст в буфер обмена</td></tr>
+<tr><td><code>ClipboardHasText()</code></td><td>—</td><td>int (0/1)</td><td>Есть ли текст в буфере</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Изображения</h2>
+<p>Обмен изображениями происходит через <code>ByteArray</code>. Плагин работает с DIB (Device-Independent Bitmap):</p>
+<ul>
+<li><code>ClipboardGetImage()</code> возвращает <strong>полный файл BMP</strong> (с заголовком <code>"BM"</code>) — его можно сразу сохранить на диск через <code>file.writebytes</code>;</li>
+<li><code>ClipboardSetImage(data)</code> принимает полный BMP-файл или «голый» DIB (данные без заголовка файла).</li>
+</ul>
+<p>Чтение из буфера выполняется из форматов <code>CF_DIB</code> / <code>CF_DIBV5</code> — это стандартные форматы, в которые Windows и большинство приложений (Print Screen, браузеры, графические редакторы) помещают изображения.</p>
+
+<table>
+<tr><th>Функция</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>ClipboardHasImage()</code></td><td>—</td><td>int (0/1)</td><td>Есть ли изображение в буфере</td></tr>
+<tr><td><code>ClipboardGetImage()</code></td><td>—</td><td>ByteArray | null</td><td>Изображение как полный файл BMP; null — изображения нет</td></tr>
+<tr><td><code>ClipboardGetImageInfo()</code></td><td>—</td><td>Tuple | null</td><td>Метаданные изображения, см. ниже; null — изображения нет</td></tr>
+<tr><td><code>ClipboardSetImage(data)</code></td><td><code>data</code>: ByteArray</td><td>int (0/1)</td><td>Помещает изображение (BMP-файл или DIB) в буфер</td></tr>
+</table>
+
+<h3>ClipboardGetImageInfo</h3>
+<p>Возвращает кортеж:</p>
+<table>
+<tr><th>Поле</th><th>Тип</th><th>Описание</th></tr>
+<tr><td><code>width</code></td><td>int</td><td>Ширина изображения, пиксели</td></tr>
+<tr><td><code>height</code></td><td>int</td><td>Высота изображения, пиксели</td></tr>
+<tr><td><code>bpp</code></td><td>int</td><td>Глубина цвета (1, 4, 8, 16, 24, 32)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Очистка</h2>
+<table>
+<tr><th>Функция</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>ClipboardClear()</code></td><td>—</td><td>int (0/1)</td><td>Полностью очищает буфер обмена</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Примеры</h2>
+
+<h3>Копирование и вставка текста</h3>
+<pre><code><span class="kw">var</span> oldText = ClipboardGetText();      <span class="cmt">// что было в буфере</span>
+ClipboardSetText(<span class="str">"Привет, мир!"</span>);
+<span class="kw">if</span> (ClipboardHasText()) {
+    print(<span class="str">"В буфере: "</span> + ClipboardGetText());
+}</code></pre>
+
+<h3>Сохранение изображения из буфера в файл</h3>
+<pre><code><span class="kw">if</span> (ClipboardHasImage()) {
+    <span class="kw">var</span> info = ClipboardGetImageInfo();
+    print(info.width + <span class="str">"x"</span> + info.height + <span class="str">", "</span> + info.bpp + <span class="str">" bpp"</span>);
+
+    <span class="kw">var</span> img = ClipboardGetImage();        <span class="cmt">// полный BMP-файл</span>
+    file.writebytes(file.apppath() + <span class="str">"/clipboard.bmp"</span>, img);
+    print(<span class="str">"Сохранено "</span> + img.size() + <span class="str">" байт"</span>);
+}</code></pre>
+
+<h3>Помещение изображения из файла в буфер</h3>
+<pre><code><span class="kw">var</span> data = file.readbytes(<span class="str">"picture.bmp"</span>);   <span class="cmt">// ByteArray с полным BMP-файлом</span>
+ClipboardSetImage(data);
+print(<span class="str">"hasImage: "</span> + ClipboardHasImage());</code></pre>
+
+<h3>Перенос изображения между приложениями</h3>
+<pre><code><span class="kw">if</span> (ClipboardHasImage()) {
+    ClipboardSetText(<span class="str">"Скриншот был скопирован из буфера"</span>);
+}</code></pre>
+</div>
+
+<footer><a href="plugins.html">← К списку плагинов</a></footer>
+</div>
+</body>
+</html>

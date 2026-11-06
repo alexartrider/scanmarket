@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Archive 7-Zip Plugin — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Archive 7-Zip Plugin</h1><p>Working with archives — 7z, ZIP, TAR, GZIP via 7-Zip</p><div class="lang-switch"><a href="../archive7zip.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="archive7zip.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / <a href="plugins.html">Plugins</a> / Archive 7-Zip</p>
+
+<div class="doc-section">
+<h2>Dependencies</h2>
+<p>Requires an installed <strong>7z.exe</strong> (or 7z on Linux). By default the plugin looks for <code>7z.exe</code> in PATH.</p>
+</div>
+
+<div class="doc-section">
+<h2>Loading the plugin</h2>
+<pre><code>loadPlugin("plugins/archive7zip.dll");</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Creating the object</h2>
+<pre><code><span class="cmt">// With the default path (7z.exe in PATH)</span>
+<span class="kw">var</span> zip = archive7zip();
+
+<span class="cmt">// With an explicit path to 7z.exe</span>
+<span class="kw">var</span> zip = archive7zip(<span class="str">"C:\\Program Files\\7-Zip\\7z.exe"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Properties</h2>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>path</code></td><td>string</td><td><code>"7z.exe"</code></td><td>Path to the 7z executable</td></tr>
+<tr><td><code>tempPath</code></td><td>string</td><td><code>%TEMP%</code> (Win) / <code>/tmp/</code> (Linux)</td><td>Temporary directory</td></tr>
+</table>
+<pre><code>zip.path = <span class="str">"C:\\7z.exe"</span>;
+zip.tempPath = <span class="str">"C:\\Temp"</span>;</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Methods</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>list</code></td><td><code>archive, [password]</code></td><td>Array&lt;Tuple&gt;</td><td>List of files with metadata</td></tr>
+<tr><td><code>extract</code></td><td><code>archive, destPath, [password], [withPaths]</code></td><td>tuple</td><td>Extracts the whole archive</td></tr>
+<tr><td><code>extractFile</code></td><td><code>archive, fileName, destPath, [password]</code></td><td>int (0/1)</td><td>Extracts a single file</td></tr>
+<tr><td><code>create</code></td><td><code>archive, files, [format], [password], [level]</code></td><td>int (0/1)</td><td>Creates an archive</td></tr>
+<tr><td><code>test</code></td><td><code>archive, [password]</code></td><td>int (0/1)</td><td>Integrity check</td></tr>
+<tr><td><code>info</code></td><td><code>archive</code></td><td>tuple</td><td>Archive information</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>list(archive, [password])</h2>
+<p>Returns the list of files in the archive with metadata.</p>
+<table>
+<tr><th>Tuple field</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>path</code></td><td>string</td><td>File path inside the archive</td></tr>
+<tr><td><code>size</code></td><td>int</td><td>Size in bytes</td></tr>
+<tr><td><code>modified</code></td><td>string</td><td>Modification date</td></tr>
+<tr><td><code>crc</code></td><td>string</td><td>CRC checksum</td></tr>
+<tr><td><code>encrypted</code></td><td>int (0/1)</td><td>Whether the file is encrypted</td></tr>
+</table>
+<pre><code><span class="kw">var</span> zip = archive7zip();
+<span class="kw">var</span> files = zip.list(<span class="str">"archive.zip"</span>);
+<span class="kw">for</span> (<span class="kw">var</span> f : files) {
+    print(f.path + <span class="str">" — "</span> + f.size + <span class="str">" bytes, CRC="</span> + f.crc);
+}
+
+<span class="cmt">// With a password</span>
+<span class="kw">var</span> files = zip.list(<span class="str">"encrypted.7z"</span>, <span class="str">"mypassword"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>extract(archive, destPath, [password], [withPaths])</h2>
+<p>Extracts the whole archive. Returns a tuple with the result.</p>
+<table>
+<tr><th>Field</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>success</code></td><td>int (0/1)</td><td>Whether the operation succeeded</td></tr>
+<tr><td><code>exitCode</code></td><td>int</td><td>7z return code</td></tr>
+<tr><td><code>output</code></td><td>string</td><td>7z output</td></tr>
+</table>
+<table>
+<tr><th>Argument</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>archive</code></td><td>string</td><td>—</td><td>Path to the archive</td></tr>
+<tr><td><code>destPath</code></td><td>string</td><td>—</td><td>Where to extract to</td></tr>
+<tr><td><code>password</code></td><td>string</td><td>—</td><td>Password</td></tr>
+<tr><td><code>withPaths</code></td><td>bool</td><td>true</td><td>Keep the directory structure (x vs e)</td></tr>
+</table>
+<pre><code><span class="kw">var</span> zip = archive7zip();
+
+<span class="cmt">// Extract keeping paths</span>
+<span class="kw">var</span> result = zip.extract(<span class="str">"archive.zip"</span>, <span class="str">"C:\\output"</span>);
+print(result.success);  <span class="cmt">// 1</span>
+print(result.output);   <span class="cmt">// 7z output</span>
+
+<span class="cmt">// Extract without the directory structure</span>
+zip.extract(<span class="str">"archive.zip"</span>, <span class="str">"C:\\flat"</span>, <span class="str">""</span>, <span class="kw">false</span>);
+
+<span class="cmt">// With a password</span>
+zip.extract(<span class="str">"encrypted.7z"</span>, <span class="str">"C:\\out"</span>, <span class="str">"mypassword"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>extractFile(archive, fileName, destPath, [password])</h2>
+<p>Extracts one specific file from the archive.</p>
+<pre><code><span class="kw">var</span> zip = archive7zip();
+<span class="kw">var</span> ok = zip.extractFile(<span class="str">"archive.zip"</span>, <span class="str">"docs/readme.txt"</span>, <span class="str">"C:\\output"</span>);
+print(ok);  <span class="cmt">// 1</span>
+
+<span class="cmt">// With a password</span>
+zip.extractFile(<span class="str">"encrypted.7z"</span>, <span class="str">"secret.txt"</span>, <span class="str">"C:\\out"</span>, <span class="str">"pass123"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>create(archive, files, [format], [password], [level])</h2>
+<p>Creates a new archive from a list of files.</p>
+<table>
+<tr><th>Argument</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>archive</code></td><td>string</td><td>—</td><td>Path to the archive being created</td></tr>
+<tr><td><code>files</code></td><td>Array&lt;string&gt;</td><td>—</td><td>List of files to archive</td></tr>
+<tr><td><code>format</code></td><td>string</td><td>"zip"</td><td>Format: <code>"zip"</code>, <code>"7z"</code>, <code>"tar"</code>, <code>"gzip"</code></td></tr>
+<tr><td><code>password</code></td><td>string</td><td>—</td><td>Password (enables encryption)</td></tr>
+<tr><td><code>level</code></td><td>int</td><td>5</td><td>Compression level 0-9 (0=no compression, 9=maximum)</td></tr>
+</table>
+<pre><code><span class="kw">var</span> zip = archive7zip();
+
+<span class="cmt">// Simple ZIP</span>
+zip.create(<span class="str">"backup.zip"</span>, #[
+    <span class="str">"C:\\Docs\\file1.txt"</span>,
+    <span class="str">"C:\\Docs\\file2.txt"</span>,
+    <span class="str">"C:\\Photos\\image.jpg"</span>
+]);
+
+<span class="cmt">// 7z with maximum compression</span>
+zip.create(<span class="str">"archive.7z"</span>, #[
+    <span class="str">"data1.bin"</span>,
+    <span class="str">"data2.bin"</span>
+], <span class="str">"7z"</span>, <span class="str">""</span>, <span class="num">9</span>);
+
+<span class="cmt">// Encrypted archive</span>
+zip.create(<span class="str">"secret.7z"</span>, #[
+    <span class="str">"private.txt"</span>,
+    <span class="str">"keys.dat"</span>
+], <span class="str">"7z"</span>, <span class="str">"StrongPassword123"</span>, <span class="num">9</span>);
+
+<span class="cmt">// GZIP (one file — format limitation)</span>
+zip.create(<span class="str">"data.tar.gz"</span>, #<span class="str">"data.tar"</span>, <span class="str">"gzip"</span>);</code></pre>
+<h3>Limitations</h3>
+<ul>
+<li><strong>GZIP:</strong> the format supports only one file. Passing several files will raise an error.</li>
+<li><strong>-mhe=on</strong> (metadata encryption): works only for the <code>7z</code> format, not for ZIP.</li>
+<li><strong>Listing password-protected archives:</strong> 7z can show the file list of a password-protected ZIP archive even without the password (metadata is not encrypted). For 7z archives a password is required.</li>
+</ul>
+</div>
+
+<div class="doc-section">
+<h2>test(archive, [password])</h2>
+<p>Checks the integrity of the archive (7z t command).</p>
+<pre><code><span class="kw">var</span> zip = archive7zip();
+<span class="kw">var</span> ok = zip.test(<span class="str">"backup.zip"</span>);
+<span class="kw">if</span> (ok) {
+    print(<span class="str">"Archive is intact!"</span>);
+} <span class="kw">else</span> {
+    print(<span class="str">"Archive is corrupted!"</span>);
+}
+
+<span class="cmt">// With a password</span>
+zip.test(<span class="str">"encrypted.7z"</span>, <span class="str">"password"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>info(archive)</h2>
+<p>Gets information about the archive. Returns a tuple {type} or null.</p>
+<pre><code><span class="kw">var</span> zip = archive7zip();
+<span class="kw">var</span> info = zip.info(<span class="str">"archive.zip"</span>);
+print(info.type);  <span class="cmt">// "zip"</span>
+
+info = zip.info(<span class="str">"backup.7z"</span>);
+print(info.type);  <span class="cmt">// "7z"</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Examples</h2>
+
+<h3>File backup</h3>
+<pre><code>loadPlugin(<span class="str">"plugins/archive7zip.dll"</span>);
+
+<span class="kw">var</span> zip = archive7zip();
+<span class="kw">var</span> today = datetime.now().strftime(<span class="str">"%Y%m%d"</span>);
+<span class="kw">var</span> archiveName = <span class="str">"backup_"</span> + today + <span class="str">".7z"</span>;
+
+<span class="kw">var</span> files = file.listdir(<span class="str">"C:\\Important"</span>);
+zip.create(archiveName, files, <span class="str">"7z"</span>, <span class="str">""</span>, <span class="num">9</span>);
+print(<span class="str">"Created: "</span> + archiveName);</code></pre>
+
+<h3>Extracting an archive</h3>
+<pre><code><span class="kw">var</span> zip = archive7zip();
+<span class="kw">var</span> files = zip.list(<span class="str">"download.zip"</span>);
+print(<span class="str">"Files in archive: "</span> + files.size());
+
+<span class="kw">var</span> result = zip.extract(<span class="str">"download.zip"</span>, <span class="str">"C:\\Downloads\\extracted"</span>);
+<span class="kw">if</span> (result.success) {
+    print(<span class="str">"Extracted successfully"</span>);
+} <span class="kw">else</span> {
+    print(<span class="str">"Error: "</span> + result.output);
+}</code></pre>
+
+<h3>Extracting a single file</h3>
+<pre><code><span class="kw">var</span> zip = archive7zip();
+zip.extractFile(<span class="str">"project.7z"</span>, <span class="str">"src/main.cpp"</span>, <span class="str">"C:\\MyProject"</span>);</code></pre>
+
+<h3>Integrity check and info</h3>
+<pre><code><span class="kw">var</span> zip = archive7zip();
+<span class="kw">var</span> info = zip.info(<span class="str">"data.7z"</span>);
+print(<span class="str">"Format: "</span> + info.type);
+
+<span class="kw">if</span> (zip.test(<span class="str">"data.7z"</span>)) {
+    print(<span class="str">"Archive is intact"</span>);
+} <span class="kw">else</span> {
+    print(<span class="str">"Archive is corrupted!"</span>);
+}</code></pre>
+
+<h3>Custom path to 7z</h3>
+<pre><code><span class="kw">var</span> zip = archive7zip(<span class="str">"D:\\Tools\\7-Zip\\7z.exe"</span>);
+zip.tempPath = <span class="str">"D:\\Temp"</span>;
+<span class="kw">var</span> files = zip.list(<span class="str">"archive.zip"</span>);</code></pre>
+</div>
+
+<footer><a href="plugins.html">← Back to the plugin list</a></footer>
+</div>
+</body>
+</html>

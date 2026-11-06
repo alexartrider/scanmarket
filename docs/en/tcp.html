@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TCP Plugin — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>TCP Plugin</h1><p>TCP client and TCP server — non-blocking I/O, asynchronous receiving, broadcast, connection handlers</p><div class="lang-switch"><a href="../tcp.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="tcp.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / <a href="plugins.html">Plugins</a> / TCP</p>
+
+<div class="doc-section">
+<h2>Loading the plugin</h2>
+<pre><code>loadPlugin(<span class="str">"tcp"</span>);</code></pre>
+</div>
+
+<!-- ============================== TCP CLIENT ============================== -->
+
+<div class="doc-section">
+<h2>TcpClient — TCP client</h2>
+<p>Creates a TCP client for connecting to a server. Data is received by a background thread and buffered.</p>
+
+<h3>Creation</h3>
+<pre><code><span class="cmt">// Anonymous client</span>
+<span class="kw">var</span> client = TcpClient();
+
+<span class="cmt">// Named client (accessible again by calling its name)</span>
+<span class="kw">var</span> client = TcpClient(<span class="str">"myClient"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Client properties</h2>
+<table>
+<tr><th>Property</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>connected</code></td><td>int</td><td>1 if connected, 0 if not</td></tr>
+<tr><td><code>name</code></td><td>string</td><td>Instance name (empty string if anonymous)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Client methods</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>connect</code></td><td><code>host, port, [family]</code></td><td>int</td><td>Connects to the server. family: AF_INET (2) — IPv4, AF_INET6 (23) — IPv6</td></tr>
+<tr><td><code>disconnect</code></td><td>—</td><td>int</td><td>Disconnects from the server</td></tr>
+<tr><td><code>isconnected</code></td><td>—</td><td>int</td><td>Checks the connection (1/0)</td></tr>
+<tr><td><code>send</code></td><td><code>data</code></td><td>int</td><td>Sends data (a string or ByteArray). Returns the number of bytes sent</td></tr>
+<tr><td><code>sendline</code></td><td><code>text</code></td><td>int</td><td>Sends a string + automatic <code>\n</code></td></tr>
+<tr><td><code>recv</code></td><td><code>[maxBytes], [asText]</code></td><td>string / bytearray / null</td><td>Reads from the buffer. asText=true — a string, otherwise ByteArray</td></tr>
+<tr><td><code>recvline</code></td><td><code>[timeoutMs]</code></td><td>string / null</td><td>Reads a line up to <code>\n</code> with a timeout</td></tr>
+<tr><td><code>available</code></td><td>—</td><td>int</td><td>Bytes in the receive buffer</td></tr>
+<tr><td><code>clear</code></td><td>—</td><td>int</td><td>Clears the receive buffer</td></tr>
+<tr><td><code>settimeout</code></td><td><code>ms</code></td><td>int</td><td>Socket timeout (send + recv)</td></tr>
+<tr><td><code>setnodelay</code></td><td><code>enable</code></td><td>int</td><td>TCP_NODELAY (Nagle's algorithm)</td></tr>
+<tr><td><code>getpeername</code></td><td>—</td><td>tuple / null</td><td>Peer address: <code>#{"ip": "...", "port": ...}</code></td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>connect(host, port, [family])</h2>
+<p>Connects to a TCP server. Performs a non-blocking connection with a 5 second timeout. On a successful connection a background data receiving thread is started.</p>
+<table>
+<tr><th>Argument</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>host</code></td><td>string</td><td>—</td><td>Server address (domain or IP)</td></tr>
+<tr><td><code>port</code></td><td>int</td><td>—</td><td>Port number</td></tr>
+<tr><td><code>family</code></td><td>int</td><td>AF_INET (2)</td><td>Address family: AF_INET=IPv4, AF_INET6=IPv6</td></tr>
+</table>
+<pre><code><span class="kw">var</span> client = TcpClient();
+client.connect(<span class="str">"127.0.0.1"</span>, <span class="num">9000</span>);
+print(client.connected);  <span class="cmt">// 1</span>
+
+<span class="cmt">// IPv6</span>
+client.connect(<span class="str">"::1"</span>, <span class="num">9000</span>, <span class="num">23</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>send(data)</h2>
+<p>Sends data to the server. Accepts a string or a ByteArray.</p>
+<pre><code><span class="cmt">// Sending a string</span>
+client.send(<span class="str">"Hello!"</span>);
+
+<span class="cmt">// Sending a ByteArray</span>
+<span class="kw">var</span> bytes = ByteArray();
+bytes.append(<span class="num">0x48</span>);  <span class="cmt">// H</span>
+bytes.append(<span class="num">0x49</span>);  <span class="cmt">// I</span>
+client.send(bytes);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>sendline(text)</h2>
+<p>Sends a string with an automatic <code>\n</code> appended at the end.</p>
+<pre><code>client.sendline(<span class="str">"Hello server"</span>);
+<span class="cmt">// Equivalent to: client.send("Hello server\n")</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>recv([maxBytes], [asText])</h2>
+<p>Reads data from the internal buffer (does not block the thread). If there is no data — returns <code>null</code>.</p>
+<table>
+<tr><th>Argument</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>maxBytes</code></td><td>int</td><td>1024</td><td>Maximum number of bytes to read</td></tr>
+<tr><td><code>asText</code></td><td>bool</td><td>false</td><td>true — return a string, false — ByteArray</td></tr>
+</table>
+<pre><code><span class="cmt">// Reading as a ByteArray</span>
+<span class="kw">var</span> raw = client.recv(<span class="num">1024</span>);
+print(typeName(raw));  <span class="cmt">// "bytearray" or "null"</span>
+
+<span class="cmt">// Reading as a string</span>
+<span class="kw">var</span> text = client.recv(<span class="num">1024</span>, <span class="kw">true</span>);
+print(text);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>recvline([timeoutMs])</h2>
+<p>Reads one line from the buffer (up to <code>\n</code>). Blocks the thread until a line appears or the timeout expires. The <code>\r</code> character before <code>\n</code> is removed automatically.</p>
+<table>
+<tr><th>Argument</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>timeoutMs</code></td><td>int</td><td>5000</td><td>Timeout in milliseconds</td></tr>
+</table>
+<pre><code><span class="cmt">// Reading with a 3 second timeout</span>
+<span class="kw">var</span> line = client.recvline(<span class="num">3000</span>);
+<span class="kw">if</span> (line != <span class="kw">null</span>) {
+    print(line);
+} <span class="kw">else</span> {
+    print(<span class="str">"Timeout!"</span>);
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>getpeername()</h2>
+<p>Returns the address of the connected peer as a tuple. Useful for determining the client's IP address on the server side.</p>
+<pre><code><span class="kw">var</span> peer = client.getpeername();
+<span class="kw">if</span> (peer != <span class="kw">null</span>) {
+    print(peer.ip);    <span class="cmt">// "127.0.0.1"</span>
+    print(peer.port);  <span class="cmt">// 54321</span>
+}</code></pre>
+</div>
+
+<!-- ============================== TCP SERVER ============================== -->
+
+<div class="doc-section">
+<h2>TcpServer — TCP server</h2>
+<p>Creates a TCP server for listening to incoming connections. Clients are accepted automatically in a background thread.</p>
+
+<h3>Creation</h3>
+<pre><code><span class="cmt">// Anonymous server</span>
+<span class="kw">var</span> server = TcpServer();
+
+<span class="cmt">// Named server</span>
+<span class="kw">var</span> server = TcpServer(<span class="str">"myServer"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Server properties</h2>
+<table>
+<tr><th>Property</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>listening</code></td><td>int</td><td>1 if listening, 0 if not</td></tr>
+<tr><td><code>port</code></td><td>int</td><td>Port number</td></tr>
+<tr><td><code>name</code></td><td>string</td><td>Instance name</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Server methods</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>listen</code></td><td><code>port, [bindAddr], [backlog]</code></td><td>int</td><td>Starts listening. Stops the previous one</td></tr>
+<tr><td><code>stop</code></td><td>—</td><td>int</td><td>Stops the server and disconnects all clients</td></tr>
+<tr><td><code>islistening</code></td><td>—</td><td>int</td><td>Checks the state (1/0)</td></tr>
+<tr><td><code>port</code></td><td>—</td><td>int</td><td>Method: port number</td></tr>
+<tr><td><code>clients</code></td><td>—</td><td>array</td><td>Array of connected TcpClient</td></tr>
+<tr><td><code>clientcount</code></td><td>—</td><td>int</td><td>Number of connected clients</td></tr>
+<tr><td><code>broadcast</code></td><td><code>data</code></td><td>int</td><td>Sends to all clients. Returns the total bytes</td></tr>
+<tr><td><code>setonconnect</code></td><td><code>func</code></td><td>int</td><td>Connection handler: func(client)</td></tr>
+<tr><td><code>closeall</code></td><td>—</td><td>int</td><td>Disconnects and removes all clients</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>listen(port, [bindAddr], [backlog])</h2>
+<p>Starts listening for incoming TCP connections. If the server is already listening — the previous listening and all clients are closed automatically.</p>
+<table>
+<tr><th>Argument</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>port</code></td><td>int</td><td>—</td><td>Port number</td></tr>
+<tr><td><code>bindAddr</code></td><td>string</td><td>"0.0.0.0"</td><td>Bind address (all interfaces / a specific IP)</td></tr>
+<tr><td><code>backlog</code></td><td>int</td><td>10</td><td>Queue of pending connections</td></tr>
+</table>
+<pre><code><span class="kw">var</span> server = TcpServer();
+server.listen(<span class="num">9000</span>);
+print(server.listening);  <span class="cmt">// 1</span>
+
+<span class="cmt">// Localhost only</span>
+server.listen(<span class="num">9000</span>, <span class="str">"127.0.0.1"</span>);
+
+<span class="cmt">// With a larger backlog</span>
+server.listen(<span class="num">9000</span>, <span class="str">"0.0.0.0"</span>, <span class="num">50</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>setonconnect(callback)</h2>
+<p>Sets the handler called for every new client. The function argument is the TcpClient object of the connected client.</p>
+<p><strong>Important:</strong> the handler is called in the background accept thread. Do not block it for long.</p>
+<pre><code><span class="kw">var</span> server = TcpServer();
+server.listen(<span class="num">9000</span>);
+
+server.setonconnect(function(client) {
+    print(<span class="str">"New client!"</span>);
+    print(<span class="str">"Address: "</span> + client.getpeername().ip);
+
+    <span class="cmt">// Greeting</span>
+    client.sendline(<span class="str">"Welcome!"</span>);
+
+    <span class="cmt">// Reading data</span>
+    <span class="kw">var</span> line = client.recvline(<span class="num">5000</span>);
+    <span class="kw">if</span> (line != <span class="kw">null</span>) {
+        print(<span class="str">"Response: "</span> + line);
+        client.sendline(<span class="str">"Received: "</span> + line);
+    }
+});</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>broadcast(data)</h2>
+<p>Sends data to all connected clients at once. Returns the total number of bytes sent.</p>
+<pre><code><span class="cmt">// Broadcast to everyone on a new connection</span>
+server.setonconnect(function(client) {
+    server.broadcast(<span class="str">"New user!"</span>);
+});
+
+<span class="cmt">// Relay a message from a client to everyone</span>
+<span class="kw">function</span> relay(sender, msg) {
+    <span class="kw">var</span> clients = server.clients();
+    <span class="kw">for</span> (<span class="kw">var</span> c : clients) {
+        c.sendline(msg);
+    }
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>clients()</h2>
+<p>Returns an array of all connected clients (TcpClient). Disconnected ones are removed automatically.</p>
+<pre><code><span class="kw">var</span> clients = server.clients();
+print(<span class="str">"Connected: "</span> + clients.size());
+
+<span class="cmt">// Sending to everyone manually</span>
+<span class="kw">for</span> (<span class="kw">var</span> c : clients) {
+    <span class="kw">if</span> (c.connected) {
+        c.sendline(<span class="str">"Ping"</span>);
+    }
+}</code></pre>
+</div>
+
+<!-- ============================== EXAMPLES ============================== -->
+
+<div class="doc-section">
+<h2>Examples</h2>
+
+<h3>Basic echo server</h3>
+<pre><code>loadPlugin(<span class="str">"tcp"</span>);
+
+<span class="kw">var</span> server = TcpServer();
+server.listen(<span class="num">9000</span>);
+print(<span class="str">"Server started on port 9000"</span>);
+
+<span class="kw">var</span> client = TcpClient();
+client.connect(<span class="str">"127.0.0.1"</span>, <span class="num">9000</span>);
+
+<span class="kw">var</span> msg = client.recvline(<span class="num">3000</span>);
+print(<span class="str">"From server: "</span> + msg);
+
+client.disconnect();
+server.stop();</code></pre>
+
+<h3>Multi-client chat</h3>
+<pre><code>loadPlugin(<span class="str">"tcp"</span>);
+
+<span class="kw">var</span> server = TcpServer();
+server.listen(<span class="num">8080</span>);
+
+server.setonconnect(function(client) {
+    <span class="kw">var</span> name = client.recvline(<span class="num">3000</span>);
+    server.broadcast(name + <span class="str">" joined the chat"</span>);
+
+    <span class="kw">while</span> (client.connected) {
+        <span class="kw">var</span> line = client.recvline(<span class="num">10000</span>);
+        <span class="kw">if</span> (line == <span class="kw">null</span>) <span class="kw">break</span>;
+        server.broadcast(name + <span class="str">": "</span> + line);
+    }
+
+    server.broadcast(name + <span class="str">" left the chat"</span>);
+});
+
+print(<span class="str">"Chat server started on port 8080"</span>);</code></pre>
+
+<h3>HTTP server (minimal)</h3>
+<pre><code>loadPlugin(<span class="str">"tcp"</span>);
+
+<span class="kw">var</span> server = TcpServer();
+server.listen(<span class="num">8080</span>);
+
+server.setonconnect(function(client) {
+    <span class="kw">var</span> request = client.recvline(<span class="num">2000</span>);
+    <span class="kw">if</span> (request != <span class="kw">null</span>) {
+        <span class="cmt">// Skipping headers</span>
+        <span class="kw">while</span> (<span class="kw">true</span>) {
+            <span class="kw">var</span> header = client.recvline(<span class="num">500</span>);
+            <span class="kw">if</span> (header == <span class="kw">null</span> || header == <span class="str">""</span>) <span class="kw">break</span>;
+        }
+
+        <span class="cmt">// Response</span>
+        <span class="kw">var</span> body = <span class="str">"&lt;h1&gt;Hello, world!&lt;/h1&gt;"</span>;
+        <span class="kw">var</span> response =
+            <span class="str">"HTTP/1.1 200 OK\r\n"</span> +
+            <span class="str">"Content-Type: text/html; charset=utf-8\r\n"</span> +
+            <span class="str">"Content-Length: "</span> + body.size() + <span class="str">"\r\n"</span> +
+            <span class="str">"Connection: close\r\n"</span> +
+            <span class="str">"\r\n"</span> + body;
+        client.send(response);
+    }
+    client.disconnect();
+});
+
+print(<span class="str">"HTTP server: http://127.0.0.1:8080"</span>);</code></pre>
+
+<h3>Named instances</h3>
+<pre><code>loadPlugin(<span class="str">"tcp"</span>);
+
+<span class="cmt">// Creating a named server</span>
+<span class="kw">var</span> s = TcpServer(<span class="str">"main"</span>);
+s.listen(<span class="num">8080</span>);
+
+<span class="cmt">// Calling again — returns the same object</span>
+<span class="kw">var</span> same = TcpServer(<span class="str">"main"</span>);
+print(same.listening);  <span class="cmt">// 1</span>
+
+<span class="cmt">// Named client</span>
+<span class="kw">var</span> c = TcpClient(<span class="str">"worker"</span>);
+c.connect(<span class="str">"127.0.0.1"</span>, <span class="num">8080</span>);
+
+<span class="cmt">// Calling again — returns the same object</span>
+<span class="kw">var</span> same_client = TcpClient(<span class="str">"worker"</span>);
+print(same_client.connected);  <span class="cmt">// 1</span></code></pre>
+
+<h3>Working with ByteArray (binary protocol)</h3>
+<pre><code>loadPlugin(<span class="str">"tcp"</span>);
+
+<span class="kw">var</span> server = TcpServer();
+server.listen(<span class="num">7000</span>);
+
+server.setonconnect(function(client) {
+    <span class="cmt">// Reading binary data</span>
+    <span class="kw">var</span> raw = client.recv(<span class="num">1024</span>);
+    <span class="kw">if</span> (raw != <span class="kw">null</span>) {
+        print(<span class="str">"Bytes received: "</span> + raw.size());
+    }
+});
+
+<span class="kw">var</span> client = TcpClient();
+client.connect(<span class="str">"127.0.0.1"</span>, <span class="num">7000</span>);
+
+<span class="cmt">// Sending binary data</span>
+<span class="kw">var</span> packet = ByteArray();
+packet.append(<span class="num">0x01</span>);  <span class="cmt">// command</span>
+packet.append(<span class="num">0x00</span>);  <span class="cmt">// parameter</span>
+packet.append(<span class="num">0xFF</span>);  <span class="cmt">// checksum</span>
+client.send(packet);
+
+client.disconnect();
+server.stop();</code></pre>
+
+<h3>Simple TCP client</h3>
+<pre><code>loadPlugin(<span class="str">"tcp"</span>);
+
+<span class="kw">var</span> client = TcpClient();
+<span class="kw">if</span> (!client.connect(<span class="str">"192.168.1.100"</span>, <span class="num">5000</span>)) {
+    print(<span class="str">"Could not connect!"</span>);
+    <span class="kw">return</span>;
+}
+
+client.sendline(<span class="str">"PING"</span>);
+<span class="kw">var</span> response = client.recvline(<span class="num">5000</span>);
+<span class="kw">if</span> (response == <span class="str">"PONG"</span>) {
+    print(<span class="str">"Server is up!"</span>);
+}
+
+print(<span class="str">"Peer: "</span> + client.getpeername().ip);
+client.disconnect();</code></pre>
+</div>
+
+<!-- ============================== SERVICES ============================== -->
+
+<div class="doc-section">
+<h2>Services for inter-plugin access</h2>
+<p>The plugin registers services for managing named instances from other plugins.</p>
+
+<h3>TcpClientService</h3>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Description</th></tr>
+<tr><td><code>create</code></td><td><code>name</code></td><td>Creates or retrieves a named client</td></tr>
+<tr><td><code>get</code></td><td><code>name</code></td><td>Retrieves a client by name (null if not found)</td></tr>
+<tr><td><code>has</code></td><td><code>name</code></td><td>Checks existence (1/0)</td></tr>
+<tr><td><code>delete</code></td><td><code>name</code></td><td>Removes from the registry + disconnects</td></tr>
+<tr><td><code>connect</code></td><td><code>name, host, port</code></td><td>Connects the client by name</td></tr>
+<tr><td><code>disconnect</code></td><td><code>name</code></td><td>Disconnects the client by name</td></tr>
+<tr><td><code>send</code></td><td><code>name, data</code></td><td>Sends data</td></tr>
+<tr><td><code>recv</code></td><td><code>name, [max], [text]</code></td><td>Receives data</td></tr>
+<tr><td><code>recvline</code></td><td><code>name, [timeout]</code></td><td>Receives a line</td></tr>
+<tr><td><code>available</code></td><td><code>name</code></td><td>Bytes in the buffer</td></tr>
+<tr><td><code>clear</code></td><td><code>name</code></td><td>Clears the buffer</td></tr>
+</table>
+
+<h3>TcpServerService</h3>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Description</th></tr>
+<tr><td><code>create</code></td><td><code>name</code></td><td>Creates or retrieves a named server</td></tr>
+<tr><td><code>get</code></td><td><code>name</code></td><td>Retrieves the server by name</td></tr>
+<tr><td><code>has</code></td><td><code>name</code></td><td>Checks existence (1/0)</td></tr>
+<tr><td><code>delete</code></td><td><code>name</code></td><td>Removes from the registry + stops</td></tr>
+<tr><td><code>listen</code></td><td><code>name, port</code></td><td>Starts listening</td></tr>
+<tr><td><code>stop</code></td><td><code>name</code></td><td>Stops the server</td></tr>
+<tr><td><code>clientcount</code></td><td><code>name</code></td><td>Number of clients</td></tr>
+<tr><td><code>broadcast</code></td><td><code>name, data</code></td><td>Broadcasts to all clients</td></tr>
+<tr><td><code>closeall</code></td><td><code>name</code></td><td>Disconnects all clients</td></tr>
+</table>
+</div>
+
+<!-- ============================== NOTES ============================== -->
+
+<div class="doc-section">
+<h2>Notes</h2>
+<ul>
+  <li><strong>Non-blocking I/O.</strong> All sockets work in non-blocking mode. Data is received by a background thread and buffered.</li>
+  <li><strong>recv() — non-blocking.</strong> Reads from the buffer, returns <code>null</code> if there is no data.</li>
+  <li><strong>recvline() — blocking.</strong> Waits for a line up to <code>\n</code> with the given timeout (5 sec by default).</li>
+  <li><strong>A repeated listen()</strong> automatically closes the previous listening and all clients.</li>
+  <li><strong>Server clients</strong> (created on connection) are removed automatically on disconnect.</li>
+  <li><strong>Named instances</strong> are returned again when calling <code>TcpClient("name")</code> / <code>TcpServer("name")</code>.</li>
+  <li><strong>Thread safety.</strong> All client and server methods are thread-safe.</li>
+  <li><strong>Cleanup.</strong> When the script ends, all sockets and threads are released automatically.</li>
+</ul>
+</div>
+
+<footer><a href="plugins.html">← Back to the plugin list</a></footer>
+</div>
+</body>
+</html>

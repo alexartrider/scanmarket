@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTTP Plugin — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>HTTP Plugin</h1><p>HTTP/HTTPS client and HTTP server — requests, file download, authentication, headers, multipart, built-in web server</p><div class="lang-switch"><a href="../http.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="http.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / <a href="plugins.html">Plugins</a> / HTTP</p>
+
+<div class="doc-section">
+<h2>Dependencies</h2>
+<p>Requires OpenSSL 3: <code>libssl-3-x64.dll</code>, <code>libcrypto-3-x64.dll</code> (placed next to the binary).</p>
+</div>
+
+<div class="doc-section">
+<h2>Loading the plugin</h2>
+<pre><code>loadPlugin(<span class="str">"plugins/http.dll"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Creating an object</h2>
+<pre><code><span class="kw">var</span> http = HttpClient();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Methods</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>get</code></td><td><code>url</code></td><td>bool</td><td>GET request</td></tr>
+<tr><td><code>post</code></td><td><code>url, [body], [contentType]</code></td><td>bool</td><td>POST request</td></tr>
+<tr><td><code>put</code></td><td><code>url, [body], [contentType]</code></td><td>bool</td><td>PUT request</td></tr>
+<tr><td><code>del</code></td><td><code>url</code></td><td>bool</td><td>DELETE request</td></tr>
+<tr><td><code>patch</code></td><td><code>url, [body], [contentType]</code></td><td>bool</td><td>PATCH request</td></tr>
+<tr><td><code>head</code></td><td><code>url</code></td><td>bool</td><td>HEAD request</td></tr>
+<tr><td><code>request</code></td><td><code>method, url, [body], [contentType]</code></td><td>bool</td><td>Arbitrary HTTP method</td></tr>
+<tr><td><code>download</code></td><td><code>url, filePath</code></td><td>bool</td><td>Download a file to disk</td></tr>
+<tr><td><code>upload</code></td><td><code>url, filePath, [fieldName]</code></td><td>bool</td><td>Multipart/form-data upload</td></tr>
+<tr><td><code>setHeader</code></td><td><code>name, value</code></td><td>bool</td><td>Set a request header</td></tr>
+<tr><td><code>clearHeaders</code></td><td>—</td><td>bool</td><td>Clear headers and authentication</td></tr>
+<tr><td><code>setBasicAuth</code></td><td><code>user, pass</code></td><td>bool</td><td>HTTP Basic Auth</td></tr>
+<tr><td><code>setBearerAuth</code></td><td><code>token</code></td><td>bool</td><td>Bearer Auth (Authorization: Bearer ...)</td></tr>
+<tr><td><code>setTimeout</code></td><td><code>[ms]</code></td><td>int</td><td>Timeout (ms). Without arguments — getter</td></tr>
+<tr><td><code>setUserAgent</code></td><td><code>ua</code></td><td>bool</td><td>Custom User-Agent</td></tr>
+<tr><td><code>setProxy</code></td><td><code>host, port</code></td><td>bool</td><td>HTTP proxy</td></tr>
+<tr><td><code>setVerifySsl</code></td><td><code>verify</code></td><td>bool</td><td>Verify SSL certificates</td></tr>
+<tr><td><code>setFollowRedirects</code></td><td><code>follow</code></td><td>bool</td><td>Follow redirects (default true)</td></tr>
+<tr><td><code>status</code></td><td>—</td><td>int</td><td>HTTP status of the last response</td></tr>
+<tr><td><code>statusText</code></td><td>—</td><td>string</td><td>Status text (OK, Not Found...)</td></tr>
+<tr><td><code>getResponse</code></td><td>—</td><td>string</td><td>Response body as a string</td></tr>
+<tr><td><code>getResponseBytes</code></td><td>—</td><td>ByteArray</td><td>Response body as a byte array</td></tr>
+<tr><td><code>getHeader</code></td><td><code>name</code></td><td>string</td><td>Response header</td></tr>
+<tr><td><code>getResponseHeaders</code></td><td>—</td><td>tuple</td><td>All response headers</td></tr>
+<tr><td><code>urlEncode</code></td><td><code>str</code></td><td>string</td><td>URL-encode a string</td></tr>
+<tr><td><code>urlDecode</code></td><td><code>str</code></td><td>string</td><td>URL-decode a string</td></tr>
+<tr><td><code>getMimeType</code></td><td><code>filename</code></td><td>string</td><td>MIME type by file extension</td></tr>
+<tr><td><code>connect</code></td><td><code>host, port, [ssl]</code></td><td>bool</td><td>Manual connection to a server</td></tr>
+<tr><td><code>disconnect</code></td><td>—</td><td>bool</td><td>Disconnect</td></tr>
+<tr><td><code>isconnected</code></td><td>—</td><td>bool</td><td>Check connection state</td></tr>
+<tr><td><code>lastError</code></td><td>—</td><td>string</td><td>Last error</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>get(url)</h2>
+<p>Performs a GET request. Returns <code>true</code> if a response was received (any status).</p>
+<table>
+<tr><th>Argument</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>url</code></td><td>string</td><td>Full URL (http://... or https://...)</td></tr>
+</table>
+<pre><code><span class="kw">var</span> http = HttpClient();
+<span class="kw">if</span> (http.get(<span class="str">"https://httpbin.org/get"</span>)) {
+    print(http.status());        <span class="cmt">// 200</span>
+    print(http.statusText());    <span class="cmt">// OK</span>
+    print(http.getResponse());   <span class="cmt">// response body</span>
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>post(url, [body], [contentType])</h2>
+<p>POST request with a body. Default Content-Type: <code>application/x-www-form-urlencoded</code>.</p>
+<table>
+<tr><th>Argument</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>url</code></td><td>string</td><td>—</td><td>Full URL</td></tr>
+<tr><td><code>body</code></td><td>string</td><td>""</td><td>Request body</td></tr>
+<tr><td><code>contentType</code></td><td>string</td><td>"application/x-www-form-urlencoded"</td><td>Content-Type</td></tr>
+</table>
+<pre><code><span class="cmt">// Form data</span>
+http.post(<span class="str">"https://httpbin.org/post"</span>, <span class="str">"name=Ivan&age=30"</span>);
+
+<span class="cmt">// JSON</span>
+http.post(<span class="str">"https://httpbin.org/post"</span>,
+    <span class="str">"{\"key\":\"value\"}"</span>, <span class="str">"application/json"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>put(url, [body], [contentType])</h2>
+<p>PUT request. Similar to <code>post()</code>.</p>
+<pre><code>http.put(<span class="str">"https://httpbin.org/put"</span>, <span class="str">"updated data"</span>, <span class="str">"text/plain"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>del(url)</h2>
+<p>DELETE request.</p>
+<pre><code>http.del(<span class="str">"https://httpbin.org/delete"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>patch(url, [body], [contentType])</h2>
+<p>PATCH request. Similar to <code>post()</code>.</p>
+<pre><code>http.patch(<span class="str">"https://httpbin.org/patch"</span>, <span class="str">"partial update"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>head(url)</h2>
+<p>HEAD request — returns only headers without a body.</p>
+<pre><code>http.head(<span class="str">"https://httpbin.org/get"</span>);
+print(http.getHeader(<span class="str">"Content-Type"</span>));  <span class="cmt">// application/json</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>request(method, url, [body], [contentType])</h2>
+<p>Arbitrary HTTP method (OPTIONS, TRACE, CONNECT, etc.).</p>
+<pre><code>http.request(<span class="str">"OPTIONS"</span>, <span class="str">"https://httpbin.org/get"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>download(url, filePath)</h2>
+<p>Download a file to disk. Supports HTTP and HTTPS with automatic redirection.</p>
+<table>
+<tr><th>Argument</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>url</code></td><td>string</td><td>File URL</td></tr>
+<tr><td><code>filePath</code></td><td>string</td><td>Path to save to</td></tr>
+</table>
+<pre><code><span class="kw">if</span> (http.download(<span class="str">"https://example.com/file.zip"</span>, <span class="str">"download/file.zip"</span>)) {
+    print(<span class="str">"Size: "</span> + file.size(<span class="str">"download/file.zip"</span>));
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>upload(url, filePath, [fieldName])</h2>
+<p>Multipart/form-data file upload (equivalent to &lt;input type="file"&gt;).</p>
+<table>
+<tr><th>Argument</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>url</code></td><td>string</td><td>—</td><td>Upload URL</td></tr>
+<tr><td><code>filePath</code></td><td>string</td><td>—</td><td>Local path to the file</td></tr>
+<tr><td><code>fieldName</code></td><td>string</td><td>"file"</td><td>Field name in the form</td></tr>
+</table>
+<pre><code>http.upload(<span class="str">"https://httpbin.org/post"</span>, <span class="str">"photo.jpg"</span>);
+http.upload(<span class="str">"https://httpbin.org/post"</span>, <span class="str">"data.csv"</span>, <span class="str">"attachment"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Headers and authentication</h2>
+<pre><code><span class="cmt">// Custom headers</span>
+http.setHeader(<span class="str">"X-Custom"</span>, <span class="str">"value"</span>);
+http.setHeader(<span class="str">"Accept"</span>, <span class="str">"application/json"</span>);
+http.get(<span class="str">"https://httpbin.org/headers"</span>);
+http.clearHeaders();  <span class="cmt">// + resets basic/bearer auth</span>
+
+<span class="cmt">// Basic Auth</span>
+http.setBasicAuth(<span class="str">"admin"</span>, <span class="str">"secret"</span>);
+http.get(<span class="str">"https://httpbin.org/basic-auth/admin/secret"</span>);
+http.clearHeaders();
+
+<span class="cmt">// Bearer Token</span>
+http.setBearerAuth(<span class="str">"eyJhbGciOiJIUzI1NiJ9..."</span>);
+http.get(<span class="str">"https://api.example.com/me"</span>);
+http.clearHeaders();
+
+<span class="cmt">// Custom User-Agent</span>
+http.setUserAgent(<span class="str">"MyApp/2.0"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Timeout and connection</h2>
+<pre><code><span class="cmt">// Timeout (default 30000 ms)</span>
+http.setTimeout(<span class="num">5000</span>);   <span class="cmt">// set</span>
+print(http.setTimeout()); <span class="cmt">// read current</span>
+
+<span class="cmt">// Manual connection handling</span>
+http.connect(<span class="str">"api.example.com"</span>, <span class="num">443</span>, <span class="kw">true</span>);
+print(http.isconnected());  <span class="cmt">// true</span>
+http.disconnect();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Redirects</h2>
+<p>By default the plugin automatically follows HTTP redirects (301, 302, 303, 307, 308) up to 10 times.</p>
+<pre><code><span class="cmt">// Disable redirects</span>
+http.setFollowRedirects(<span class="kw">false</span>);
+http.get(<span class="str">"https://httpbin.org/redirect/3"</span>);
+print(http.status());  <span class="cmt">// 302</span>
+
+<span class="cmt">// Enable them back</span>
+http.setFollowRedirects(<span class="kw">true</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Response and headers</h2>
+<pre><code>http.get(<span class="str">"https://httpbin.org/get"</span>);
+
+<span class="cmt">// Status</span>
+print(http.status());       <span class="cmt">// 200</span>
+print(http.statusText());   <span class="cmt">// OK</span>
+
+<span class="cmt">// Response body</span>
+<span class="kw">var</span> text = http.getResponse();     <span class="cmt">// string</span>
+<span class="kw">var</span> data = http.getResponseBytes(); <span class="cmt">// ByteArray</span>
+
+<span class="cmt">// Response headers</span>
+print(http.getHeader(<span class="str">"Content-Type"</span>));
+<span class="kw">var</span> all = http.getResponseHeaders(); <span class="cmt">// tuple</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Utilities</h2>
+<pre><code><span class="cmt">// URL encoding/decoding</span>
+<span class="kw">var</span> enc = http.urlEncode(<span class="str">"Hello World!"</span>);  <span class="cmt">// %48%65%6C%6C%6F...</span>
+<span class="kw">var</span> dec = http.urlDecode(<span class="str">"%D0%9F%D1%80%D0%B8%D0%B2%D0%B5%D1%82"</span>);
+
+<span class="cmt">// MIME type by extension</span>
+print(http.getMimeType(<span class="str">"index.html"</span>));   <span class="cmt">// text/html</span>
+print(http.getMimeType(<span class="str">"photo.jpg"</span>));    <span class="cmt">// image/jpeg</span>
+print(http.getMimeType(<span class="str">"data.json"</span>));    <span class="cmt">// application/json</span>
+print(http.getMimeType(<span class="str">"app.exe"</span>));      <span class="cmt">// application/x-msdownload</span>
+
+<span class="cmt">// Diagnostics</span>
+print(http.lastError());  <span class="cmt">// "null" if there are no errors</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Examples</h2>
+
+<h3>GET request with error handling</h3>
+<pre><code>loadPlugin(<span class="str">"plugins/http.dll"</span>);
+
+<span class="kw">var</span> http = HttpClient();
+http.setTimeout(<span class="num">10000</span>);
+
+<span class="kw">if</span> (http.get(<span class="str">"https://httpbin.org/get"</span>)) {
+    <span class="kw">if</span> (http.status() == <span class="num">200</span>) {
+        print(http.getResponse());
+    } <span class="kw">else</span> {
+        print(<span class="str">"HTTP Error: "</span> + http.status() + <span class="str">" "</span> + http.statusText());
+    }
+} <span class="kw">else</span> {
+    print(<span class="str">"Connection error: "</span> + http.lastError());
+}</code></pre>
+
+<h3>POST JSON</h3>
+<pre><code><span class="kw">var</span> http = HttpClient();
+<span class="kw">var</span> json = <span class="str">"{\"name\":\"Ivan\",\"age\":30}"</span>;
+
+http.post(<span class="str">"https://httpbin.org/post"</span>, json, <span class="str">"application/json"</span>);
+print(http.status());        <span class="cmt">// 200</span>
+print(http.getResponse());   <span class="cmt">// echo from the server</span></code></pre>
+
+<h3>File download</h3>
+<pre><code><span class="kw">var</span> http = HttpClient();
+<span class="kw">if</span> (http.download(<span class="str">"https://httpbin.org/robots.txt"</span>, <span class="str">"robots.txt"</span>)) {
+    print(<span class="str">"Downloaded: "</span> + file.size(<span class="str">"robots.txt"</span>) + <span class="str">" bytes"</span>);
+}
+
+<span class="cmt">// Multipart upload</span>
+<span class="kw">var</span> http2 = HttpClient();
+http2.upload(<span class="str">"https://httpbin.org/post"</span>, <span class="str">"photo.jpg"</span>, <span class="str">"photo"</span>);
+print(http2.getResponse());</code></pre>
+
+<h3>Working with an API (JSON + headers)</h3>
+<pre><code><span class="kw">var</span> http = HttpClient();
+http.setHeader(<span class="str">"Accept"</span>, <span class="str">"application/json"</span>);
+http.setBearerAuth(<span class="str">"my-api-token"</span>);
+http.setUserAgent(<span class="str">"MyScript/1.0"</span>);
+
+<span class="kw">if</span> (http.get(<span class="str">"https://api.example.com/users"</span>)) {
+    <span class="kw">var</span> data = json.parse(http.getResponse());
+    print(data);
+}
+
+http.clearHeaders();</code></pre>
+
+<h3>Proxy</h3>
+<pre><code><span class="kw">var</span> http = HttpClient();
+http.setProxy(<span class="str">"proxy.company.com"</span>, <span class="num">8080</span>);
+http.get(<span class="str">"https://httpbin.org/ip"</span>);
+print(http.getResponse());</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>HttpServer — built-in HTTP server</h2>
+<p>Multithreaded HTTP server with a callback request handling model. It accepts connections in a background thread; the script handles requests synchronously via <code>process()</code>.</p>
+</div>
+
+<div class="doc-section">
+<h2>Creating an object</h2>
+<pre><code><span class="kw">var</span> server = HttpServer();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Server methods</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>listen</code></td><td><code>port</code></td><td>bool</td><td>Start listening on a port</td></tr>
+<tr><td><code>stop</code></td><td>—</td><td>bool</td><td>Stop the server</td></tr>
+<tr><td><code>islistening</code></td><td>—</td><td>bool</td><td>Check listening state</td></tr>
+<tr><td><code>port</code></td><td>—</td><td>int</td><td>Current port number</td></tr>
+<tr><td><code>process</code></td><td><code>[timeout_ms]</code></td><td>tuple|null</td><td>Process one incoming request (returns the request tuple or null)</td></tr>
+<tr><td><code>respond</code></td><td><code>socketId, responseTuple</code></td><td>bool</td><td>Send an HTTP response and close the connection</td></tr>
+<tr><td><code>lastError</code></td><td>—</td><td>string</td><td>Last error</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>listen(port)</h2>
+<p>Starts listening on the specified TCP port. Spawns a background thread to accept connections. Returns <code>true</code> on success.</p>
+<pre><code><span class="kw">var</span> server = HttpServer();
+<span class="kw">if</span> (server.listen(<span class="num">8080</span>)) {
+    print(<span class="str">"Server started on port "</span> + server.port());
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>process(timeout_ms)</h2>
+<p>Waits for an incoming request for <code>timeout_ms</code> milliseconds (default 50). If a request arrived — returns a tuple with the request data. If there are no requests — returns <code>null</code>.</p>
+<p>The request tuple contains:</p>
+<table>
+<tr><th>Field</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>method</code></td><td>string</td><td>HTTP method (GET, POST, ...)</td></tr>
+<tr><td><code>path</code></td><td>string</td><td>Request path (/api/data)</td></tr>
+<tr><td><code>query</code></td><td>string</td><td>Query string (q=test&page=1)</td></tr>
+<tr><td><code>body</code></td><td>string</td><td>Request body</td></tr>
+<tr><td><code>headers</code></td><td>tuple</td><td>Request headers (key: value)</td></tr>
+<tr><td><code>port</code></td><td>int</td><td>Server port</td></tr>
+<tr><td><code>socket</code></td><td>int</td><td>Connection identifier (to pass to respond)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>respond(socketId, responseTuple)</h2>
+<p>Sends an HTTP response to the client and closes the connection. <code>responseTuple</code> is a tuple with the fields:</p>
+<table>
+<tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>status</code></td><td>int</td><td>200</td><td>HTTP status</td></tr>
+<tr><td><code>statusText</code></td><td>string</td><td>"OK"</td><td>Status text</td></tr>
+<tr><td><code>body</code></td><td>string</td><td>""</td><td>Response body</td></tr>
+<tr><td><code>headers</code></td><td>tuple</td><td>#{} </td><td>Response headers</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Example: simple server</h2>
+<pre><code>loadPlugin(<span class="str">"plugins/http.dll"</span>);
+
+<span class="kw">var</span> server = HttpServer();
+server.listen(<span class="num">8080</span>);
+print(<span class="str">"Server started on port 8080"</span>);
+
+<span class="kw">var</span> handler = function(req) {
+    print(req.method + <span class="str">" "</span> + req.path);
+    <span class="kw">return</span> #{
+        <span class="str">"status"</span>: <span class="num">200</span>,
+        <span class="str">"statusText"</span>: <span class="str">"OK"</span>,
+        <span class="str">"headers"</span>: #{"Content-Type": <span class="str">"text/plain"</span>},
+        <span class="str">"body"</span>: <span class="str">"Hello, World!"</span>
+    };
+};
+
+<span class="cmt">// Main processing loop</span>
+<span class="kw">while</span> (server.islistening()) {
+    <span class="kw">var</span> req = server.process(<span class="num">100</span>);
+    <span class="kw">if</span> (req != null) {
+        <span class="kw">var</span> resp = handler(req);
+        server.respond(req.socket, resp);
+    }
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Example: standalone server script</h2>
+<pre><code><span class="cmt">// server.prg — run: qodeqt.exe server.prg</span>
+loadPlugin(<span class="str">"plugins/http.dll"</span>);
+
+<span class="kw">var</span> server = HttpServer();
+server.listen(<span class="num">3000</span>);
+
+<span class="kw">var</span> handler = function(req) {
+    <span class="kw">if</span> (req.method == <span class="str">"GET"</span> &amp;&amp; req.path == <span class="str">"/time"</span>) {
+        <span class="kw">return</span> #{
+            <span class="str">"status"</span>: <span class="num">200</span>,
+            <span class="str">"headers"</span>: #{"Content-Type": <span class="str">"application/json"</span>},
+            <span class="str">"body"</span>: <span class="str">"{\"time\": \"\(datetime.now())\"}"</span>
+        };
+    }
+    <span class="kw">return</span> #{
+        <span class="str">"status"</span>: <span class="num">404</span>,
+        <span class="str">"statusText"</span>: <span class="str">"Not Found"</span>,
+        <span class="str">"body"</span>: <span class="str">"Not Found"</span>
+    };
+};
+
+<span class="kw">while</span> (server.islistening()) {
+    <span class="kw">var</span> req = server.process(<span class="num">100</span>);
+    <span class="kw">if</span> (req != null) {
+        <span class="kw">var</span> resp = handler(req);
+        server.respond(req.socket, resp);
+    }
+}</code></pre>
+</div>
+
+<footer><a href="plugins.html">← Back to the plugin list</a></footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>xml module — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>xml module</h1><p>Working with XML — parsing, creating and modifying documents (pugixml)</p><div class="lang-switch"><a href="../xml.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="xml.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / xml</p>
+
+<div class="doc-section">
+<h2>Access</h2>
+<p>The <code>xml</code> module is available globally without <code>uses</code>:</p>
+<pre><code>print(typeName(xml));  <span class="cmt">// object</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Module functions</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>xml.parse(string)</code></td><td>Parse an XML string → XmlDocument</td></tr>
+<tr><td><code>xml.load(path)</code></td><td>Load XML from a file → XmlDocument</td></tr>
+<tr><td><code>xml.create(rootName)</code></td><td>Create a new document with a root element → XmlDocument</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>XmlDocument methods</h2>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>doc.child(name)</code></td><td>First child element by name → XmlNode</td></tr>
+<tr><td><code>doc.children()</code></td><td>All child elements of the root → array of XmlNode</td></tr>
+<tr><td><code>doc.print()</code></td><td>Serialize the document to a string (indented)</td></tr>
+<tr><td><code>doc.save(path)</code></td><td>Save to a file (indented by default)</td></tr>
+<tr><td><code>doc.save(path, false)</code></td><td>Save without indentation</td></tr>
+<tr><td><code>doc.set_root(name)</code></td><td>Add a root element → XmlNode</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>XmlNode methods</h2>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>node.name()</code></td><td>Element name</td></tr>
+<tr><td><code>node.value()</code></td><td>Value of the <code>value</code> attribute (or an empty string)</td></tr>
+<tr><td><code>node.set_value(val)</code></td><td>Set the value</td></tr>
+<tr><td><code>node.text()</code></td><td>Text content of the element</td></tr>
+<tr><td><code>node.set_text(val)</code></td><td>Set the text content</td></tr>
+<tr><td><code>node.attribute(name)</code></td><td>Value of an attribute by name (or null)</td></tr>
+<tr><td><code>node.set_attribute(name, val)</code></td><td>Set or create an attribute</td></tr>
+<tr><td><code>node.child(name)</code></td><td>First child element by name → XmlNode</td></tr>
+<tr><td><code>node.children()</code></td><td>All child elements → array of XmlNode</td></tr>
+<tr><td><code>node.parent()</code></td><td>Parent element → XmlNode</td></tr>
+<tr><td><code>node.next_sibling()</code></td><td>Next sibling element → XmlNode</td></tr>
+<tr><td><code>node.prev_sibling()</code></td><td>Previous sibling element → XmlNode</td></tr>
+<tr><td><code>node.append_child(name)</code></td><td>Add a child element → XmlNode</td></tr>
+<tr><td><code>node.remove_child(name)</code></td><td>Remove a child element by name → bool</td></tr>
+<tr><td><code>node.attributes()</code></td><td>All attributes → array of tuples <code>#{"name": ..., "value": ...}</code></td></tr>
+<tr><td><code>node.empty()</code></td><td>true if the element is empty</td></tr>
+<tr><td><code>node.print()</code></td><td>Serialize the subtree to a string (indented)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Examples</h2>
+
+<h3>XML parsing</h3>
+<pre><code>var doc = xml.parse(<span class="str">"&lt;root&gt;&lt;name&gt;Ivan&lt;/name&gt;&lt;age&gt;30&lt;/age&gt;&lt;/root&gt;"</span>);
+print(typeName(doc));  <span class="cmt">// object</span>
+
+var root = doc.child(<span class="str">"root"</span>);
+print(root.name());           <span class="cmt">// root</span>
+print(root.child(<span class="str">"name"</span>).text());  <span class="cmt">// Ivan</span>
+print(root.child(<span class="str">"age"</span>).text());   <span class="cmt">// 30</span></code></pre>
+
+<h3>Document output</h3>
+<pre><code>print(doc.print());
+<span class="cmt">// &lt;?xml version="1.0"?&gt;</span>
+<span class="cmt">// &lt;root&gt;</span>
+<span class="cmt">//     &lt;name&gt;Ivan&lt;/name&gt;</span>
+<span class="cmt">//     &lt;age&gt;30&lt;/age&gt;</span>
+<span class="cmt">// &lt;/root&gt;</span></code></pre>
+
+<h3>Creating XML</h3>
+<pre><code>var doc = xml.create(<span class="str">"catalog"</span>);
+var root = doc.child(<span class="str">"catalog"</span>);
+
+var item = root.append_child(<span class="str">"item"</span>);
+item.set_attribute(<span class="str">"id"</span>, <span class="str">"1"</span>);
+item.append_child(<span class="str">"title"</span>).set_text(<span class="str">"Book"</span>);
+item.append_child(<span class="str">"price"</span>).set_text(<span class="str">"500"</span>);
+
+print(doc.print());</code></pre>
+
+<h3>Loading from a file</h3>
+<pre><code>var doc = xml.load(<span class="str">"data.xml"</span>);
+var items = doc.child(<span class="str">"root"</span>).children();
+for (var item : items) {
+    print(item.name() + <span class="str">": "</span> + item.text());
+}</code></pre>
+
+<h3>Saving to a file</h3>
+<pre><code>doc.save(<span class="str">"output.xml"</span>);         <span class="cmt">// indented</span>
+doc.save(<span class="str">"output.xml"</span>, false);  <span class="cmt">// not indented</span></code></pre>
+
+<h3>Working with attributes</h3>
+<pre><code>var node = doc.child(<span class="str">"root"</span>).child(<span class="str">"item"</span>);
+print(node.attribute(<span class="str">"id"</span>));  <span class="cmt">// value of the id attribute</span>
+
+var attrs = node.attributes();
+for (var a : attrs) {
+    print(a.name + <span class="str">"=\""</span> + a.value + <span class="str">"\""</span>);
+}</code></pre>
+
+<h3>Tree navigation</h3>
+<pre><code>var node = doc.child(<span class="str">"root"</span>).child(<span class="str">"item"</span>);
+var parent = node.parent();
+var next = node.next_sibling();
+var prev = node.prev_sibling();</code></pre>
+</div>
+
+<footer>Script Documentation — xml module (pugixml)</footer>
+</div>
+</body>
+</html>

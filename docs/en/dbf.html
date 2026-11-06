@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DBF Plugin — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>DBF Plugin</h1><p>Working with dBASE (DBF) files — reading, writing, creating, and managing records</p><div class="lang-switch"><a href="../dbf.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="dbf.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / <a href="plugins.html">Plugins</a> / DBF</p>
+
+<div class="doc-section">
+<h2>Loading the plugin</h2>
+<pre><code><span class="kw">if</span> (!loadPlugin(<span class="str">"plugins/dbf.dll"</span>)) {
+    print(<span class="str">"ERROR: dbf.dll not loaded!"</span>);
+    system.exit(<span class="num">1</span>);
+}
+
+<span class="kw">var</span> db = dbffile();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>File operations</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>open</code></td><td><code>path, [encoding]</code></td><td>int (1/0)</td><td>Opens a DBF file. encoding: 1251 (default) or 866</td></tr>
+<tr><td><code>close</code></td><td>—</td><td>—</td><td>Closes the file and clears the data</td></tr>
+<tr><td><code>create</code></td><td><code>path, fields, [encoding]</code></td><td>int (1/0)</td><td>Creates a new DBF file</td></tr>
+<tr><td><code>save</code></td><td><code>[path]</code></td><td>int (1/0)</td><td>Saves to a file. path is optional (defaults to the current file)</td></tr>
+<tr><td><code>isOpen</code></td><td>—</td><td>int (0/1)</td><td>Whether the file is open</td></tr>
+<tr><td><code>isModified</code></td><td>—</td><td>int (0/1)</td><td>Whether there have been changes since the last open/save</td></tr>
+</table>
+<h3>Field format for create()</h3>
+<p>An array of tuples describing each field:</p>
+<table>
+<tr><th>Key</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>name</code></td><td>string</td><td>Field name (up to 10 characters)</td></tr>
+<tr><td><code>type</code></td><td>string</td><td>Type: C (string), N (number), D (date), L (logical)</td></tr>
+<tr><td><code>length</code></td><td>int</td><td>Field length in bytes</td></tr>
+<tr><td><code>decimals</code></td><td>int</td><td>Number of decimal places (for N)</td></tr>
+</table>
+<pre><code><span class="cmt">// Opening an existing file</span>
+<span class="kw">var</span> db = dbffile();
+<span class="kw">var</span> ok = db.open(<span class="str">"C:/data/employees.dbf"</span>);
+print(<span class="str">"Opened: "</span> + ok);
+
+<span class="cmt">// Opening with CP866 encoding</span>
+db.open(<span class="str">"C:/data/old_file.dbf"</span>, <span class="num">866</span>);
+
+<span class="cmt">// Creating a new file</span>
+<span class="kw">var</span> fields = #[
+    #{"name": <span class="str">"NAME"</span>,    "type": <span class="str">"C"</span>, "length": <span class="num">30</span>, "decimals": <span class="num">0</span>},
+    #{"name": <span class="str">"AGE"</span>,     "type": <span class="str">"N"</span>, "length": <span class="num">5</span>,  "decimals": <span class="num">0</span>},
+    #{"name": <span class="str">"SALARY"</span>,  "type": <span class="str">"N"</span>, "length": <span class="num">10</span>, "decimals": <span class="num">2</span>},
+    #{"name": <span class="str">"BDATE"</span>,   "type": <span class="str">"D"</span>, "length": <span class="num">8</span>,  "decimals": <span class="num">0</span>},
+    #{"name": <span class="str">"ACTIVE"</span>,  "type": <span class="str">"L"</span>, "length": <span class="num">1</span>,  "decimals": <span class="num">0</span>}
+];
+db.create(<span class="str">"C:/data/new.dbf"</span>, fields);
+
+<span class="cmt">// Saving</span>
+db.save();
+<span class="cmt">// Or save to another file:</span>
+db.save(<span class="str">"C:/data/backup.dbf"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Record navigation</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>next</code></td><td>—</td><td>int (0/1)</td><td>Moves to the next record. Returns 0 when EOF is reached</td></tr>
+<tr><td><code>prev</code></td><td>—</td><td>int (0/1)</td><td>Moves to the previous record. Returns 0 when BOF is reached</td></tr>
+<tr><td><code>rewind</code></td><td>—</td><td>—</td><td>Rewinds to the beginning (pointer before the first record)</td></tr>
+<tr><td><code>moveTo</code></td><td><code>n</code></td><td>int (1/0)</td><td>Moves to a record by number (1-based)</td></tr>
+<tr><td><code>eof</code></td><td>—</td><td>int (0/1)</td><td>Whether the end of file has been reached</td></tr>
+<tr><td><code>bof</code></td><td>—</td><td>int (0/1)</td><td>Whether the pointer is before the first record</td></tr>
+<tr><td><code>recno</code></td><td>—</td><td>int</td><td>Current record number (1-based, 0 = before the first)</td></tr>
+<tr><td><code>recordCount</code></td><td>—</td><td>int</td><td>Total number of records</td></tr>
+</table>
+<pre><code><span class="kw">var</span> db = dbffile();
+db.open(<span class="str">"C:/data/employees.dbf"</span>);
+
+<span class="cmt">// Sequential iteration</span>
+db.rewind();
+<span class="kw">while</span> (db.next()) {
+    <span class="kw">var</span> row = db.currentRow();
+    print(row[<span class="str">"NAME"</span>]);
+}
+
+<span class="cmt">// Jump to a specific record</span>
+db.moveTo(<span class="num">5</span>);  <span class="cmt">// 5th record</span>
+<span class="kw">var</span> row = db.currentRow();
+print(row);
+
+<span class="cmt">// Position in the file</span>
+print(<span class="str">"Record: "</span> + db.recno() + <span class="str">" of "</span> + db.recordCount());
+print(<span class="str">"EOF: "</span> + db.eof());
+print(<span class="str">"BOF: "</span> + db.bof());</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Reading data</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>readAll</code></td><td><code>[asTuple]</code></td><td>array / tuple</td><td>Reads all records. Default: an array of tuples</td></tr>
+<tr><td><code>row</code></td><td><code>n</code></td><td>tuple / null</td><td>Reads a record by number (1-based)</td></tr>
+<tr><td><code>currentRow</code></td><td>—</td><td>tuple / null</td><td>The current record at the navigation pointer</td></tr>
+<tr><td><code>readFlat</code></td><td>—</td><td>array</td><td>A flat array of all values in sequence</td></tr>
+</table>
+<h3>Return data formats</h3>
+<table>
+<tr><th>Method</th><th>Format</th><th>Example</th></tr>
+<tr><td><code>readAll()</code></td><td>array of tuple</td><td><code>[{"NAME":"Ivan","AGE":30}, {"NAME":"Peter","AGE":25}]</code></td></tr>
+<tr><td><code>readAll(true)</code></td><td>tuple of tuple</td><td><code>{1:{"NAME":"Ivan"}, 2:{"NAME":"Peter"}}</code></td></tr>
+<tr><td><code>row(n)</code></td><td>tuple</td><td><code>{"NAME":"Ivan","AGE":30}</code></td></tr>
+<tr><td><code>readFlat()</code></td><td>array</td><td><code>["Ivan", 30, "Peter", 25, ...]</code></td></tr>
+</table>
+<h3>Value types in a tuple</h3>
+<table>
+<tr><th>DBF type</th><th>Script type</th><th>Example</th></tr>
+<tr><td><code>C</code> (Character)</td><td>string</td><td><code>"Ivan"</code></td></tr>
+<tr><td><code>N</code> (Numeric, decimals=0)</td><td>int</td><td><code>30</code></td></tr>
+<tr><td><code>N</code> (Numeric, decimals&gt;0)</td><td>double</td><td><code>50000.00</code></td></tr>
+<tr><td><code>D</code> (Date)</td><td>datetime</td><td><code>datetime</code></td></tr>
+<tr><td><code>L</code> (Logical)</td><td>int (0/1)</td><td><code>1</code> or <code>0</code></td></tr>
+</table>
+<pre><code><span class="kw">var</span> db = dbffile();
+db.open(<span class="str">"C:/data/employees.dbf"</span>);
+
+<span class="cmt">// Read all records</span>
+<span class="kw">var</span> rows = db.readAll();
+print(<span class="str">"Records: "</span> + rows.size());
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i < rows.size(); i++) {
+    print(rows[i][<span class="str">"NAME"</span>] + <span class="str">" — "</span> + rows[i][<span class="str">"AGE"</span>]);
+}
+
+<span class="cmt">// Read a single record</span>
+<span class="kw">var</span> row = db.row(<span class="num">3</span>);  <span class="cmt">// 3rd record</span>
+print(row[<span class="str">"NAME"</span>]);
+print(row[<span class="str">"SALARY"</span>]);
+
+<span class="cmt">// Current record (after next/moveTo)</span>
+db.moveTo(<span class="num">1</span>);
+<span class="kw">var</span> cur = db.currentRow();
+print(cur);
+
+<span class="cmt">// Flat array</span>
+<span class="kw">var</span> flat = db.readFlat();
+print(<span class="str">"Elements: "</span> + flat.size());  <span class="cmt">// recordCount * fieldCount</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Writing data</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>append</code></td><td><code>(val1, val2, ...)</code> or <code>(array)</code> or <code>(tuple)</code></td><td>int (1/0)</td><td>Appends a record (3 call forms)</td></tr>
+<tr><td><code>updateRow</code></td><td><code>n, data</code></td><td>int (1/0)</td><td>Updates a record by number (1-based)</td></tr>
+<tr><td><code>updateCurrentRow</code></td><td><code>data</code></td><td>int (1/0)</td><td>Updates the current record</td></tr>
+<tr><td><code>writeAll</code></td><td><code>data</code></td><td>int (1/0)</td><td>Replaces all records entirely</td></tr>
+</table>
+<h3>Call forms of append()</h3>
+<table>
+<tr><th>Form</th><th>Example</th></tr>
+<tr><td>Separate arguments</td><td><code>db.append("Ivan", 30, 50000.00, dt, 1)</code></td></tr>
+<tr><td>Array</td><td><code>db.append(#["Ivan", 30, 50000.00, dt, 1])</code></td></tr>
+<tr><td>Tuple</td><td><code>db.append(#{"NAME":"Ivan", "AGE":30, "SALARY":50000.00})</code></td></tr>
+</table>
+<pre><code><span class="kw">var</span> db = dbffile();
+db.open(<span class="str">"C:/data/employees.dbf"</span>);
+
+<span class="cmt">// Form 1: separate arguments</span>
+<span class="kw">var</span> dt = datetime.makedatetime(<span class="num">2024</span>, <span class="num">1</span>, <span class="num">15</span>);
+db.append(<span class="str">"Ivanov Ivan"</span>, <span class="num">30</span>, <span class="num">50000.00</span>, dt, <span class="num">1</span>);
+
+<span class="cmt">// Form 2: array</span>
+db.append(#[<span class="str">"Petrov Pyotr"</span>, <span class="num">25</span>, <span class="num">45000.50</span>, dt, <span class="num">1</span>]);
+
+<span class="cmt">// Form 3: tuple (named fields)</span>
+db.append(#{
+    <span class="str">"NAME"</span>:   <span class="str">"Sidorov Sidor"</span>,
+    <span class="str">"AGE"</span>:    <span class="num">40</span>,
+    <span class="str">"SALARY"</span>: <span class="num">60000.00</span>,
+    <span class="str">"BDATE"</span>:  datetime.makedatetime(<span class="num">1984</span>, <span class="num">5</span>, <span class="num">20</span>),
+    <span class="str">"ACTIVE"</span>: <span class="num">1</span>
+});
+
+<span class="cmt">// Update a record by number</span>
+db.updateRow(<span class="num">1</span>, #{"NAME": <span class="str">"Ivanov I.I."</span>, <span class="str">"AGE"</span>: <span class="num">31</span>});
+
+<span class="cmt">// Update the current record</span>
+db.moveTo(<span class="num">2</span>);
+db.updateCurrentRow(#{"SALARY": <span class="num">55000.00</span>});
+
+<span class="cmt">// Complete replacement of the data</span>
+<span class="kw">var</span> newData = #[
+    #{"NAME": <span class="str">"New"</span>, <span class="str">"AGE"</span>: <span class="num">20</span>, <span class="str">"SALARY"</span>: <span class="num">30000.00</span>, <span class="str">"BDATE"</span>: dt, <span class="str">"ACTIVE"</span>: <span class="num">1</span>}
+];
+db.writeAll(newData);
+
+<span class="cmt">// Saving</span>
+db.save();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Deleting records</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>deleteRow</code></td><td><code>n</code></td><td>int (1/0)</td><td>Marks a record as deleted (1-based)</td></tr>
+<tr><td><code>pack</code></td><td>—</td><td>—</td><td>Physically removes all marked records</td></tr>
+<tr><td><code>isDeleted</code></td><td><code>n</code></td><td>int (0/1)</td><td>Checks whether a record is marked as deleted</td></tr>
+<tr><td><code>undelete</code></td><td><code>n</code></td><td>int (1/0)</td><td>Restores a deleted record</td></tr>
+</table>
+<p><strong>Important:</strong> in DBF, deletion works in two stages. First the record is <strong>marked</strong> as deleted (deleteRow), then when <strong>pack()</strong> is called the marked records are physically removed.</p>
+<pre><code><span class="kw">var</span> db = dbffile();
+db.open(<span class="str">"C:/data/employees.dbf"</span>);
+
+<span class="cmt">// Mark a record for deletion</span>
+db.deleteRow(<span class="num">5</span>);
+
+<span class="cmt">// Check the status</span>
+print(db.isDeleted(<span class="num">5</span>));  <span class="cmt">// 1</span>
+print(db.isDeleted(<span class="num">1</span>));  <span class="cmt">// 0</span>
+
+<span class="cmt">// Restore if needed</span>
+db.undelete(<span class="num">5</span>);
+print(db.isDeleted(<span class="num">5</span>));  <span class="cmt">// 0</span>
+
+<span class="cmt">// Mark again</span>
+db.deleteRow(<span class="num">5</span>);
+
+<span class="cmt">// Physically remove all marked records</span>
+db.pack();
+print(db.recordCount());  <span class="cmt">// decreased</span>
+
+db.save();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Field metadata</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>fieldCount</code></td><td>—</td><td>int</td><td>Number of fields</td></tr>
+<tr><td><code>fields</code></td><td>—</td><td>array of tuple</td><td>Field descriptions: {name, type, length, decimals}</td></tr>
+<tr><td><code>fieldMeta</code></td><td>—</td><td>array of tuple</td><td>Alias of fields()</td></tr>
+<tr><td><code>fieldNames</code></td><td>—</td><td>array of string</td><td>Array of field names</td></tr>
+<tr><td><code>getEncoding</code></td><td>—</td><td>int</td><td>Current encoding (1251 or 866)</td></tr>
+<tr><td><code>setEncoding</code></td><td><code>enc</code></td><td>—</td><td>Sets the encoding (1251 or 866)</td></tr>
+</table>
+<pre><code><span class="kw">var</span> db = dbffile();
+db.open(<span class="str">"C:/data/employees.dbf"</span>);
+
+<span class="cmt">// Number of fields and records</span>
+print(<span class="str">"Fields: "</span> + db.fieldCount());
+print(<span class="str">"Records: "</span> + db.recordCount());
+
+<span class="cmt">// Field names</span>
+<span class="kw">var</span> names = db.fieldNames();
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i < names.size(); i++) {
+    print(<span class="str">"  "</span> + names[i]);
+}
+
+<span class="cmt">// Full field descriptions</span>
+<span class="kw">var</span> meta = db.fields();
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i < meta.size(); i++) {
+    print(<span class="str">"  "</span> + meta[i].name
+        + <span class="str">" : "</span> + meta[i].type
+        + <span class="str">"("</span> + meta[i].length + <span class="str">","</span> + meta[i].decimals + <span class="str">")"</span>);
+}
+
+<span class="cmt">// Encoding</span>
+print(<span class="str">"Encoding: "</span> + db.getEncoding());  <span class="cmt">// 1251</span>
+db.setEncoding(<span class="num">866</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Finding records</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>locate</code></td><td><code>fieldName, value</code></td><td>int</td><td>Searches by field value. Returns the record number (1-based) or 0 if not found. Moves the pointer</td></tr>
+</table>
+<pre><code><span class="kw">var</span> db = dbffile();
+db.open(<span class="str">"C:/data/employees.dbf"</span>);
+
+<span class="cmt">// Find a record with the name "Ivan"</span>
+<span class="kw">var</span> rec = db.locate(<span class="str">"NAME"</span>, <span class="str">"Ivan"</span>);
+<span class="kw">if</span> (rec > <span class="num">0</span>) {
+    print(<span class="str">"Found record #"</span> + rec);
+    <span class="kw">var</span> row = db.currentRow();
+    print(row);
+} <span class="kw">else</span> {
+    print(<span class="str">"Not found"</span>);
+}
+
+<span class="cmt">// Search with navigation — find all records</span>
+db.rewind();
+<span class="kw">while</span> (db.next()) {
+    <span class="kw">var</span> row = db.currentRow();
+    <span class="kw">if</span> (row[<span class="str">"AGE"</span>] > <span class="num">30</span>) {
+        print(row[<span class="str">"NAME"</span>] + <span class="str">" — "</span> + row[<span class="str">"AGE"</span>]);
+    }
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Example: creating a database</h2>
+<pre><code><span class="kw">if</span> (!loadPlugin(<span class="str">"plugins/dbf.dll"</span>)) { system.exit(<span class="num">1</span>); }
+
+<span class="kw">var</span> db = dbffile();
+
+<span class="cmt">// Defining the structure</span>
+<span class="kw">var</span> fields = #[
+    #{"name": <span class="str">"CODE"</span>,    "type": <span class="str">"N"</span>, "length": <span class="num">6</span>,  "decimals": <span class="num">0</span>},
+    #{"name": <span class="str">"NAME"</span>,    "type": <span class="str">"C"</span>, "length": <span class="num">50</span>, "decimals": <span class="num">0</span>},
+    #{"name": <span class="str">"PRICE"</span>,   "type": <span class="str">"N"</span>, "length": <span class="num">12</span>, "decimals": <span class="num">2</span>},
+    #{"name": <span class="str">"INSTOCK"</span>, "type": <span class="str">"N"</span>, "length": <span class="num">8</span>,  "decimals": <span class="num">0</span>},
+    #{"name": <span class="str">"ACTIVE"</span>,  "type": <span class="str">"L"</span>, "length": <span class="num">1</span>,  "decimals": <span class="num">0</span>}
+];
+
+db.create(<span class="str">"C:/data/products.dbf"</span>, fields);
+print(<span class="str">"File created!"</span>);
+
+<span class="cmt">// Adding products</span>
+db.append(<span class="num">1001</span>, <span class="str">"ASUS Laptop"</span>,     <span class="num">54990.00</span>, <span class="num">15</span>, <span class="num">1</span>);
+db.append(<span class="num">1002</span>, <span class="str">"Samsung Monitor"</span>,  <span class="num">23990.50</span>, <span class="num">8</span>,  <span class="num">1</span>);
+db.append(<span class="num">1003</span>, <span class="str">"Logi Keyboard"</span>, <span class="num">2490.00</span>,  <span class="num">42</span>, <span class="num">1</span>);
+db.append(<span class="num">1004</span>, <span class="str">"A4Tech Mouse"</span>,     <span class="num">590.00</span>,   <span class="num">100</span>,<span class="num">0</span>);
+
+db.save();
+print(<span class="str">"Data saved!"</span>);
+print(<span class="str">"Records: "</span> + db.recordCount());  <span class="cmt">// 4</span>
+
+db.close();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Example: reading and processing</h2>
+<pre><code><span class="kw">var</span> db = dbffile();
+db.open(<span class="str">"C:/data/products.dbf"</span>);
+
+<span class="cmt">// Read all records</span>
+<span class="kw">var</span> products = db.readAll();
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i < products.size(); i++) {
+    <span class="kw">var</span> p = products[i];
+    print(p[<span class="str">"CODE"</span>] + <span class="str">" | "</span>
+        + p[<span class="str">"NAME"</span>] + <span class="str">" | "</span>
+        + p[<span class="str">"PRICE"</span>] + <span class="str">" RUB"</span>);
+}
+
+<span class="cmt">// Find products more expensive than 10000</span>
+print(<span class="str">"\nExpensive products:"</span>);
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i < products.size(); i++) {
+    <span class="kw">if</span> (products[i][<span class="str">"PRICE"</span>] > <span class="num">10000</span>) {
+        print(<span class="str">"  "</span> + products[i][<span class="str">"NAME"</span>]);
+    }
+}
+
+<span class="cmt">// Table structure</span>
+<span class="kw">var</span> meta = db.fields();
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i < meta.size(); i++) {
+    print(meta[i].name + <span class="str">": type="</span> + meta[i].type
+        + <span class="str">" length="</span> + meta[i].length);
+}
+
+db.close();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Example: deletion and packing</h2>
+<pre><code><span class="kw">var</span> db = dbffile();
+db.open(<span class="str">"C:/data/products.dbf"</span>);
+
+<span class="cmt">// Delete the product with code 1004</span>
+<span class="kw">var</span> rec = db.locate(<span class="str">"CODE"</span>, <span class="str">"1004"</span>);
+<span class="kw">if</span> (rec > <span class="num">0</span>) {
+    db.deleteRow(rec);
+    print(<span class="str">"Record #"</span> + rec + <span class="str">" marked for deletion"</span>);
+}
+
+<span class="cmt">// Check</span>
+print(<span class="str">"Deleted: "</span> + db.isDeleted(rec));  <span class="cmt">// 1</span>
+
+<span class="cmt">// Restore if you made a mistake</span>
+<span class="cmt">// db.undelete(rec);</span>
+
+<span class="cmt">// Physically remove</span>
+db.pack();
+print(<span class="str">"Records remaining: "</span> + db.recordCount());
+
+db.save();
+db.close();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Example: copying data</h2>
+<pre><code><span class="kw">var</span> db = dbffile();
+
+<span class="cmt">// Open the source file</span>
+db.open(<span class="str">"C:/data/source.dbf"</span>);
+<span class="kw">var</span> data = db.readAll();
+<span class="kw">var</span> meta = db.fields();
+db.close();
+
+<span class="cmt">// Create a new file with the same structure</span>
+db.create(<span class="str">"C:/data/copy.dbf"</span>, meta);
+db.writeAll(data);
+db.save();
+db.close();
+
+print(<span class="str">"Records copied: "</span> + data.size());</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Error handling</h2>
+<pre><code><span class="kw">var</span> db = dbffile();
+
+<span class="cmt">// Check opening</span>
+<span class="kw">if</span> (!db.open(<span class="str">"C:/data/missing.dbf"</span>)) {
+    print(<span class="str">"File not found or corrupted!"</span>);
+    system.exit(<span class="num">1</span>);
+}
+
+<span class="cmt">// Check after operations</span>
+<span class="kw">var</span> ok = db.append(<span class="str">"test"</span>, <span class="num">123</span>);
+<span class="kw">if</span> (!ok) {
+    print(<span class="str">"Write error!"</span>);
+}
+
+<span class="cmt">// Check reading</span>
+<span class="kw">var</span> row = db.row(<span class="num">999</span>);
+<span class="kw">if</span> (row.isnull()) {
+    print(<span class="str">"Record not found!"</span>);
+}
+
+<span class="cmt">// Check the current state</span>
+print(<span class="str">"Open: "</span> + db.isOpen());
+print(<span class="str">"Modified: "</span> + db.isModified());
+
+db.close();</code></pre>
+</div>
+
+<footer><a href="plugins.html">← Back to the plugin list</a></footer>
+</div>
+</body>
+</html>

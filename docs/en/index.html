@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Script — Reference Documentation</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header>
+<h1>Script</h1>
+<p>Scripting language on C++23 — reference documentation</p>
+<div class="lang-switch"><a href="../index.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="index.html">EN</a></div>
+</header>
+<div class="container">
+
+<div class="doc-section">
+<h2>Navigation</h2>
+<table>
+<tr><th>Section</th><th>Description</th></tr>
+<tr><td><a href="language.html">Language</a></td><td>Syntax, keywords, operators, data types, control flow</td></tr>
+<tr><td><a href="functions.html">Global functions</a></td><td>print, format, type, eval, tojson, dialog, etc.</td></tr>
+<tr><td><a href="str.html">str module</a></td><td>String operations</td></tr>
+<tr><td><a href="regex.html">regex module</a></td><td>Regular expressions</td></tr>
+<tr><td><a href="math.html">math module</a></td><td>Mathematical functions and constants</td></tr>
+<tr><td><a href="file.html">file module</a></td><td>File system operations</td></tr>
+<tr><td><a href="datetime.html">datetime module</a></td><td>Date and time operations</td></tr>
+<tr><td><a href="bytearray.html">ByteArray module</a></td><td>Byte array operations</td></tr>
+<tr><td><a href="json.html">json module</a></td><td>JSON — parsing, serialization, validation (rapidjson)</td></tr>
+<tr><td><a href="yaml.html">yaml module</a></td><td>YAML — parsing, serialization, files, validation (rapidyaml)</td></tr>
+<tr><td><a href="xml.html">xml module</a></td><td>XML — parsing, creation, document modification (pugixml)</td></tr>
+<tr><td><a href="ssh.html">ssh module</a></td><td>SSH — connections, exec, SCP, SFTP (libssh2)</td></tr>
+<tr><td><a href="snmp.html">snmp module</a></td><td>SNMP — network device monitoring, GET/GETNEXT/WALK (UDP, ASN.1/BER)</td></tr>
+<tr><td><a href="sqlite.html">sqlite module</a></td><td>Native SQLite database without a QtSql dependency</td></tr>
+<tr><td><a href="log.html">Log module</a></td><td>Logging and output</td></tr>
+<tr><td><a href="system.html">system module</a></td><td>System functions, processes, environment</td></tr>
+<tr><td><a href="classes.html">Data structures</a></td><td>Stack, Queue, PriorityQueue, Dictionary, DictionaryCI, Mutex, LockGuard</td></tr>
+<tr><td><a href="objects.html">Object methods</a></td><td>Built-in methods of all types: strings, arrays, sets, tuples, dates</td></tr>
+<tr><td><a href="geometry.html">Geometry</a></td><td>QodePoint, QodeSize, QodeRect — 2D primitives</td></tr>
+<tr><td><a href="colors.html">Colors</a></td><td>Color constants and ANSI codes</td></tr>
+<tr><td><a href="qt.html">QT integration</a></td><td>Widgets, layout, signals, utilities</td></tr>
+<tr><td><a href="dbgrid.html">QDbGridView</a></td><td>Data grid from a database</td></tr>
+<tr><td><a href="dbgrid_directory.html">QDbDirectoryView</a></td><td>Hierarchical explorer with folder navigation</td></tr>
+<tr><td><a href="db.html">Database</a></td><td>Working with databases through Qt drivers (SQLite, PostgreSQL, MySQL)</td></tr>
+<tr><td><a href="dialogs.html">Dialogs</a></td><td>Dialog windows and data input</td></tr>
+<tr><td><a href="ole.html">OLE/COM</a></td><td>Access to COM objects (Windows)</td></tr>
+<tr><td><a href="xlsx.html">Excel (XLSX)</a></td><td>Reading and writing Excel files</td></tr>
+<tr><td><a href="rxl.html">QRXLWidget table (rxl)</a></td><td>Mini-Excel form widget: cells from scripts, export to XLSX/PDF/PNG</td></tr>
+<tr><td><a href="automation.html">Automation libraries</a></td><td>qtestlib, cli, funcedit, jsonedit, fileedit (plan/apply), xlsxedit, run_tests — safe file-editing loop, command-line parsing, and tests</td></tr>
+<tr><td><a href="plugins.html">Plugins</a></td><td>archive7zip, zip, excel, clipboard, comport, crypto, dbf, ftpclient, imap, ini_csv, ldap, max, registry, screen, smtp, tcp, udp</td></tr>
+<tr><td><a href="plugin_development.html">Plugin development</a></td><td>Complete guide: C API, C++ Helper, examples, errors</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Quick start</h2>
+<pre><code><span class="cmt">// Hello world</span>
+print(<span class="str">"Hello, world!"</span>);
+
+<span class="cmt">// Variables and arithmetic</span>
+<span class="kw">var</span> x = <span class="num">10</span>;
+<span class="kw">var</span> y = <span class="num">3.14</span>;
+print(<span class="str">"x = \(x), y = \(y)"</span>);
+
+<span class="cmt">// Functions</span>
+<span class="kw">function</span> <span class="fn">factorial</span>(n) {
+    <span class="kw">if</span> (n &lt;= <span class="num">1</span>) <span class="kw">return</span> <span class="num">1</span>;
+    <span class="kw">return</span> n * <span class="fn">factorial</span>(n - <span class="num">1</span>);
+}
+
+<span class="cmt">// Classes</span>
+<span class="kw">class</span> Point {
+    <span class="kw">var</span> x;
+    <span class="kw">var</span> y;
+    Point(x, y) { <span class="kw">this</span>.x = x; <span class="kw">this</span>.y = y; }
+    <span class="kw">function</span> <span class="fn">distance</span>(other) {
+        <span class="kw">return</span> math.sqrt((<span class="kw">this</span>.x - other.x)**<span class="num">2</span> + (<span class="kw">this</span>.y - other.y)**<span class="num">2</span>);
+    }
+}
+
+<span class="cmt">// Collections</span>
+<span class="kw">var</span> arr = <span class="op">#</span>[<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>];
+<span class="kw">var</span> doubled = arr.mapped(<span class="kw">function</span>(x) { <span class="kw">return</span> x * <span class="num">2</span>; });
+print(doubled); <span class="cmt">// [2, 4, 6, 8, 10]</span>
+
+<span class="cmt">// Modules</span>
+<span class="kw">uses</span> file;
+file.write(<span class="str">"out.txt"</span>, <span class="str">"Data"</span>);
+</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Running scripts</h2>
+<table>
+<tr><th>Command</th><th>Description</th></tr>
+<tr><td><code>./bin/qodeqt.exe script.prg</code></td><td>Runs the script (QT widgets available)</td></tr>
+<tr><td><code>./bin/qode.exe script.prg</code></td><td>Runs without GUI (console only)</td></tr>
+<tr><td><code>./bin/qodedesigner.exe</code></td><td>Launches the mini IDE with a debugger</td></tr>
+</table>
+<p style="margin-top:10px;font-size:0.9em;color:#666;">Script files: <code>*.prg</code>, <code>*.json</code>, or any UTF-8 text file.</p>
+</div>
+
+<footer>Script Documentation — Auto-generated from source code</footer>
+</div>
+</body>
+</html>

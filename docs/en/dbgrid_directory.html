@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QDbDirectoryView — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header>
+<h1>QDbDirectoryView — File explorer</h1>
+<p>Hierarchical or flat data view with folder navigation</p>
+<div class="lang-switch"><a href="../dbgrid_directory.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="dbgrid_directory.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / <a href="qt.html">QT</a> / QDbDirectoryView</p>
+
+<div class="doc-section">
+<h2>Description</h2>
+<p><code>QDbDirectoryView</code> is a comprehensive widget for navigating hierarchical data (folders, trees). It includes:</p>
+<ul>
+<li><strong>Data table</strong> (QDbGridView) for displaying records</li>
+<li><strong>Navigation panel</strong> — "breadcrumbs" showing the current path</li>
+<li><strong>Mode switch</strong> — hierarchical or flat</li>
+</ul>
+
+<p>The table must contain the fields:</p>
+<ul>
+<li><code>rowid</code> — unique row identifier</li>
+<li><code>name</code> — name</li>
+<li><code>folder</code> — 1 if a folder, 0 if a file/record</li>
+<li><code>parent</code> — ID of the parent folder (-1 for the root)</li>
+</ul>
+</div>
+
+<div class="doc-section">
+<h2>Properties</h2>
+<table>
+<tr><th>Property</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>tableName</code></td><td>string</td><td>Table name in the database</td></tr>
+<tr><td><code>directoryMode</code></td><td>bool</td><td>Explorer mode (hierarchical navigation)</td></tr>
+<tr><td><code>viewMode</code></td><td>int</td><td>0 = Hierarchical, 1 = Flat</td></tr>
+<tr><td><code>currentFolderId</code></td><td>int64</td><td>ID of the current folder (read-only)</td></tr>
+<tr><td><code>columns</code></td><td>string (JSON)</td><td>Column definition (same as QDbGridView)</td></tr>
+<tr><td><code>readOnly</code></td><td>bool</td><td>Read-only</td></tr>
+<tr><td><code>showGridLines</code></td><td>bool</td><td>Show grid lines</td></tr>
+<tr><td><code>autoOpen</code></td><td>bool</td><td>Open automatically on creation</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Methods</h2>
+<h3>Navigation</h3>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>navigateTo(folderId)</code></td><td>Navigate to a folder by ID</td></tr>
+<tr><td><code>navigateToRoot()</code></td><td>Navigate to the root</td></tr>
+<tr><td><code>navigateUp()</code></td><td>Navigate one level up</td></tr>
+<tr><td><code>isRoot()</code></td><td>Whether it is at the root (bool)</td></tr>
+</table>
+
+<h3>Data</h3>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>open()</code></td><td>Open the table. Returns true on success</td></tr>
+<tr><td><code>close()</code></td><td>Close the table</td></tr>
+<tr><td><code>refresh()</code></td><td>Refresh the data</td></tr>
+<tr><td><code>isActive()</code></td><td>Whether the table is open (bool)</td></tr>
+<tr><td><code>currentRow()</code></td><td>Current row as a QVariantMap</td></tr>
+<tr><td><code>currentIsFolder()</code></td><td>Whether the current record is a folder (bool)</td></tr>
+<tr><td><code>currentRowId()</code></td><td>ID of the current row (int64)</td></tr>
+<tr><td><code>gridView()</code></td><td>Access to the internal QDbGridView</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Signals</h2>
+<table>
+<tr><th>Signal</th><th>Arguments</th><th>Description</th></tr>
+<tr><td><code>rowDoubleClicked</code></td><td>int row, int64 rowId, bool isFolder</td><td>Double click on a row</td></tr>
+<tr><td><code>currentRowChanged</code></td><td>int row, int64 rowId, bool isFolder</td><td>Current row changed</td></tr>
+<tr><td><code>folderChanged</code></td><td>int64 folderId, string folderName</td><td>Folder changed</td></tr>
+<tr><td><code>beforeOpen</code></td><td>—</td><td>Before opening</td></tr>
+<tr><td><code>afterOpen</code></td><td>—</td><td>After opening</td></tr>
+<tr><td><code>beforeClose</code></td><td>—</td><td>Before closing</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Keyboard shortcuts</h2>
+<table>
+<tr><th>Key</th><th>Action</th></tr>
+<tr><td><code>Backspace</code></td><td>Navigate one level up (in hierarchical mode)</td></tr>
+<tr><td><code>Enter (double click)</code></td><td>Enter a folder or open a record</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Examples</h2>
+
+<h3>Basic explorer</h3>
+<pre><code><span class="kw">var</span> dir = qt.create(<span class="str">"QDbDirectoryView"</span>, form);
+dir.tableName = <span class="str">"files"</span>;
+dir.directoryMode = <span class="kw">true</span>;
+dir.viewMode = <span class="num">0</span>;  <span class="cmt">// Hierarchical</span>
+dir.columns = <span class="str">'[
+    {"field":"rowid","caption":"ID","width":50},
+    {"field":"name","caption":"Name","width":300},
+    {"field":"folder","caption":"Type","width":80}
+]</span>;
+dir.align = <span class="str">"alClient"</span>;
+dir.autoOpen = <span class="kw">true</span>;</code></pre>
+
+<h3>Flat mode (no navigation)</h3>
+<pre><code><span class="kw">var</span> dir = qt.create(<span class="str">"QDbDirectoryView"</span>, form);
+dir.tableName = <span class="str">"employees"</span>;
+dir.directoryMode = <span class="kw">false</span>;
+dir.align = <span class="str">"alClient"</span>;
+dir.open();</code></pre>
+
+<h3>Event handling</h3>
+<pre><code><span class="cmt">// Double click — open a folder or file</span>
+dir.rowDoubleClicked = <span class="kw">function</span>(sender, row, rowId, isFolder) {
+    <span class="kw">if</span> (isFolder) {
+        sender.navigateTo(rowId);
+    } <span class="kw">else</span> {
+        print(<span class="str">"Open file: \(rowId)"</span>);
+    }
+};
+
+<span class="cmt">// Folder changed</span>
+dir.folderChanged = <span class="kw">function</span>(sender, folderId, folderName) {
+    form.windowTitle = <span class="str">"Explorer — \(folderName)"</span>;
+};</code></pre>
+
+<h3>Manual navigation control</h3>
+<pre><code>dir.open();                 <span class="cmt">// open</span>
+dir.navigateTo(42);         <span class="cmt">// enter folder 42</span>
+dir.navigateUp();           <span class="cmt">// go back</span>
+dir.navigateToRoot();       <span class="cmt">// to the root</span>
+<span class="kw">var</span> id = dir.currentRowId();  <span class="cmt">// current ID</span>
+dir.refresh();              <span class="cmt">// refresh</span></code></pre>
+</div>
+
+<footer><a href="qt.html">← QT integration</a></footer>
+</div>
+</body>
+</html>

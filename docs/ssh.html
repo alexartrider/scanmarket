@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SSH модуль — Script</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>SSH модуль</h1><p>Встроенный модуль для удалённого управления серверами — SSH-подключения, выполнение команд, передача файлов через SCP и SFTP</p><div class="lang-switch"><a class="active" href="ssh.html">RU</a><a href="en/ssh.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Главная</a> / SSH</p>
+
+<div class="doc-section">
+<h2>Зависимости</h2>
+<p>Встроен в движок. Использует libssh2 1.11.1 + OpenSSL 3.</p>
+<p>Для работы на Windows рядом с бинарником должны быть: <code>libcrypto-3-x64.dll</code>, <code>libssl-3-x64.dll</code>.</p>
+</div>
+
+<div class="doc-section">
+<h2>Создание сессии</h2>
+<pre><code><span class="cmt">// ssh — глобальный объект-модуль</span>
+<span class="kw">var</span> session = ssh.connect();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Методы модуля ssh</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>ssh.connect()</code></td><td>—</td><td>object</td><td>Создаёт новый объект SSH-сессии</td></tr>
+<tr><td><code>ssh.version()</code></td><td>—</td><td>string</td><td>Версия libssh2 (например, <code>"1.11.1"</code>)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Методы сессии</h2>
+
+<h3>Подключение</h3>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>connect</code></td><td><code>host, port, user, pass</code></td><td>int (0/1)</td><td>Подключение по SSH с аутентификацией по паролю</td></tr>
+<tr><td><code>disconnect</code></td><td>—</td><td>—</td><td>Отключение от сервера</td></tr>
+<tr><td><code>isconnected</code></td><td>—</td><td>int (0/1)</td><td>Проверка состояния подключения</td></tr>
+<tr><td><code>last_error</code></td><td>—</td><td>string</td><td>Последняя ошибка libssh2</td></tr>
+</table>
+
+<h3>Выполнение команд</h3>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>exec</code></td><td><code>command</code></td><td>string</td><td>Выполнение команды, возвращает stdout + stderr</td></tr>
+</table>
+
+<h3>SCP (передача файлов)</h3>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>scp_send</code></td><td><code>remote_path, data</code></td><td>int (0/1)</td><td>Отправка данных в удалённый файл</td></tr>
+<tr><td><code>scp_recv</code></td><td><code>remote_path</code></td><td>string</td><td>Скачивание удалённого файла</td></tr>
+</table>
+
+<h3>SFTP (файловая система)</h3>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>sftp_init</code></td><td>—</td><td>int (0/1)</td><td>Инициализация SFTP-сессии</td></tr>
+<tr><td><code>sftp_open</code></td><td><code>path, mode</code></td><td>int (handle)</td><td>Открытие файла. mode: <code>"r"</code>, <code>"w"</code>, <code>"a"</code>, <code>"rb"</code>, <code>"wb"</code></td></tr>
+<tr><td><code>sftp_read</code></td><td><code>handle, max_bytes</code></td><td>string</td><td>Чтение данных из файла</td></tr>
+<tr><td><code>sftp_write</code></td><td><code>handle, data</code></td><td>int</td><td>Запись данных в файл (возвращает байт)</td></tr>
+<tr><td><code>sftp_close</code></td><td><code>handle</code></td><td>int (0/1)</td><td>Закрытие файла</td></tr>
+<tr><td><code>sftp_readdir</code></td><td><code>path</code></td><td>array</td><td>Список файлов в директории</td></tr>
+<tr><td><code>sftp_mkdir</code></td><td><code>path</code></td><td>int (0/1)</td><td>Создание директории</td></tr>
+<tr><td><code>sftp_rmdir</code></td><td><code>path</code></td><td>int (0/1)</td><td>Удаление пустой директории</td></tr>
+<tr><td><code>sftp_unlink</code></td><td><code>path</code></td><td>int (0/1)</td><td>Удаление файла</td></tr>
+<tr><td><code>sftp_rename</code></td><td><code>old_path, new_path</code></td><td>int (0/1)</td><td>Переименование файла</td></tr>
+<tr><td><code>sftp_stat</code></td><td><code>path</code></td><td>tuple|null</td><td>Информация о файле: <code>{size, mode, mtime, atime, isdir}</code></td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Формат результата sftp_readdir</h2>
+<p>Каждый элемент массива — кортеж:</p>
+<pre><code>#{
+    "name":  "file.txt",   <span class="cmt">// string — имя файла</span>
+    "size":  12345,        <span class="cmt">// int    — размер в байтах</span>
+    "mode":  33188,        <span class="cmt">// int    — POSIX-права (octal 0644)</span>
+    "mtime": 1694000000,   <span class="cmt">// int    — время модификации (unix timestamp)</span>
+    "isdir":  0            <span class="cmt">// int    — 1 если директория</span>
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Пример: подключение и выполнение команды</h2>
+<pre><code><span class="kw">var</span> session = ssh.connect();
+
+<span class="kw">if</span> (session.connect(<span class="str">"192.168.1.1"</span>, <span class="num">22</span>, <span class="str">"root"</span>, <span class="str">"password"</span>)) {
+    print(<span class="str">"Подключено!"</span>);
+
+    <span class="kw">var</span> result = session.exec(<span class="str">"uname -a"</span>);
+    print(result);
+
+    <span class="kw">var</span> hostname = session.exec(<span class="str">"hostname"</span>);
+    print(<span class="str">"Сервер: \(hostname)"</span>);
+
+    session.disconnect();
+} <span class="kw">else</span> {
+    print(<span class="str">"Ошибка: \(session.last_error())"</span>);
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Пример: загрузка файла через SCP</h2>
+<pre><code><span class="kw">var</span> session = ssh.connect();
+session.connect(<span class="str">"192.168.1.1"</span>, <span class="num">22</span>, <span class="str">"user"</span>, <span class="str">"pass"</span>);
+
+<span class="cmt">// Скачивание удалённого файла</span>
+<span class="kw">var</span> data = session.scp_recv(<span class="str">"/var/log/syslog"</span>);
+print(<span class="str">"Размер: \(size(data))"</span>);
+
+<span class="cmt">// Отправка данных</span>
+session.scp_send(<span class="str">"/tmp/upload.txt"</span>, <span class="str">"Hello from Script!"</span>);
+
+session.disconnect();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Пример: работа с SFTP</h2>
+<pre><code><span class="kw">var</span> s = ssh.connect();
+s.connect(<span class="str">"192.168.1.1"</span>, <span class="num">22</span>, <span class="str">"user"</span>, <span class="str">"pass"</span>);
+
+<span class="cmt">// Инициализация SFTP</span>
+s.sftp_init();
+
+<span class="cmt">// Просмотр директории</span>
+<span class="kw">var</span> files = s.sftp_readdir(<span class="str">"/home/user"</span>);
+<span class="kw">for</span> (<span class="kw">var</span> f : files) {
+    print(<span class="str">"\(f.name)  \(f.size) bytes"</span>);
+}
+
+<span class="cmt">// Запись файла</span>
+<span class="kw">var</span> h = s.sftp_open(<span class="str">"/tmp/test.txt"</span>, <span class="str">"w"</span>);
+s.sftp_write(h, <span class="str">"Данные из скрипта\n"</span>);
+s.sftp_close(h);
+
+<span class="cmt">// Чтение файла</span>
+<span class="kw">var</span> r = s.sftp_open(<span class="str">"/tmp/test.txt"</span>, <span class="str">"r"</span>);
+<span class="kw">var</span> content = s.sftp_read(r, <span class="num">4096</span>);
+s.sftp_close(r);
+print(content);
+
+<span class="cmt">// Информация о файле</span>
+<span class="kw">var</span> st = s.sftp_stat(<span class="str">"/tmp/test.txt"</span>);
+print(<span class="str">"Размер: \(st.size)"</span>);
+
+<span class="cmt">// Операции с файлами</span>
+s.sftp_rename(<span class="str">"/tmp/test.txt"</span>, <span class="str">"/tmp/renamed.txt"</span>);
+s.sftp_unlink(<span class="str">"/tmp/renamed.txt"</span>);
+
+<span class="cmt">// Директории</span>
+s.sftp_mkdir(<span class="str">"/tmp/newdir"</span>);
+s.sftp_rmdir(<span class="str">"/tmp/newdir"</span>);
+
+s.disconnect();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Пример: массовое выполнение команд</h2>
+<pre><code><span class="kw">var</span> servers = [
+    #{"host": <span class="str">"192.168.1.10"</span>, "user": <span class="str">"admin"</span>, "pass": <span class="str">"secret"</span>},
+    #{"host": <span class="str">"192.168.1.11"</span>, "user": <span class="str">"admin"</span>, "pass": <span class="str">"secret"</span>},
+    #{"host": <span class="str">"192.168.1.12"</span>, "user": <span class="str">"admin"</span>, "pass": <span class="str">"secret"</span>}
+];
+
+<span class="kw">for</span> (<span class="kw">var</span> srv : servers) {
+    <span class="kw">var</span> s = ssh.connect();
+    <span class="kw">if</span> (s.connect(srv.host, <span class="num">22</span>, srv.user, srv.pass)) {
+        print(<span class="str">"\(srv.host):"</span>);
+        print(s.exec(<span class="str">"uptime"</span>));
+        s.disconnect();
+    } <span class="kw">else</span> {
+        print(<span class="str">"\(srv.host): FAILED"</span>);
+    }
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Пример: мониторинг диска</h2>
+<pre><code><span class="kw">var</span> s = ssh.connect();
+s.connect(<span class="str">"server.example.com"</span>, <span class="num">22</span>, <span class="str">"root"</span>, <span class="str">"pass"</span>);
+
+<span class="cmt">// Проверка свободного места</span>
+<span class="kw">var</span> df = s.exec(<span class="str">"df -h /"</span>);
+print(<span class="str">"Дисковое пространство:"</span>);
+print(df);
+
+<span class="cmt">// Проверка процессов</span>
+<span class="kw">var</span> ps = s.exec(<span class="str">"ps aux | head -20"</span>);
+print(<span class="str">"\nТоп процессов:"</span>);
+print(ps);
+
+<span class="cmt">// Проверка размера директории</span>
+<span class="kw">var</span> du = s.exec(<span class="str">"du -sh /var/log"</span>);
+print(<span class="str">"\nЛоги:"</span>);
+print(du);
+
+s.disconnect();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Пример: загрузка конфигурации</h2>
+<pre><code><span class="kw">var</span> s = ssh.connect();
+s.connect(<span class="str">"db-server"</span>, <span class="num">22</span>, <span class="str">"dba"</span>, <span class="str">"password"</span>);
+s.sftp_init();
+
+<span class="cmt">// Чтение конфигурационного файла</span>
+<span class="kw">var</span> h = s.sftp_open(<span class="str">"/etc/my.cnf"</span>, <span class="str">"r"</span>);
+<span class="kw">var</span> config = s.sftp_read(h, <span class="num">65536</span>);
+s.sftp_close(h);
+
+<span class="cmt">// Поиск нужных строк</span>
+<span class="kw">var</span> lines = config.splitlines();
+<span class="kw">for</span> (<span class="kw">var</span> line : lines) {
+    <span class="kw">if</span> (line.startswith(<span class="str">"max_connections"</span>)) {
+        print(<span class="str">"Найдено: \(line)"</span>);
+    }
+}
+
+s.disconnect();</code></pre>
+</div>
+
+</div>
+</body>
+</html>

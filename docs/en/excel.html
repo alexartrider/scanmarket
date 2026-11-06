@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Excel (XLSX) Plugin — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Excel (XLSX) Plugin</h1><p>Reading and writing XLSX files — the XlsxDocument object model (native implementation based on OpenXLSX)</p><div class="lang-switch"><a href="../excel.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="excel.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / <a href="plugins.html">Plugins</a> / Excel</p>
+
+<div class="doc-section">
+<h2>Features</h2>
+<ul>
+<li>Native implementation (C++, OpenXLSX 0.5.1) — no dependency on Qt or external programs.</li>
+<li>UTF-8 file names and Russian text in cells are supported.</li>
+<li>Reading and writing: strings, integers and floating-point numbers, booleans, dates, empty cells.</li>
+<li>Working with sheets, cell merging, widths/heights, hiding rows/columns, document properties.</li>
+<li>Read/write only .xlsx (.xls and .csv formats are not supported).</li>
+</ul>
+</div>
+
+<div class="doc-section">
+<h2>Loading the plugin</h2>
+<pre><code>loadPlugin(file.apppath() + "/plugins/excel.dll");</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Creating the object</h2>
+<pre><code><span class="kw">var</span> doc = XlsxDocument();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>File operations</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>create</code></td><td><code>filename</code></td><td>int (0/1)</td><td>Create a new XLSX file (overwrites an existing one)</td></tr>
+<tr><td><code>open</code></td><td><code>filename</code></td><td>int (0/1)</td><td>Open an existing XLSX file</td></tr>
+<tr><td><code>save</code></td><td>—</td><td>int (0/1)</td><td>Save changes to the current file</td></tr>
+<tr><td><code>saveAs</code></td><td><code>filename</code></td><td>int (0/1)</td><td>Save to another file</td></tr>
+<tr><td><code>isLoaded</code></td><td>—</td><td>int (0/1)</td><td>The file is opened/created</td></tr>
+<tr><td><code>fileName</code></td><td>—</td><td>string</td><td>Path to the current file</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Cell data</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>read</code></td><td><code>row, col</code></td><td>varies | null</td><td>Cell value (1-based; string/int/float/bool or null)</td></tr>
+<tr><td><code>write</code></td><td><code>row, col, value</code></td><td>int (0/1)</td><td>Write a value (number, string, date; null — clear)</td></tr>
+<tr><td><code>readAll</code></td><td>—</td><td>Array&lt;Array&gt;</td><td>All data of the current sheet, by rows</td></tr>
+<tr><td><code>readRow</code></td><td><code>row</code></td><td>Array</td><td>A row of data</td></tr>
+<tr><td><code>readColumn</code></td><td><code>col</code></td><td>Array</td><td>A column of data</td></tr>
+<tr><td><code>rowCount</code></td><td>—</td><td>int</td><td>Number of the last filled row</td></tr>
+<tr><td><code>columnCount</code></td><td>—</td><td>int</td><td>Number of columns (up to the last filled cell)</td></tr>
+</table>
+<p>Row and column indices are <strong>1-based</strong> (as in Excel).</p>
+<pre><code>doc.write(1, 1, "Name");
+doc.write(2, 1, "John");
+doc.write(2, 2, 25);
+print(doc.read(2, 2));  <span class="cmt">// 25</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Sheets</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>sheetCount</code></td><td>—</td><td>int</td><td>Number of sheets</td></tr>
+<tr><td><code>sheetNames</code></td><td>—</td><td>Array&lt;string&gt;</td><td>Names of all sheets</td></tr>
+<tr><td><code>currentSheetName</code></td><td>—</td><td>string</td><td>Name of the current sheet</td></tr>
+<tr><td><code>selectSheet</code></td><td><code>name | index</code></td><td>int (0/1)</td><td>Select a sheet by name or index (0-based)</td></tr>
+<tr><td><code>addSheet</code></td><td><code>name</code></td><td>int (0/1)</td><td>Add a sheet at the end</td></tr>
+<tr><td><code>insertSheet</code></td><td><code>index, name</code></td><td>int (0/1)</td><td>Insert a sheet at a position (0-based)</td></tr>
+<tr><td><code>renameSheet</code></td><td><code>oldName, newName</code></td><td>int (0/1)</td><td>Rename a sheet</td></tr>
+<tr><td><code>copySheet</code></td><td><code>srcName, dstName</code></td><td>int (0/1)</td><td>Copy a sheet</td></tr>
+<tr><td><code>moveSheet</code></td><td><code>name, index</code></td><td>int (0/1)</td><td>Move a sheet to a position</td></tr>
+<tr><td><code>deleteSheet</code></td><td><code>name</code></td><td>int (0/1)</td><td>Delete a sheet</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Formatting</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>mergeCells</code></td><td><code>r1, c1, r2, c2</code></td><td>int (0/1)</td><td>Merge a cell range</td></tr>
+<tr><td><code>unmergeCells</code></td><td><code>r1, c1, r2, c2</code></td><td>int (0/1)</td><td>Unmerge a range</td></tr>
+<tr><td><code>setColumnWidth</code></td><td><code>col, width</code></td><td>int (0/1)</td><td>Column width</td></tr>
+<tr><td><code>setRowHeight</code></td><td><code>row, height</code></td><td>int (0/1)</td><td>Row height</td></tr>
+<tr><td><code>columnWidth / rowHeight</code></td><td><code>col / row</code></td><td>float</td><td>Always 0 — reading sizes is not supported by OpenXLSX</td></tr>
+<tr><td><code>setColumnHidden</code></td><td><code>col, bool</code></td><td>int (0/1)</td><td>Hide a column</td></tr>
+<tr><td><code>setRowHidden</code></td><td><code>row, bool</code></td><td>int (0/1)</td><td>Hide a row</td></tr>
+<tr><td><code>defineName</code></td><td><code>name, range</code></td><td>int (0/1)</td><td>Not supported by OpenXLSX (always 0)</td></tr>
+</table>
+<pre><code>doc.mergeCells(6, 1, 6, 3);
+doc.write(6, 1, "Merged cell");
+doc.setColumnWidth(1, 25);
+doc.setRowHeight(1, 20);
+doc.setColumnHidden(2, true);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Document properties</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>documentProperty</code></td><td><code>name</code></td><td>string</td><td>Property value (empty string if not set)</td></tr>
+<tr><td><code>setDocumentProperty</code></td><td><code>name, value</code></td><td>int (0/1)</td><td>Set a property</td></tr>
+<tr><td><code>documentPropertyNames</code></td><td>—</td><td>Array&lt;string&gt;</td><td>List of supported property names (21)</td></tr>
+</table>
+<p>Supported names: <code>Title</code>, <code>Subject</code>, <code>Creator</code>, <code>Author</code> (alias), <code>Keywords</code>, <code>Description</code>, <code>LastModifiedBy</code>, <code>LastPrinted</code>, <code>CreationDate</code>, <code>ModificationDate</code>, <code>Category</code>, <code>Application</code>, <code>DocSecurity</code>, <code>ScaleCrop</code>, <code>Manager</code>, <code>Company</code>, <code>LinksUpToDate</code>, <code>SharedDoc</code>, <code>HyperlinkBase</code>, <code>HyperlinksChanged</code>, <code>AppVersion</code>.</p>
+<pre><code>doc.setDocumentProperty("Author", "Tester");
+doc.setDocumentProperty("Title", "Monthly report");
+print(doc.documentProperty("Title"));</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Full example</h2>
+<pre><code>loadPlugin(file.apppath() + "/plugins/excel.dll");
+
+<span class="kw">var</span> doc = XlsxDocument();
+doc.create("test_output.xlsx");
+
+<span class="kw">var</span> data = #[
+    #["Name", "Age", "City"],
+    #["John", 25, "Moscow"],
+    #["Mary", 28, "Kazan"]
+];
+<span class="kw">for</span> (<span class="kw">var</span> i = 0; i &lt; data.size(); i++)
+    <span class="kw">for</span> (<span class="kw">var</span> j = 0; j &lt; data[i].size(); j++)
+        doc.write(i + 1, j + 1, data[i][j]);
+
+doc.setColumnWidth(1, 25);
+doc.setRowHeight(1, 20);
+doc.mergeCells(5, 1, 5, 3);
+doc.write(5, 1, "Total");
+doc.setDocumentProperty("Author", "Script");
+doc.save();</code></pre>
+</div>
+
+<footer><a href="plugins.html">← Back to the plugin list</a></footer>
+</div>
+</body>
+</html>

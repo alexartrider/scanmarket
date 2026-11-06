@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OLE/COM — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header>
+<h1>OLE module — Component Object Model (Windows)</h1>
+<p>Access to COM objects through IDispatch</p>
+<div class="lang-switch"><a href="../ole.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="ole.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / OLE</p>
+
+<div class="doc-section">
+<h2>Functions</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>ole.create(progId)</code></td><td>Creates a COM object by ProgID (e.g. "Excel.Application")</td></tr>
+<tr><td><code>ole.getActive(progId)</code></td><td>Retrieves an already running COM object</td></tr>
+<tr><td><code>ole.isAvailable(progId)</code></td><td>Checks whether the COM class is available (bool)</td></tr>
+</table>
+
+<h3>Example</h3>
+<pre><code><span class="kw">var</span> excel = ole.create(<span class="str">"Excel.Application"</span>);
+excel.Visible = <span class="kw">true</span>;
+<span class="kw">var</span> wb = excel.Workbooks.Add();
+<span class="kw">var</span> sheet = wb.Sheets(1);
+sheet.Cells(1, 1).Value = <span class="str">"Hello"</span>;
+wb.SaveAs(<span class="str">"C:\\test.xlsx"</span>);
+excel.Quit();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Properties and methods of an OLE object</h2>
+<p>Properties and methods of a COM object are accessed with dot notation. Names are case-insensitive.</p>
+
+<h3>Properties</h3>
+<pre><code>obj.PropertyName           <span class="cmt">// read</span>
+obj.PropertyName = value   <span class="cmt">// write</span></code></pre>
+
+<h3>Methods</h3>
+<pre><code>obj.MethodName(arg1, arg2)  <span class="cmt">// method call</span></code></pre>
+
+<h3>Examples</h3>
+<pre><code><span class="cmt">// Word</span>
+<span class="kw">var</span> word = ole.create(<span class="str">"Word.Application"</span>);
+word.Visible = <span class="kw">true</span>;
+<span class="kw">var</span> doc = word.Documents.Add();
+doc.Content.Text = <span class="str">"Hello, World!"</span>;
+doc.SaveAs2(<span class="str">"C:\\doc.docx"</span>);
+word.Quit();
+
+<span class="cmt">// Get the active instance</span>
+<span class="kw">var</span> excel = ole.getActive(<span class="str">"Excel.Application"</span>);
+<span class="kw">if</span> (excel) {
+    print(<span class="str">"Excel is already running"</span>);
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Limitations</h2>
+<ul>
+<li>Available on Windows only (OLE/COM)</li>
+<li>Arrays are converted to SAFEARRAY (1D and 2D)</li>
+<li>The VT_DISPATCH type is returned as an OLE object</li>
+<li>3D+ arrays are not supported</li>
+</ul>
+</div>
+
+<footer>Script Documentation</footer>
+</div>
+</body>
+</html>

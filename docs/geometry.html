@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Геометрия — Script</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header>
+<h1>Геометрические примитивы</h1>
+<p>QodePoint, QodeSize, QodeRect — 2D-геометрия</p>
+<div class="lang-switch"><a class="active" href="geometry.html">RU</a><a href="en/geometry.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Главная</a> / Геометрия</p>
+
+<div class="doc-section">
+<h2>QodePoint — Точка</h2>
+<pre><code>var p = QodePoint(10, 20);</code></pre>
+
+<h3>Свойства</h3>
+<table>
+<tr><th>Свойство</th><th>Тип</th><th>Описание</th></tr>
+<tr><td><code>x</code></td><td>int</td><td>Координата X (чтение/запись)</td></tr>
+<tr><td><code>y</code></td><td>int</td><td>Координата Y (чтение/запись)</td></tr>
+</table>
+
+<h3>Методы</h3>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>add(p|s|x,y) -> QodePoint</code></td><td>Сложение с QodePoint, QodeSize или координатами</td></tr>
+<tr><td><code>subtract(p|s|x,y) -> QodePoint</code></td><td>Вычитание</td></tr>
+<tr><td><code>scale(factor) -> QodePoint</code></td><td>Масштабирование относительно (0,0)</td></tr>
+<tr><td><code>offset(s|x,y) -> QodePoint</code></td><td>Смещение (alias для add)</td></tr>
+<tr><td><code>setlocation(x,y) -> QodePoint</code></td><td>Установка абсолютных координат</td></tr>
+<tr><td><code>negate() -> QodePoint</code></td><td>Инверсия знака координат</td></tr>
+<tr><td><code>abs() -> QodePoint</code></td><td>Модуль координат</td></tr>
+<tr><td><code>min(p|x,y) -> QodePoint</code></td><td>Покомпонентный минимум</td></tr>
+<tr><td><code>max(p|x,y) -> QodePoint</code></td><td>Покомпонентный максимум</td></tr>
+<tr><td><code>clamp(min,max) -> QodePoint</code></td><td>Ограничение диапазоном (оба аргумента — QodePoint)</td></tr>
+<tr><td><code>rotate(angle, center?) -> QodePoint</code></td><td>Поворот вокруг точки (радианы). center: QodePoint или (cx,cy)</td></tr>
+<tr><td><code>lerp(target, t) -> QodePoint</code></td><td>Линейная интерполяция к target (t: 0..1)</td></tr>
+<tr><td><code>distance(p|x,y) -> float</code></td><td>Расстояние до точки</td></tr>
+<tr><td><code>length() -> float</code></td><td>Длина вектора от (0,0)</td></tr>
+<tr><td><code>angle(p|x,y) -> float</code></td><td>Угол до точки (atan2)</td></tr>
+<tr><td><code>normalize() -> QodePoint</code></td><td>Нормализация вектора (длина = 1)</td></tr>
+<tr><td><code>ptincircle(center, radius) -> bool</code></td><td>Проверка вхождения в круг</td></tr>
+<tr><td><code>equals(p) -> bool</code></td><td>Сравнение с другой точкой</td></tr>
+<tr><td><code>iszero() -> bool</code></td><td>Проверка на (0,0)</td></tr>
+<tr><td><code>isempty() -> bool</code></td><td>Alias для iszero()</td></tr>
+<tr><td><code>clone() -> QodePoint</code></td><td>Создание копии</td></tr>
+<tr><td><code>toarray() -> [x, y]</code></td><td>Конвертация в массив</td></tr>
+<tr><td><code>toQodeSize() -> QodeSize</code></td><td>Конвертация в QodeSize (abs значений)</td></tr>
+</table>
+
+<h3>Пример</h3>
+<pre><code>var p = QodePoint(10, 20);
+p.add(5, 3).scale(2);          <span class="cmt">// QodePoint[30,46]</span>
+p.distance(QodePoint(0, 0));    <span class="cmt">// ~22.36</span>
+p.rotate(3.14159 / 2, 0, 0);   <span class="cmt">// поворот на 90°</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>QodeSize — Размер</h2>
+<pre><code>var s = QodeSize(100, 200);</code></pre>
+
+<h3>Свойства</h3>
+<table>
+<tr><th>Свойство</th><th>Тип</th><th>Описание</th></tr>
+<tr><td><code>cx</code></td><td>int</td><td>Ширина (чтение/запись)</td></tr>
+<tr><td><code>cy</code></td><td>int</td><td>Высота (чтение/запись)</td></tr>
+</table>
+
+<h3>Методы</h3>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>add(s|cx,cy) -> QodeSize</code></td><td>Сложение</td></tr>
+<tr><td><code>subtract(s|cx,cy) -> QodeSize</code></td><td>Вычитание</td></tr>
+<tr><td><code>scale(factor) -> QodeSize</code></td><td>Масштабирование</td></tr>
+<tr><td><code>swap() -> QodeSize</code></td><td>Обмен cx/cy местами</td></tr>
+<tr><td><code>fit(target) -> QodeSize</code></td><td>Масштабирование с сохранением пропорций для вписывания в target</td></tr>
+<tr><td><code>expand(s) -> QodeSize</code></td><td>Покомпонентный max</td></tr>
+<tr><td><code>reduce(s) -> QodeSize</code></td><td>Покомпонентный min</td></tr>
+<tr><td><code>aspect() -> float</code></td><td>Соотношение сторон (cx/cy)</td></tr>
+<tr><td><code>area() -> int</code></td><td>Площадь</td></tr>
+<tr><td><code>maxside() -> int</code></td><td>Максимальная сторона</td></tr>
+<tr><td><code>minside() -> int</code></td><td>Минимальная сторона</td></tr>
+<tr><td><code>equals(s) -> bool</code></td><td>Сравнение</td></tr>
+<tr><td><code>iszero() -> bool</code></td><td>Проверка на (0,0)</td></tr>
+<tr><td><code>clone() -> QodeSize</code></td><td>Копия</td></tr>
+<tr><td><code>toarray() -> [cx, cy]</code></td><td>В массив</td></tr>
+<tr><td><code>toQodePoint() -> QodePoint</code></td><td>В QodePoint</td></tr>
+</table>
+
+<h3>Пример</h3>
+<pre><code>var s = QodeSize(100, 200);
+s.fit(QodeSize(50, 50));   <span class="cmt">// QodeSize[25,50] — вписано с пропорциями</span>
+s.aspect();                <span class="cmt">// 0.5</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>QodeRect — Прямоугольник</h2>
+<pre><code>var r = QodeRect(0, 0, 100, 200);</code></pre>
+
+<h3>Конструкторы</h3>
+<table>
+<tr><th>Форма</th><th>Описание</th></tr>
+<tr><td><code>QodeRect(l, t, r, b)</code></td><td>По координатам</td></tr>
+<tr><td><code>QodeRect(QodePoint, QodeSize)</code></td><td>От точки и размера</td></tr>
+<tr><td><code>QodeRect(QodePoint1, QodePoint2)</code></td><td>По двум противоположным углам</td></tr>
+<tr><td><code>QodeRect(otherQodeRect)</code></td><td>Копирование</td></tr>
+</table>
+
+<h3>Свойства координат</h3>
+<table>
+<tr><th>Свойство</th><th>Тип</th><th>Описание</th></tr>
+<tr><td><code>left, top, right, bottom</code></td><td>int</td><td>Границы (чтение/запись)</td></tr>
+<tr><td><code>width</code></td><td>int</td><td>Ширина (right-left). Set обновляет right</td></tr>
+<tr><td><code>height</code></td><td>int</td><td>Высота (bottom-top). Set обновляет bottom</td></tr>
+<tr><td><code>topleft</code></td><td>QodePoint</td><td>Левый верхний угол (чтение/запись)</td></tr>
+<tr><td><code>bottomright</code></td><td>QodePoint</td><td>Правый нижний угол (чтение/запись)</td></tr>
+<tr><td><code>location</code></td><td>QodePoint</td><td>Alias для topleft. При set сохраняет размер</td></tr>
+<tr><td><code>QodeSize</code></td><td>QodeSize</td><td>Размеры (чтение/запись)</td></tr>
+</table>
+
+<h3>Методы трансформации</h3>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>move(p|x,y) -> QodeRect</code></td><td>Перемещение в абсолютную позицию</td></tr>
+<tr><td><code>offset(p|s|x,y) -> QodeRect</code></td><td>Относительное смещение</td></tr>
+<tr><td><code>inflate(s|dx,dy|d) -> QodeRect</code></td><td>Расширение (отрицательное = сжатие)</td></tr>
+<tr><td><code>shrink(s|dx,dy|d) -> QodeRect</code></td><td>Сжатие (обратное inflate)</td></tr>
+<tr><td><code>scale(sx, sy?) -> QodeRect</code></td><td>Масштабирование относительно центра. sy по умолчанию = sx</td></tr>
+<tr><td><code>normalize() -> QodeRect</code></td><td>Исправление: left&lt;right, top&lt;bottom</td></tr>
+<tr><td><code>round() -> QodeRect</code></td><td>Округление границ (floor/ceil)</td></tr>
+</table>
+
+<h3>Геометрические операции</h3>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>union(r) -> QodeRect</code></td><td>Объединение с другим QodeRect</td></tr>
+<tr><td><code>intersect(r) -> QodeRect</code></td><td>Пересечение (пустой → все нули)</td></tr>
+<tr><td><code>fit(target) -> QodeRect</code></td><td>Вписывание с сохранением пропорций, центрирование в target</td></tr>
+<tr><td><code>split(cols, rows) -> [QodeRect]</code></td><td>Разбиение на сетку, возвращает массив</td></tr>
+</table>
+
+<h3>Запросы</h3>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>contains(p|x,y) -> bool</code></td><td>Содержит ли точку</td></tr>
+<tr><td><code>containsQodeRect(r) -> bool</code></td><td>Содержит ли целиком другой QodeRect</td></tr>
+<tr><td><code>intersects(r) -> bool</code></td><td>Пересекается ли с другим QodeRect</td></tr>
+<tr><td><code>center() -> QodePoint</code></td><td>Центр прямоугольника</td></tr>
+<tr><td><code>aspect() -> float</code></td><td>Соотношение сторон</td></tr>
+<tr><td><code>area() -> int</code></td><td>Площадь (0 если пустой)</td></tr>
+<tr><td><code>isempty() -> bool</code></td><td>Пустой (width≤0 или height≤0)</td></tr>
+<tr><td><code>iszero() -> bool</code></td><td>Все координаты == 0</td></tr>
+<tr><td><code>equals(r) -> bool</code></td><td>Полное совпадение</td></tr>
+<tr><td><code>clone() -> QodeRect</code></td><td>Копия</td></tr>
+<tr><td><code>setQodeRect(l,t,r,b) -> QodeRect</code></td><td>Установка всех координат</td></tr>
+</table>
+
+<h3>Примеры</h3>
+<pre><code><span class="cmt">// Разные конструкторы</span>
+var r1 = QodeRect(0, 0, 100, 200);
+var r2 = QodeRect(QodePoint(0, 0), QodeSize(100, 200));
+var r3 = QodeRect(QodePoint(0, 0), QodePoint(100, 200));
+
+<span class="cmt">// Манипуляции</span>
+r1.inflate(10);                  <span class="cmt">// расширение на 10 со всех сторон</span>
+r1.offset(QodePoint(5, 5));      <span class="cmt">// смещение</span>
+r1.move(QodePoint(100, 100));    <span class="cmt">// перемещение в (100,100)</span>
+
+<span class="cmt">// Геометрия</span>
+var r4 = QodeRect(0, 0, 50, 50);
+var r5 = QodeRect(25, 25, 75, 75);
+r4.union(r5);                    <span class="cmt">// QodeRect[0,0,75,75]</span>
+r4.intersect(r5);                <span class="cmt">// QodeRect[25,25,50,50]</span>
+r4.contains(QodePoint(30, 30));  <span class="cmt">// true</span>
+
+<span class="cmt">// Разбиение на сетку</span>
+var cells = QodeRect(0, 0, 100, 100).split(2, 2);
+<span class="cmt">// → [QodeRect[0,0,50,50], QodeRect[50,0,100,50],
+<span class="cmt">//    QodeRect[0,50,50,100], QodeRect[50,50,100,100]]</span></code></pre>
+</div>
+
+<footer>Script Documentation</footer>
+</div>
+</body>
+</html>

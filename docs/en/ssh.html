@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SSH module — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>SSH module</h1><p>Built-in module for remote server management — SSH connections, command execution, file transfer via SCP and SFTP</p><div class="lang-switch"><a href="../ssh.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="ssh.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / SSH</p>
+
+<div class="doc-section">
+<h2>Dependencies</h2>
+<p>Built into the engine. Uses libssh2 1.11.1 + OpenSSL 3.</p>
+<p>To run on Windows the following must be next to the binary: <code>libcrypto-3-x64.dll</code>, <code>libssl-3-x64.dll</code>.</p>
+</div>
+
+<div class="doc-section">
+<h2>Creating a session</h2>
+<pre><code><span class="cmt">// ssh — global module object</span>
+<span class="kw">var</span> session = ssh.connect();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>ssh module methods</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>ssh.connect()</code></td><td>—</td><td>object</td><td>Creates a new SSH session object</td></tr>
+<tr><td><code>ssh.version()</code></td><td>—</td><td>string</td><td>libssh2 version (e.g. <code>"1.11.1"</code>)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Session methods</h2>
+
+<h3>Connection</h3>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>connect</code></td><td><code>host, port, user, pass</code></td><td>int (0/1)</td><td>Connects over SSH with password authentication</td></tr>
+<tr><td><code>disconnect</code></td><td>—</td><td>—</td><td>Disconnects from the server</td></tr>
+<tr><td><code>isconnected</code></td><td>—</td><td>int (0/1)</td><td>Checks the connection state</td></tr>
+<tr><td><code>last_error</code></td><td>—</td><td>string</td><td>Last libssh2 error</td></tr>
+</table>
+
+<h3>Command execution</h3>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>exec</code></td><td><code>command</code></td><td>string</td><td>Executes a command, returns stdout + stderr</td></tr>
+</table>
+
+<h3>SCP (file transfer)</h3>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>scp_send</code></td><td><code>remote_path, data</code></td><td>int (0/1)</td><td>Sends data to a remote file</td></tr>
+<tr><td><code>scp_recv</code></td><td><code>remote_path</code></td><td>string</td><td>Downloads a remote file</td></tr>
+</table>
+
+<h3>SFTP (file system)</h3>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>sftp_init</code></td><td>—</td><td>int (0/1)</td><td>Initializes an SFTP session</td></tr>
+<tr><td><code>sftp_open</code></td><td><code>path, mode</code></td><td>int (handle)</td><td>Opens a file. mode: <code>"r"</code>, <code>"w"</code>, <code>"a"</code>, <code>"rb"</code>, <code>"wb"</code></td></tr>
+<tr><td><code>sftp_read</code></td><td><code>handle, max_bytes</code></td><td>string</td><td>Reads data from a file</td></tr>
+<tr><td><code>sftp_write</code></td><td><code>handle, data</code></td><td>int</td><td>Writes data to a file (returns bytes)</td></tr>
+<tr><td><code>sftp_close</code></td><td><code>handle</code></td><td>int (0/1)</td><td>Closes a file</td></tr>
+<tr><td><code>sftp_readdir</code></td><td><code>path</code></td><td>array</td><td>List of files in a directory</td></tr>
+<tr><td><code>sftp_mkdir</code></td><td><code>path</code></td><td>int (0/1)</td><td>Creates a directory</td></tr>
+<tr><td><code>sftp_rmdir</code></td><td><code>path</code></td><td>int (0/1)</td><td>Removes an empty directory</td></tr>
+<tr><td><code>sftp_unlink</code></td><td><code>path</code></td><td>int (0/1)</td><td>Deletes a file</td></tr>
+<tr><td><code>sftp_rename</code></td><td><code>old_path, new_path</code></td><td>int (0/1)</td><td>Renames a file</td></tr>
+<tr><td><code>sftp_stat</code></td><td><code>path</code></td><td>tuple|null</td><td>File information: <code>{size, mode, mtime, atime, isdir}</code></td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>sftp_readdir result format</h2>
+<p>Each array element is a tuple:</p>
+<pre><code>#{
+    "name":  "file.txt",   <span class="cmt">// string — file name</span>
+    "size":  12345,        <span class="cmt">// int    — size in bytes</span>
+    "mode":  33188,        <span class="cmt">// int    — POSIX permissions (octal 0644)</span>
+    "mtime": 1694000000,   <span class="cmt">// int    — modification time (unix timestamp)</span>
+    "isdir":  0            <span class="cmt">// int    — 1 if a directory</span>
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Example: connecting and executing a command</h2>
+<pre><code><span class="kw">var</span> session = ssh.connect();
+
+<span class="kw">if</span> (session.connect(<span class="str">"192.168.1.1"</span>, <span class="num">22</span>, <span class="str">"root"</span>, <span class="str">"password"</span>)) {
+    print(<span class="str">"Connected!"</span>);
+
+    <span class="kw">var</span> result = session.exec(<span class="str">"uname -a"</span>);
+    print(result);
+
+    <span class="kw">var</span> hostname = session.exec(<span class="str">"hostname"</span>);
+    print(<span class="str">"Server: \(hostname)"</span>);
+
+    session.disconnect();
+} <span class="kw">else</span> {
+    print(<span class="str">"Error: \(session.last_error())"</span>);
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Example: uploading a file via SCP</h2>
+<pre><code><span class="kw">var</span> session = ssh.connect();
+session.connect(<span class="str">"192.168.1.1"</span>, <span class="num">22</span>, <span class="str">"user"</span>, <span class="str">"pass"</span>);
+
+<span class="cmt">// Downloading a remote file</span>
+<span class="kw">var</span> data = session.scp_recv(<span class="str">"/var/log/syslog"</span>);
+print(<span class="str">"Size: \(size(data))"</span>);
+
+<span class="cmt">// Sending data</span>
+session.scp_send(<span class="str">"/tmp/upload.txt"</span>, <span class="str">"Hello from Script!"</span>);
+
+session.disconnect();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Example: working with SFTP</h2>
+<pre><code><span class="kw">var</span> s = ssh.connect();
+s.connect(<span class="str">"192.168.1.1"</span>, <span class="num">22</span>, <span class="str">"user"</span>, <span class="str">"pass"</span>);
+
+<span class="cmt">// SFTP initialization</span>
+s.sftp_init();
+
+<span class="cmt">// Browsing a directory</span>
+<span class="kw">var</span> files = s.sftp_readdir(<span class="str">"/home/user"</span>);
+<span class="kw">for</span> (<span class="kw">var</span> f : files) {
+    print(<span class="str">"\(f.name)  \(f.size) bytes"</span>);
+}
+
+<span class="cmt">// Writing a file</span>
+<span class="kw">var</span> h = s.sftp_open(<span class="str">"/tmp/test.txt"</span>, <span class="str">"w"</span>);
+s.sftp_write(h, <span class="str">"Data from the script\n"</span>);
+s.sftp_close(h);
+
+<span class="cmt">// Reading a file</span>
+<span class="kw">var</span> r = s.sftp_open(<span class="str">"/tmp/test.txt"</span>, <span class="str">"r"</span>);
+<span class="kw">var</span> content = s.sftp_read(r, <span class="num">4096</span>);
+s.sftp_close(r);
+print(content);
+
+<span class="cmt">// File information</span>
+<span class="kw">var</span> st = s.sftp_stat(<span class="str">"/tmp/test.txt"</span>);
+print(<span class="str">"Size: \(st.size)"</span>);
+
+<span class="cmt">// File operations</span>
+s.sftp_rename(<span class="str">"/tmp/test.txt"</span>, <span class="str">"/tmp/renamed.txt"</span>);
+s.sftp_unlink(<span class="str">"/tmp/renamed.txt"</span>);
+
+<span class="cmt">// Directories</span>
+s.sftp_mkdir(<span class="str">"/tmp/newdir"</span>);
+s.sftp_rmdir(<span class="str">"/tmp/newdir"</span>);
+
+s.disconnect();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Example: bulk command execution</h2>
+<pre><code><span class="kw">var</span> servers = [
+    #{"host": <span class="str">"192.168.1.10"</span>, "user": <span class="str">"admin"</span>, "pass": <span class="str">"secret"</span>},
+    #{"host": <span class="str">"192.168.1.11"</span>, "user": <span class="str">"admin"</span>, "pass": <span class="str">"secret"</span>},
+    #{"host": <span class="str">"192.168.1.12"</span>, "user": <span class="str">"admin"</span>, "pass": <span class="str">"secret"</span>}
+];
+
+<span class="kw">for</span> (<span class="kw">var</span> srv : servers) {
+    <span class="kw">var</span> s = ssh.connect();
+    <span class="kw">if</span> (s.connect(srv.host, <span class="num">22</span>, srv.user, srv.pass)) {
+        print(<span class="str">"\(srv.host):"</span>);
+        print(s.exec(<span class="str">"uptime"</span>));
+        s.disconnect();
+    } <span class="kw">else</span> {
+        print(<span class="str">"\(srv.host): FAILED"</span>);
+    }
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Example: disk monitoring</h2>
+<pre><code><span class="kw">var</span> s = ssh.connect();
+s.connect(<span class="str">"server.example.com"</span>, <span class="num">22</span>, <span class="str">"root"</span>, <span class="str">"pass"</span>);
+
+<span class="cmt">// Checking free space</span>
+<span class="kw">var</span> df = s.exec(<span class="str">"df -h /"</span>);
+print(<span class="str">"Disk space:"</span>);
+print(df);
+
+<span class="cmt">// Checking processes</span>
+<span class="kw">var</span> ps = s.exec(<span class="str">"ps aux | head -20"</span>);
+print(<span class="str">"\nTop processes:"</span>);
+print(ps);
+
+<span class="cmt">// Checking directory size</span>
+<span class="kw">var</span> du = s.exec(<span class="str">"du -sh /var/log"</span>);
+print(<span class="str">"\nLogs:"</span>);
+print(du);
+
+s.disconnect();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Example: fetching a configuration</h2>
+<pre><code><span class="kw">var</span> s = ssh.connect();
+s.connect(<span class="str">"db-server"</span>, <span class="num">22</span>, <span class="str">"dba"</span>, <span class="str">"password"</span>);
+s.sftp_init();
+
+<span class="cmt">// Reading the configuration file</span>
+<span class="kw">var</span> h = s.sftp_open(<span class="str">"/etc/my.cnf"</span>, <span class="str">"r"</span>);
+<span class="kw">var</span> config = s.sftp_read(h, <span class="num">65536</span>);
+s.sftp_close(h);
+
+<span class="cmt">// Searching for the needed lines</span>
+<span class="kw">var</span> lines = config.splitlines();
+<span class="kw">for</span> (<span class="kw">var</span> line : lines) {
+    <span class="kw">if</span> (line.startswith(<span class="str">"max_connections"</span>)) {
+        print(<span class="str">"Found: \(line)"</span>);
+    }
+}
+
+s.disconnect();</code></pre>
+</div>
+
+</div>
+</body>
+</html>

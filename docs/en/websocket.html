@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebSocket Plugin — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>WebSocket Plugin</h1><p>WebSocket client — bidirectional real-time communication, text and binary messages, ping/pong</p><div class="lang-switch"><a href="../websocket.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="websocket.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / <a href="plugins.html">Plugins</a> / WebSocket</p>
+
+<div class="doc-section">
+<h2>Dependencies</h2>
+<p>Requires OpenSSL 3: <code>libssl-3-x64.dll</code>, <code>libcrypto-3-x64.dll</code> (placed next to the binary).</p>
+<p>Incoming text and binary messages are reassembled from WebSocket fragments; the total message size is limited to 64 MiB.</p>
+</div>
+
+<div class="doc-section">
+<h2>Loading the plugin</h2>
+<pre><code>loadPlugin(<span class="str">"plugins/websocket.dll"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Creating the object</h2>
+<pre><code><span class="kw">var</span> ws = WebSocket();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Methods</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>connect</code></td><td><code>url</code></td><td>bool</td><td>Connect to a WebSocket server (ws:// or wss://)</td></tr>
+<tr><td><code>disconnect</code></td><td>—</td><td>bool</td><td>Disconnect without sending a close frame</td></tr>
+<tr><td><code>isconnected</code></td><td>—</td><td>bool</td><td>Check the connection state</td></tr>
+<tr><td><code>send</code></td><td><code>text</code></td><td>bool</td><td>Send a text message</td></tr>
+<tr><td><code>sendBinary</code></td><td><code>data</code></td><td>bool</td><td>Send binary data (ByteArray or string)</td></tr>
+<tr><td><code>recv</code></td><td>—</td><td>string|null</td><td>Receive the next text message</td></tr>
+<tr><td><code>recvBinary</code></td><td>—</td><td>ByteArray|null</td><td>Receive the next binary message</td></tr>
+<tr><td><code>ping</code></td><td>—</td><td>bool</td><td>Send a ping frame</td></tr>
+<tr><td><code>close</code></td><td>—</td><td>bool</td><td>Gracefully close the connection (close frame)</td></tr>
+<tr><td><code>hasMessage</code></td><td>—</td><td>bool</td><td>Whether there are messages in the queue</td></tr>
+<tr><td><code>messageCount</code></td><td>—</td><td>int</td><td>Number of messages in the queue</td></tr>
+<tr><td><code>clearMessages</code></td><td>—</td><td>bool</td><td>Clear the message queue</td></tr>
+<tr><td><code>setTimeout</code></td><td><code>[ms]</code></td><td>int</td><td>Read timeout (ms). Without arguments — getter</td></tr>
+<tr><td><code>lastError</code></td><td>—</td><td>string|null</td><td>Last error</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Connecting</h2>
+<p>Supports <code>ws://</code> (plain) and <code>wss://</code> (SSL/TLS).</p>
+<pre><code><span class="kw">var</span> ws = WebSocket();
+
+<span class="cmt">// ws://</span>
+ws.connect(<span class="str">"ws://echo.websocket.events"</span>);
+
+<span class="cmt">// wss://</span>
+ws.connect(<span class="str">"wss://echo.websocket.events"</span>);
+
+<span class="cmt">// with a port</span>
+ws.connect(<span class="str">"ws://localhost:8080"</span>);
+
+<span class="cmt">// with a path</span>
+ws.connect(<span class="str">"wss://example.com/chat"</span>);
+
+print(ws.isconnected());  <span class="cmt">// 1</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Text messages</h2>
+<pre><code><span class="kw">var</span> ws = WebSocket();
+ws.connect(<span class="str">"wss://echo.websocket.events"</span>);
+
+<span class="cmt">// Sending</span>
+ws.send(<span class="str">"Hello, world!"</span>);
+ws.send(<span class="str">"val=\(42)"</span>);
+
+<span class="cmt">// Receiving</span>
+<span class="kw">var</span> msg = ws.recv();
+<span class="kw">if</span> (msg != null) {
+    print(<span class="str">"Received: \(msg)"</span>);
+}
+
+<span class="cmt">// Checking for messages</span>
+<span class="kw">if</span> (ws.hasMessage()) {
+    <span class="kw">var</span> next = ws.recv();
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Binary messages</h2>
+<pre><code><span class="kw">var</span> ws = WebSocket();
+ws.connect(<span class="str">"wss://echo.websocket.events"</span>);
+
+<span class="cmt">// Sending binary data (ByteArray)</span>
+<span class="kw">var</span> ba = ByteArray();
+ba.push(0x48);  <span class="cmt">// H</span>
+ba.push(0x65);  <span class="cmt">// e</span>
+ba.push(0x6C);  <span class="cmt">// l</span>
+ba.push(0x6C);  <span class="cmt">// l</span>
+ba.push(0x6F);  <span class="cmt">// o</span>
+ws.sendBinary(ba);
+
+<span class="cmt">// Receiving binary data</span>
+<span class="kw">var</span> data = ws.recvBinary();
+<span class="kw">if</span> (data != null) {
+    print(<span class="str">"Size: \(data.size())"</span>);
+    print(<span class="str">"First byte: \(data[0])"</span>);
+}
+
+<span class="cmt">// Sending a string as binary data</span>
+ws.sendBinary(<span class="str">"raw bytes"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Ping / Pong</h2>
+<p>The plugin automatically replies to server ping frames with pong frames.</p>
+<pre><code><span class="kw">var</span> ws = WebSocket();
+ws.connect(<span class="str">"wss://echo.websocket.events"</span>);
+
+<span class="cmt">// Manual ping</span>
+ws.ping();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Closing the connection</h2>
+<pre><code><span class="kw">var</span> ws = WebSocket();
+ws.connect(<span class="str">"wss://echo.websocket.events"</span>);
+
+<span class="cmt">// Graceful close (sends a close frame)</span>
+ws.close();
+
+<span class="cmt">// Abrupt disconnect (no close frame)</span>
+ws.disconnect();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Message queue</h2>
+<pre><code><span class="kw">var</span> ws = WebSocket();
+ws.connect(<span class="str">"wss://echo.websocket.events"</span>);
+
+<span class="cmt">// Number of messages in the queue</span>
+print(ws.messageCount());
+
+<span class="cmt">// Whether there are messages</span>
+print(ws.hasMessage());  <span class="cmt">// 1 or 0</span>
+
+<span class="cmt">// Processing all messages</span>
+<span class="kw">while</span> (ws.hasMessage()) {
+    <span class="kw">var</span> msg = ws.recv();
+    print(msg);
+}
+
+<span class="cmt">// Clearing the queue</span>
+ws.clearMessages();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Timeout</h2>
+<pre><code><span class="kw">var</span> ws = WebSocket();
+ws.connect(<span class="str">"wss://echo.websocket.events"</span>);
+
+<span class="cmt">// Setting the read timeout (ms)</span>
+ws.setTimeout(5000);  <span class="cmt">// 5 seconds</span>
+
+<span class="cmt">// Getting the current timeout</span>
+<span class="kw">var</span> timeout = ws.setTimeout();  <span class="cmt">// getter</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Example: Echo client</h2>
+<pre><code>loadPlugin(<span class="str">"plugins/websocket.dll"</span>);
+
+<span class="kw">var</span> ws = WebSocket();
+
+<span class="kw">if</span> (ws.connect(<span class="str">"wss://echo.websocket.events"</span>)) {
+    print(<span class="str">"Connected!"</span>);
+
+    <span class="cmt">// Sending messages</span>
+    ws.send(<span class="str">"Hi!"</span>);
+    ws.send(<span class="str">"Echo test"</span>);
+
+    <span class="cmt">// Waiting for replies</span>
+    system.sleep(2000);
+
+    <span class="kw">while</span> (ws.hasMessage()) {
+        <span class="kw">var</span> msg = ws.recv();
+        print(<span class="str">"Echo: \(msg)"</span>);
+    }
+
+    ws.close();
+} <span class="kw">else</span> {
+    print(<span class="str">"Error: \(ws.lastError())"</span>);
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Example: Receiving binary data</h2>
+<pre><code>loadPlugin(<span class="str">"plugins/websocket.dll"</span>);
+
+<span class="kw">var</span> ws = WebSocket();
+ws.connect(<span class="str">"wss://echo.websocket.events"</span>);
+
+<span class="cmt">// Sending binary data</span>
+<span class="kw">var</span> data = ByteArray();
+<span class="kw">for</span> (<span class="kw">var</span> i = 0; i &lt; 256; i++) {
+    data.push(i);
+}
+ws.sendBinary(data);
+
+system.sleep(1000);
+
+<span class="kw">var</span> received = ws.recvBinary();
+<span class="kw">if</span> (received != null) {
+    print(<span class="str">"Bytes received: \(received.size())"</span>);
+}
+
+ws.close();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Example: Error handling</h2>
+<pre><code>loadPlugin(<span class="str">"plugins/websocket.dll"</span>);
+
+<span class="kw">var</span> ws = WebSocket();
+ws.setTimeout(5000);
+
+<span class="kw">if</span> (!ws.connect(<span class="str">"wss://invalid-host.example.com"</span>)) {
+    print(<span class="str">"Connection error: \(ws.lastError())"</span>);
+    <span class="kw">return</span>;
+}
+
+ws.send(<span class="str">"test"</span>);
+
+<span class="kw">if</span> (ws.recv() == null) {
+    print(<span class="str">"No response. Error: \(ws.lastError())"</span>);
+}
+
+ws.close();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Example: Without SSL (ws:// only)</h2>
+<p>Connecting to servers without encryption:</p>
+<pre><code><span class="kw">var</span> ws = WebSocket();
+ws.connect(<span class="str">"ws://localhost:9001"</span>);</code></pre>
+<p>Connecting to servers with SSL:</p>
+<pre><code><span class="kw">var</span> ws = WebSocket();
+ws.connect(<span class="str">"wss://secure-server.com"</span>);</code></pre>
+</div>
+
+</div>
+</body>
+</html>

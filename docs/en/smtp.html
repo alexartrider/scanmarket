@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMTP plugin — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>SMTP plugin</h1><p>Sending email via SMTP — SSL/TLS, attachments, MIME messages</p><div class="lang-switch"><a href="../smtp.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="smtp.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / <a href="plugins.html">Plugins</a> / SMTP</p>
+
+<div class="doc-section">
+<h2>Loading the plugin</h2>
+<pre><code>loadPlugin("plugins/smtp.dll");</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Creating a client</h2>
+<pre><code><span class="kw">var</span> smtp = SmtpClient();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Methods</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>connect</code></td><td><code>host, [port], [useSSL]</code></td><td>bool</td><td>Connecting to an SMTP server</td></tr>
+<tr><td><code>starttls</code></td><td>—</td><td>bool</td><td>Switching to TLS via STARTTLS</td></tr>
+<tr><td><code>login</code></td><td><code>user, pass</code></td><td>bool</td><td>Authentication (PLAIN or LOGIN)</td></tr>
+<tr><td><code>authPlain</code></td><td><code>user, pass</code></td><td>bool</td><td>Alias for login</td></tr>
+<tr><td><code>send</code></td><td><code>from, to, subject, body, [isHtml]</code></td><td>bool</td><td>Sending a MIME message</td></tr>
+<tr><td><code>attach</code></td><td><code>filename, data, [contentType], [contentId]</code></td><td>int</td><td>Adding an attachment</td></tr>
+<tr><td><code>clearAttachments</code></td><td>—</td><td>bool</td><td>Clearing the attachment list</td></tr>
+<tr><td><code>attachments</code></td><td>—</td><td>int</td><td>Current number of attachments</td></tr>
+<tr><td><code>disconnect</code></td><td>—</td><td>bool</td><td>QUIT + closing the connection</td></tr>
+<tr><td><code>lastresponse</code></td><td>—</td><td>string</td><td>Last response from the SMTP server</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>connect(host, [port], [useSSL])</h2>
+<p>Connects to an SMTP server. Performs the TCP connection, an optional SSL handshake and the greeting (EHLO/HELO).</p>
+<table>
+<tr><th>Argument</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>host</code></td><td>string</td><td>—</td><td>Server address (domain or IP)</td></tr>
+<tr><td><code>port</code></td><td>int</td><td>465</td><td>Server port</td></tr>
+<tr><td><code>useSSL</code></td><td>bool</td><td>true</td><td>SSL/TLS connection. If port=465 — defaults to true</td></tr>
+</table>
+<pre><code><span class="cmt">// SSL (port 465)</span>
+smtp.connect(<span class="str">"smtp.mail.ru"</span>, <span class="num">465</span>, <span class="kw">true</span>);
+
+<span class="cmt">// STARTTLS (port 587)</span>
+smtp.connect(<span class="str">"smtp.gmail.com"</span>, <span class="num">587</span>, <span class="kw">false</span>);
+smtp.starttls();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>starttls()</h2>
+<p>Switches the connection to TLS after the initial connection. Use it when port=587 and useSSL=false.</p>
+<pre><code>smtp.connect(<span class="str">"smtp.gmail.com"</span>, <span class="num">587</span>, <span class="kw">false</span>);
+smtp.starttls();  <span class="cmt">// TLS handshake</span>
+smtp.login(<span class="str">"user@gmail.com"</span>, <span class="str">"password"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>login(user, pass)</h2>
+<p>Authentication on the server. Tries AUTH PLAIN, then AUTH LOGIN.</p>
+<pre><code>smtp.login(<span class="str">"user@mail.ru"</span>, <span class="str">"password"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>send(from, to, subject, body, [isHtml])</h2>
+<p>Sends a MIME message with UTF-8 encoding.</p>
+<table>
+<tr><th>Argument</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>from</code></td><td>string</td><td>Sender address</td></tr>
+<tr><td><code>to</code></td><td>string</td><td>Recipient address</td></tr>
+<tr><td><code>subject</code></td><td>string</td><td>Message subject</td></tr>
+<tr><td><code>body</code></td><td>string</td><td>Message body</td></tr>
+<tr><td><code>isHtml</code></td><td>bool</td><td>HTML body format (defaults to false)</td></tr>
+</table>
+<pre><code><span class="cmt">// Plain message</span>
+smtp.send(<span class="str">"from@mail.ru"</span>, <span class="str">"to@yandex.ru"</span>, <span class="str">"Subject"</span>, <span class="str">"Message body"</span>);
+
+<span class="cmt">// HTML message</span>
+smtp.send(<span class="str">"from@mail.ru"</span>, <span class="str">"to@yandex.ru"</span>, <span class="str">"HTML"</span>,
+    <span class="str">"&lt;h1&gt;Hello!&lt;/h1&gt;&lt;p&gt;This is an &lt;b&gt;HTML&lt;/b&gt; message&lt;/p&gt;"</span>, <span class="kw">true</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>attach(filename, data, [contentType], [contentId])</h2>
+<p>Adds an attachment to the next message. Call <code>attach()</code> before <code>send()</code>.</p>
+<table>
+<tr><th>Argument</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>filename</code></td><td>string</td><td>—</td><td>File name to display</td></tr>
+<tr><td><code>data</code></td><td>string / ByteArray</td><td>—</td><td>Path to a file or a ByteArray</td></tr>
+<tr><td><code>contentType</code></td><td>string</td><td>"application/octet-stream"</td><td>MIME type</td></tr>
+<tr><td><code>contentId</code></td><td>string</td><td>—</td><td>Content-ID for inline attachments</td></tr>
+</table>
+<pre><code><span class="cmt">// Attachment from a file</span>
+smtp.attach(<span class="str">"report.pdf"</span>, <span class="str">"C:\\docs\\report.pdf"</span>, <span class="str">"application/pdf"</span>);
+
+<span class="cmt">// Attachment from a ByteArray</span>
+<span class="kw">var</span> data = file.readbytes(<span class="str">"image.png"</span>);
+smtp.attach(<span class="str">"image.png"</span>, data, <span class="str">"image/png"</span>);
+
+<span class="cmt">// Inline attachment (for HTML)</span>
+smtp.attach(<span class="str">"logo.png"</span>, <span class="str">"logo.png"</span>, <span class="str">"image/png"</span>, <span class="str">"logo001"</span>);
+smtp.send(<span class="str">"from@mail.ru"</span>, <span class="str">"to@mail.ru"</span>, <span class="str">"HTML with an image"</span>,
+    <span class="str">"&lt;img src='cid:logo001'&gt;"</span>, <span class="kw">true</span>);
+
+print(smtp.attachments());  <span class="cmt">// 1</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Examples</h2>
+
+<h3>Basic sending (SSL)</h3>
+<pre><code>loadPlugin(<span class="str">"plugins/smtp.dll"</span>);
+
+<span class="kw">var</span> smtp = SmtpClient();
+smtp.connect(<span class="str">"smtp.mail.ru"</span>, <span class="num">465</span>, <span class="kw">true</span>);
+smtp.login(<span class="str">"user@mail.ru"</span>, <span class="str">"password"</span>);
+
+smtp.send(<span class="str">"user@mail.ru"</span>, <span class="str">"recipient@yandex.ru"</span>,
+    <span class="str">"Test"</span>, <span class="str">"Hello from the script!"</span>);
+
+print(smtp.lastresponse());
+smtp.disconnect();</code></pre>
+
+<h3>Sending with attachments</h3>
+<pre><code>loadPlugin(<span class="str">"plugins/smtp.dll"</span>);
+
+<span class="kw">var</span> smtp = SmtpClient();
+smtp.connect(<span class="str">"smtp.mail.ru"</span>, <span class="num">465</span>, <span class="kw">true</span>);
+smtp.login(<span class="str">"user@mail.ru"</span>, <span class="str">"password"</span>);
+
+smtp.attach(<span class="str">"photo.jpg"</span>, <span class="str">"C:\\Photos\\photo.jpg"</span>, <span class="str">"image/jpeg"</span>);
+smtp.attach(<span class="str">"data.csv"</span>, <span class="str">"C:\\Data\\report.csv"</span>, <span class="str">"text/csv"</span>);
+
+smtp.send(<span class="str">"user@mail.ru"</span>, <span class="str">"recipient@yandex.ru"</span>,
+    <span class="str">"Report"</span>, <span class="str">"Files are attached"</span>);
+
+print(smtp.attachments());  <span class="cmt">// 2</span>
+smtp.disconnect();</code></pre>
+
+<h3>STARTTLS (port 587)</h3>
+<pre><code><span class="kw">var</span> smtp = SmtpClient();
+smtp.connect(<span class="str">"smtp.gmail.com"</span>, <span class="num">587</span>, <span class="kw">false</span>);
+smtp.starttls();
+smtp.login(<span class="str">"user@gmail.com"</span>, <span class="str">"app_password"</span>);
+smtp.send(<span class="str">"user@gmail.com"</span>, <span class="str">"dest@gmail.com"</span>, <span class="str">"Hi"</span>, <span class="str">"Hello!"</span>);
+smtp.disconnect();</code></pre>
+
+<h3>HTML message with an inline attachment</h3>
+<pre><code><span class="kw">var</span> smtp = SmtpClient();
+smtp.connect(<span class="str">"smtp.mail.ru"</span>, <span class="num">465</span>, <span class="kw">true</span>);
+smtp.login(<span class="str">"user@mail.ru"</span>, <span class="str">"password"</span>);
+
+smtp.attach(<span class="str">"logo.png"</span>, <span class="str">"C:\\logo.png"</span>, <span class="str">"image/png"</span>, <span class="str">"logo001"</span>);
+
+<span class="kw">var</span> html = <span class="str">"&lt;h1&gt;Report&lt;/h1&gt;"</span> +
+    <span class="str">"&lt;p&gt;Attachment:&lt;/p&gt;"</span> +
+    <span class="str">"&lt;img src='cid:logo001' width='200'&gt;"</span>;
+
+smtp.send(<span class="str">"user@mail.ru"</span>, <span class="str">"recipient@yandex.ru"</span>, <span class="str">"HTML report"</span>, html, <span class="kw">true</span>);
+smtp.disconnect();</code></pre>
+
+<h3>Error diagnostics</h3>
+<pre><code><span class="kw">var</span> smtp = SmtpClient();
+<span class="kw">if</span> (!smtp.connect(<span class="str">"smtp.invalid.host"</span>, <span class="num">465</span>, <span class="kw">true</span>)) {
+    print(<span class="str">"Connection error: "</span> + smtp.lastresponse());
+}
+smtp.connect(<span class="str">"smtp.mail.ru"</span>, <span class="num">465</span>, <span class="kw">true</span>);
+<span class="kw">if</span> (!smtp.login(<span class="str">"wrong@mail.ru"</span>, <span class="str">"wrong_pass"</span>)) {
+    print(<span class="str">"Authentication error: "</span> + smtp.lastresponse());
+}
+smtp.disconnect();</code></pre>
+</div>
+
+<footer><a href="plugins.html">← Back to the plugin list</a></footer>
+</div>
+</body>
+</html>

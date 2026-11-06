@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QDbGridView — Script</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header>
+<h1>QDbGridView — Таблица данных</h1>
+<p>Просмотр и редактирование данных из базы данных в табличном виде</p>
+<div class="lang-switch"><a class="active" href="dbgrid.html">RU</a><a href="en/dbgrid.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Главная</a> / <a href="qt.html">QT</a> / QDbGridView</p>
+
+<div class="doc-section">
+<h2>Описание</h2>
+<p><code>QDbGridView</code> — это виджет таблицы (наследник QTableView) для отображения и редактирования данных из базы данных. Поддерживает два режима работы:</p>
+<ul>
+<li><strong>Внешний DataSet</strong> — данные передаются из скрипта через <code>setDataSet()</code></li>
+<li><strong>Внутренний DataSet</strong> — данные загружаются по SQL-запросу через <code>open()</code></li>
+</ul>
+</div>
+
+<div class="doc-section">
+<h2>Свойства</h2>
+<table>
+<tr><th>Свойство</th><th>Тип</th><th>Описание</th></tr>
+<tr><td><code>sql</code></td><td>string</td><td>SQL-запрос для загрузки данных</td></tr>
+<tr><td><code>columns</code></td><td>string (JSON)</td><td>Описание колонок в формате JSON-массива</td></tr>
+<tr><td><code>readOnly</code></td><td>bool</td><td>Только для чтения (запрет редактирования)</td></tr>
+<tr><td><code>showGridLines</code></td><td>bool</td><td>Показывать линии сетки</td></tr>
+<tr><td><code>autoOpen</code></td><td>bool</td><td>Автоматически открывать при создании на форме</td></tr>
+</table>
+
+<h3>Формат JSON для columns</h3>
+<pre><code>[
+    {
+        "field": "NAME",       <span class="cmt">// имя поля в БД</span>
+        "caption": "Наименование", <span class="cmt">// заголовок колонки</span>
+        "width": 150,          <span class="cmt">// ширина (по умолчанию 100)</span>
+        "visible": true,       <span class="cmt">// видимость (по умолчанию true)</span>
+        "align": 1,            <span class="cmt">// выравнивание: 1=Left, 2=Right, 4=Center</span>
+        "readOnly": false      <span class="cmt">// только чтение (по умолчанию false)</span>
+    }
+]</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Методы</h2>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>open()</code></td><td>Открыть таблицу по SQL-запросу. Возвращает true при успехе</td></tr>
+<tr><td><code>close()</code></td><td>Закрыть таблицу и освободить данные</td></tr>
+<tr><td><code>refresh()</code></td><td>Обновить данные (перевыполнить SQL или обновить модель)</td></tr>
+<tr><td><code>isActive()</code></td><td>Открыта ли таблица (bool)</td></tr>
+<tr><td><code>currentRow()</code></td><td>Текущая строка как кортеж с ключами-именами полей (имя_поля: значение); при отсутствии выбранной строки возвращает пустой кортеж. SQL NULL преобразуется в <code>null</code></td></tr>
+<tr><td><code>currentRowIndex()</code></td><td>Индекс текущей строки с нуля; <code>-1</code>, если строка не выбрана</td></tr>
+<tr><td><code>setDataSet(ds)</code></td><td>Установить внешний DataSet</td></tr>
+<tr><td><code>dataSet()</code></td><td>Получить текущий DataSet</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Сигналы</h2>
+<table>
+<tr><th>Сигнал</th><th>Аргументы</th><th>Описание</th></tr>
+<tr><td><code>rowDoubleClicked</code></td><td>int row, QVariantMap rowData</td><td>Двойной клик по строке</td></tr>
+<tr><td><code>currentRowChanged</code></td><td>int rowIndex</td><td>Смена текущей строки; передаётся индекс строки с нуля, а не QVariantMap</td></tr>
+<tr><td><code>beforeOpen</code></td><td>—</td><td>Перед открытием</td></tr>
+<tr><td><code>afterOpen</code></td><td>—</td><td>После открытия</td></tr>
+<tr><td><code>beforeClose</code></td><td>—</td><td>Перед закрытием</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Горячие клавиши</h2>
+<table>
+<tr><th>Клавиша</th><th>Действие</th></tr>
+<tr><td><code>F2</code></td><td>Редактирование текущей ячейки</td></tr>
+<tr><td><code>F5</code></td><td>Обновить данные</td></tr>
+<tr><td><code>Enter</code></td><td>Перейти к следующей строке</td></tr>
+<tr><td><code>Escape</code></td><td>Отменить редактирование</td></tr>
+<tr><td><code>Ctrl+Home</code></td><td>Первая строка</td></tr>
+<tr><td><code>Ctrl+End</code></td><td>Последняя строка</td></tr>
+<tr><td><code>Ctrl+PageUp</code></td><td>Страницу вверх</td></tr>
+<tr><td><code>Ctrl+PageDown</code></td><td>Страницу вниз</td></tr>
+<tr><td><code>Backspace</code></td><td>Наверх (в DirectoryView)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Примеры</h2>
+
+<h3>Внешний DataSet</h3>
+<pre><code><span class="kw">var</span> ds = db.open(<span class="str">"SELECT * FROM users"</span>);
+<span class="kw">var</span> grid = qt.create(<span class="str">"QDbGridView"</span>, form);
+grid.setDataSet(ds);
+grid.columns = <span class="str">'[{"field":"ID","caption":"№","width":50},{"field":"NAME","caption":"Имя","width":200}]'</span>;
+grid.align = <span class="str">"alClient"</span>;</code></pre>
+
+<h3>Внутренний DataSet (SQL)</h3>
+<pre><code><span class="kw">var</span> grid = qt.create(<span class="str">"QDbGridView"</span>, form);
+grid.sql = <span class="str">"SELECT id, name, salary FROM employees WHERE department = 'IT'"</span>;
+grid.autoOpen = <span class="kw">true</span>;
+grid.columns = <span class="str">'[{"field":"id","width":50},{"field":"name","width":200},{"field":"salary","width":100,"align":2}]'</span>;
+grid.align = <span class="str">"alClient"</span>;</code></pre>
+
+<p>Для формы из JSON с <code>autoOpen: true</code> подключите БД в верхнеуровневом коде формы: SQL-grid открываются после выполнения этого кода, но до обработчика <code>formCreate</code> (OnCreate). Именованные обработчики событий также должны быть объявлены в коде формы, чтобы подключиться при загрузке. Фазы инициализации подробно описаны в разделе <a href="qt.html">жизненный цикл JSON-формы</a>.</p>
+
+<h3>Обработка событий</h3>
+<pre><code>grid.rowDoubleClicked = <span class="kw">function</span>(sender, row, rowData) {
+    print(<span class="str">"Выбрана строка: \(rowData["NAME"])"</span>);
+};
+
+grid.currentRowChanged = <span class="kw">function</span>(sender, row) {
+    statusBar.showMessage(<span class="str">"Строка \(row + 1) из \(sender.model.rowCount)"</span>);
+};</code></pre>
+
+<p><code>currentRowChanged</code> передаёт индекс строки; эта форма сигнала не зависит от конвертации QVariantMap. Если нужен способ чтения записи по индексу, можно выполнить отдельный SQL-запрос с тем же порядком сортировки и выбрать запись по индексу средствами конкретной БД. До исправления конвертации это обходной путь для <code>currentRow()</code>.</p>
+
+<h3>Ручное открытие/обновление</h3>
+<pre><code>grid.open();          <span class="cmt">// открыть по SQL</span>
+grid.refresh();       <span class="cmt">// обновить данные</span>
+<span class="kw">var</span> row = grid.currentRow();  <span class="cmt">// row["product_id"], row["name"]; NULL → null</span>
+grid.close();         <span class="cmt">// закрыть</span></code></pre>
+</div>
+
+<footer><a href="qt.html">← QT интеграция</a></footer>
+</div>
+</body>
+</html>

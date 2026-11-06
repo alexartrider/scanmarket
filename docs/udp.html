@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Плагин UDP — Script</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Плагин UDP</h1><p>UDP-клиент и UDP-сервер — дейтаграммы, broadcast, multicast, reply</p><div class="lang-switch"><a class="active" href="udp.html">RU</a><a href="en/udp.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Главная</a> / <a href="plugins.html">Плагины</a> / UDP</p>
+
+<div class="doc-section">
+<h2>Загрузка плагина</h2>
+<pre><code>loadPlugin(<span class="str">"udp"</span>);</code></pre>
+</div>
+
+<!-- ============================== UDP CLIENT ============================== -->
+
+<div class="doc-section">
+<h2>UdpClient — UDP-клиент</h2>
+<p>Создаёт UDP-сокет для отправки и приёма дейтаграмм. При вызове <code>bind()</code> автоматически запускает фоновый поток приёма.</p>
+
+<h3>Создание</h3>
+<pre><code><span class="kw">var</span> client = UdpClient();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Свойства клиента</h2>
+<table>
+<tr><th>Свойство</th><th>Тип</th><th>Описание</th></tr>
+<tr><td><code>bound</code></td><td>int</td><td>1 если привязан к порту, 0 если нет</td></tr>
+<tr><td><code>port</code></td><td>int</td><td>Номер привязанного порта</td></tr>
+<tr><td><code>AF_INET</code></td><td>int</td><td>Константа AF_INET = 2</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Методы клиента</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>open</code></td><td>—</td><td>int</td><td>Создание UDP-сокета</td></tr>
+<tr><td><code>close</code></td><td>—</td><td>int</td><td>Закрытие сокета и остановка потока приёма</td></tr>
+<tr><td><code>isopen</code></td><td>—</td><td>int</td><td>Проверка: сокет создан (1/0)</td></tr>
+<tr><td><code>bind</code></td><td><code>port, [addr]</code></td><td>int</td><td>Привязка к порту. port=0 — автовыбор. Запускает recv thread</td></tr>
+<tr><td><code>isbound</code></td><td>—</td><td>int</td><td>Проверка: привязан (1/0)</td></tr>
+<tr><td><code>localport</code></td><td>—</td><td>int</td><td>Номер привязанного порта</td></tr>
+<tr><td><code>send</code> / <code>sendto</code></td><td><code>host, port, data</code></td><td>int</td><td>Отправка дейтаграммы (строка или ByteArray)</td></tr>
+<tr><td><code>broadcast</code></td><td><code>port, data</code></td><td>int</td><td>Отправка на 255.255.255.255</td></tr>
+<tr><td><code>setbroadcast</code></td><td><code>enable</code></td><td>int</td><td>Включение SO_BROADCAST</td></tr>
+<tr><td><code>recv</code> / <code>recvfrom</code></td><td><code>[maxBytes], [asText], [peek]</code></td><td>tuple / null</td><td>Чтение из буфера. Возвращает <code>#{"data": ..., "ip": "...", "port": ...}</code></td></tr>
+<tr><td><code>available</code></td><td>—</td><td>int</td><td>Количество дейтаграмм в буфере</td></tr>
+<tr><td><code>clear</code></td><td>—</td><td>int</td><td>Очистка буфера</td></tr>
+<tr><td><code>joingroup</code></td><td><code>mcastAddr, [localAddr]</code></td><td>int</td><td>Вступление в multicast-группу</td></tr>
+<tr><td><code>leavegroup</code></td><td><code>mcastAddr, [localAddr]</code></td><td>int</td><td>Выход из multicast-группы</td></tr>
+<tr><td><code>setmulticastttl</code></td><td><code>ttl</code></td><td>int</td><td>Установка TTL для multicast</td></tr>
+<tr><td><code>setreuseaddr</code></td><td><code>[enable]</code></td><td>int</td><td>SO_REUSEADDR</td></tr>
+<tr><td><code>settimeout</code></td><td><code>ms</code></td><td>int</td><td>Тайм-аут сокета (send + recv)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>bind(port, [addr])</h2>
+<p>Привязывает сокет к порту и запускает фоновый поток приёма данных. Если порт=0, ОС выберет свободный порт автоматически.</p>
+<table>
+<tr><th>Аргумент</th><th>Тип</th><th>По умолчанию</th><th>Описание</th></tr>
+<tr><td><code>port</code></td><td>int</td><td>—</td><td>Номер порта (0 = автовыбор)</td></tr>
+<tr><td><code>addr</code></td><td>string</td><td>"0.0.0.0"</td><td>Адрес привязки</td></tr>
+</table>
+<pre><code><span class="kw">var</span> c = UdpClient();
+c.bind(<span class="num">0</span>);  <span class="cmt">// Автоматический выбор порта</span>
+print(c.port);  <span class="cmt">// 54321 (пример)</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>send(host, port, data)</h2>
+<p>Отправляет UDP-дейтаграмму. Принимает строку или ByteArray.</p>
+<pre><code><span class="kw">var</span> c = UdpClient();
+c.bind(<span class="num">0</span>);
+
+<span class="cmt">// Отправка строки</span>
+c.send(<span class="str">"127.0.0.1"</span>, <span class="num">9000</span>, <span class="str">"Hello!"</span>);
+
+<span class="cmt">// Отправка ByteArray</span>
+<span class="kw">var</span> data = file.readbytes(<span class="str">"photo.jpg"</span>);
+c.send(<span class="str">"192.168.1.100"</span>, <span class="num">8080</span>, data);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>recv([maxBytes], [asText], [peek])</h2>
+<p>Читает одну дейтаграмму из буфера. Если данных нет — возвращает <code>null</code>.</p>
+<table>
+<tr><th>Аргумент</th><th>Тип</th><th>По умолчанию</th><th>Описание</th></tr>
+<tr><td><code>maxBytes</code></td><td>int</td><td>65535</td><td>Макс. размер дейтаграммы</td></tr>
+<tr><td><code>asText</code></td><td>bool</td><td>false</td><td>true — data как строка, false — ByteArray</td></tr>
+<tr><td><code>peek</code></td><td>bool</td><td>false</td><td>true — не удалять из буфера</td></tr>
+</table>
+<p>Возвращает кортеж:</p>
+<table>
+<tr><th>Поле</th><th>Тип</th><th>Описание</th></tr>
+<tr><td><code>data</code></td><td>string / bytearray</td><td>Данные дейтаграммы</td></tr>
+<tr><td><code>ip</code></td><td>string</td><td>IP-адрес отправителя</td></tr>
+<tr><td><code>port</code></td><td>int</td><td>Порт отправителя</td></tr>
+</table>
+<pre><code><span class="kw">var</span> pkt = c.recv();
+<span class="kw">if</span> (pkt != <span class="kw">null</span>) {
+    print(<span class="str">"От: "</span> + pkt.ip + <span class="str">":"</span> + pkt.port);
+    print(<span class="str">"Данные: "</span> + pkt.data);
+}
+
+<span class="cmt">// Чтение как текст</span>
+<span class="kw">var</span> pkt2 = c.recv(<span class="num">1024</span>, <span class="kw">true</span>);</code></pre>
+</div>
+
+<!-- ============================== UDP SERVER ============================== -->
+
+<div class="doc-section">
+<h2>UdpServer — UDP-сервер</h2>
+<p>Создаёт UDP-сокет для приёма и отправки дейтаграмм. Автоматически отслеживает пиров.</p>
+
+<h3>Создание</h3>
+<pre><code><span class="kw">var</span> server = UdpServer();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Свойства сервера</h2>
+<table>
+<tr><th>Свойство</th><th>Тип</th><th>Описание</th></tr>
+<tr><td><code>bound</code></td><td>int</td><td>1 если привязан, 0 если нет</td></tr>
+<tr><td><code>port</code></td><td>int</td><td>Номер привязанного порта</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Методы сервера</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>bind</code></td><td><code>port, [addr]</code></td><td>int</td><td>Привязка к порту. port=0 — автовыбор. Запускает recv thread</td></tr>
+<tr><td><code>close</code></td><td>—</td><td>int</td><td>Закрытие сокета</td></tr>
+<tr><td><code>isbound</code></td><td>—</td><td>int</td><td>Проверка: привязан (1/0)</td></tr>
+<tr><td><code>port</code></td><td>—</td><td>int</td><td>Метод: номер порта</td></tr>
+<tr><td><code>receive</code></td><td><code>[asText], [maxBytes], [peek]</code></td><td>tuple / null</td><td>Получение дейтаграммы</td></tr>
+<tr><td><code>send</code></td><td><code>ip, port, data</code></td><td>int</td><td>Отправка по адресу</td></tr>
+<tr><td><code>reply</code></td><td><code>data</code></td><td>int</td><td>Ответ последнему отправителю</td></tr>
+<tr><td><code>broadcast</code></td><td><code>port, data</code></td><td>int</td><td>Broadcast на 255.255.255.255</td></tr>
+<tr><td><code>available</code></td><td>—</td><td>int</td><td>Количество дейтаграмм в буфере</td></tr>
+<tr><td><code>clear</code></td><td>—</td><td>int</td><td>Очистка буфера</td></tr>
+<tr><td><code>peers</code></td><td>—</td><td>array</td><td>Список известных пиров</td></tr>
+<tr><td><code>clearpeers</code></td><td>—</td><td>int</td><td>Очистка списка пиров</td></tr>
+<tr><td><code>joingroup</code></td><td><code>mcastAddr, [localAddr]</code></td><td>int</td><td>Multicast: вступление в группу</td></tr>
+<tr><td><code>leavegroup</code></td><td><code>mcastAddr, [localAddr]</code></td><td>int</td><td>Multicast: выход из группы</td></tr>
+<tr><td><code>setmulticastttl</code></td><td><code>ttl</code></td><td>int</td><td>TTL для multicast</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>receive([asText], [maxBytes], [peek])</h2>
+<p>Читает одну дейтаграмму из буфера. Формат аналогичен <code>UdpClient.recv()</code>.</p>
+<table>
+<tr><th>Аргумент</th><th>Тип</th><th>По умолчанию</th><th>Описание</th></tr>
+<tr><td><code>asText</code></td><td>bool</td><td>false</td><td>true — data как строка</td></tr>
+<tr><td><code>maxBytes</code></td><td>int</td><td>65535</td><td>Макс. размер</td></tr>
+<tr><td><code>peek</code></td><td>bool</td><td>false</td><td>Не удалять из буфера</td></tr>
+</table>
+<pre><code><span class="kw">var</span> server = UdpServer();
+server.bind(<span class="num">9000</span>);
+
+<span class="cmt">// Ожидание данных</span>
+<span class="kw">while</span> (<span class="kw">true</span>) {
+    <span class="kw">var</span> pkt = server.receive(<span class="kw">true</span>);
+    <span class="kw">if</span> (pkt != <span class="kw">null</span>) {
+        print(pkt.ip + <span class="str">": "</span> + pkt.data);
+        server.reply(<span class="str">"OK"</span>);  <span class="cmt">// Ответ тому же адресату</span>
+    }
+    system.sleep(<span class="num">0.01</span>);
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>reply(data)</h2>
+<p>Отправляет ответ последнему отправителю (из последнего вызова <code>receive()</code>). Удобно для реализации request-reply протоколов.</p>
+<pre><code><span class="kw">var</span> pkt = server.receive(<span class="kw">true</span>);
+<span class="kw">if</span> (pkt != <span class="kw">null</span>) {
+    print(<span class="str">"Запрос от "</span> + pkt.ip + <span class="str">":"</span> + pkt.port);
+    server.reply(<span class="str">"Получено: "</span> + pkt.data);
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>peers()</h2>
+<p>Возвращает список всех пиров, с которых когда-либо приходили данные.</p>
+<pre><code><span class="kw">var</span> peers = server.peers();
+<span class="kw">for</span> (<span class="kw">var</span> p : peers) {
+    print(p.ip + <span class="str">":"</span> + p.port);
+}</code></pre>
+</div>
+
+<!-- ============================== EXAMPLES ============================== -->
+
+<div class="doc-section">
+<h2>Примеры</h2>
+
+<h3>Базовый обмен дейтаграммами</h3>
+<pre><code>loadPlugin(<span class="str">"udp"</span>);
+
+<span class="kw">var</span> sender = UdpClient();
+sender.bind(<span class="num">0</span>);
+
+<span class="kw">var</span> receiver = UdpServer();
+receiver.bind(<span class="num">9000</span>);
+
+sender.send(<span class="str">"127.0.0.1"</span>, <span class="num">9000</span>, <span class="str">"Привет UDP!"</span>);
+system.sleep(<span class="num">0.1</span>);
+
+<span class="kw">var</span> pkt = receiver.receive(<span class="kw">true</span>);
+print(pkt.data);  <span class="cmt">// Привет UDP!</span>
+print(pkt.ip);    <span class="cmt">// 127.0.0.1</span>
+
+sender.close();
+receiver.close();</code></pre>
+
+<h3>Request-Reply (эхо-сервер)</h3>
+<pre><code>loadPlugin(<span class="str">"udp"</span>);
+
+<span class="kw">var</span> server = UdpServer();
+server.bind(<span class="num">8080</span>);
+print(<span class="str">"Эхо-сервер запущен на порту 8080"</span>);
+
+<span class="cmt">// Серверный цикл</span>
+<span class="kw">while</span> (<span class="kw">true</span>) {
+    <span class="kw">var</span> pkt = server.receive(<span class="kw">true</span>);
+    <span class="kw">if</span> (pkt != <span class="kw">null</span>) {
+        print(pkt.ip + <span class="str">": "</span> + pkt.data);
+        server.reply(pkt.data);  <span class="cmt">// Эхо</span>
+    }
+    system.sleep(<span class="num">0.01</span>);
+}</code></pre>
+
+<h3>Broadcast-рассылка</h3>
+<pre><code>loadPlugin(<span class="str">"udp"</span>);
+
+<span class="kw">var</span> client = UdpClient();
+client.bind(<span class="num">0</span>);
+
+<span class="cmt">// Рассылка всем в сети</span>
+client.broadcast(<span class="num">9000</span>, <span class="str">"Обнаружение сервиса"</span>);</code></pre>
+
+<h3>Multicast</h3>
+<pre><code>loadPlugin(<span class="str">"udp"</span>);
+
+<span class="cmt">// Подписчик</span>
+<span class="kw">var</span> sub = UdpClient();
+sub.bind(<span class="num">9001</span>);
+sub.joingroup(<span class="str">"239.0.0.1"</span>, <span class="str">"192.168.1.100"</span>);
+
+<span class="cmt">// Издатель</span>
+<span class="kw">var</span> pub = UdpClient();
+pub.bind(<span class="num">0</span>);
+pub.send(<span class="str">"239.0.0.1"</span>, <span class="num">9001</span>, <span class="str">"Multicast hello!"</span>);</code></pre>
+
+<h3>Отправка ByteArray (бинарные данные)</h3>
+<pre><code>loadPlugin(<span class="str">"udp"</span>);
+
+<span class="kw">var</span> client = UdpClient();
+client.bind(<span class="num">0</span>);
+
+<span class="cmt">// Чтение бинарного файла</span>
+<span class="kw">var</span> data = file.readbytes(<span class="str">"firmware.bin"</span>);
+client.send(<span class="str">"192.168.1.50"</span>, <span class="num">5000</span>, data);
+
+<span class="cmt">// Получение бинарных данных</span>
+<span class="kw">var</span> server = UdpServer();
+server.bind(<span class="num">5001</span>);
+<span class="kw">var</span> pkt = server.receive();  <span class="cmt">// asText=false по умолчанию</span>
+<span class="kw">if</span> (pkt != <span class="kw">null</span>) {
+    print(typeName(pkt.data));  <span class="cmt">// "bytearray"</span>
+    print(pkt.data.size());
+}</code></pre>
+
+<h3>Peers — отслеживание адресатов</h3>
+<pre><code>loadPlugin(<span class="str">"udp"</span>);
+
+<span class="kw">var</span> server = UdpServer();
+server.bind(<span class="num">9000</span>);
+
+<span class="cmt">// Принимаем пакеты</span>
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i &lt; <span class="num">10</span>; i++) {
+    <span class="kw">var</span> pkt = server.receive();
+    system.sleep(<span class="num">0.1</span>);
+}
+
+<span class="cmt">// Смотрим кто отправлял</span>
+<span class="kw">var</span> peers = server.peers();
+print(<span class="str">"Известные пиры: "</span> + peers.size());
+<span class="kw">for</span> (<span class="kw">var</span> p : peers) {
+    print(<span class="str">"  "</span> + p.ip + <span class="str">":"</span> + p.port);
+}</code></pre>
+</div>
+
+<!-- ============================== NOTES ============================== -->
+
+<div class="doc-section">
+<h2>Примечания</h2>
+<ul>
+  <li><strong>Дейтаграммы.</strong> UDP не гарантирует доставку и порядок. Каждый <code>send()</code> — одна дейтаграмма.</li>
+  <li><strong>Буферизация.</strong> Данные буферизуются фоновым потоком. <code>receive()</code> / <code>recv()</code> читают из буфера без блокировки.</li>
+  <li><strong>bind(port=0).</strong> ОС выберет свободный порт. Узнать номер: <code>client.port</code> / <code>server.port</code>.</li>
+  <li><strong>reply()</strong> отправляет последнему отправителю. Если <code>receive()</code> не вызывался — возвращает 0.</li>
+  <li><strong>Multicast.</strong> Используйте <code>joingroup()</code> / <code>leavegroup()</code> для управления группами. Адрес группы: 224.0.0.0 — 239.255.255.255.</li>
+  <li><strong>Broadcast.</strong> Адрес 255.255.255.255. Может быть заблокирован файрволом.</li>
+  <li><strong>Размер дейтаграммы.</strong> Максимум 65535 байт. Рекомендуется ≤ 1472 байт для избежания фрагментации.</li>
+  <li><strong>Очистка.</strong> При завершении скрипта все сокеты и потоки освобождаются автоматически.</li>
+</ul>
+</div>
+
+<footer><a href="plugins.html">← К списку плагинов</a></footer>
+</div>
+</body>
+</html>

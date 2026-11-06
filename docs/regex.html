@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Модуль regex — Script</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Модуль regex</h1><p>Регулярные выражения — доступен глобально</p><div class="lang-switch"><a class="active" href="regex.html">RU</a><a href="en/regex.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Главная</a> / regex</p>
+
+<div class="doc-section">
+<h2>Проверка и поиск</h2>
+<table>
+<tr><th>Функция</th><th>Описание</th></tr>
+<tr><td><code>regex.match(s, pattern)</code></td><td>Вся строка соответствует шаблону (true/false)</td></tr>
+<tr><td><code>regex.search(s, pattern)</code></td><td>Содержит ли подстроку, соответствующую шаблону (true/false)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Извлечение</h2>
+<pre><code><span class="kw">var</span> m = regex.findall(<span class="str">"a=1, b=2"</span>, <span class="str">"(\\w)=(\\d)"</span>);
+print(m[<span class="num">0</span>][<span class="num">0</span>]); <span class="cmt">// "a"</span>
+print(m[<span class="num">0</span>][<span class="num">1</span>]); <span class="cmt">// "1"</span></code></pre>
+<p>Без групп — массив совпадений. Одна группа — массив значений. Несколько групп — массив кортежей.</p>
+</div>
+
+<div class="doc-section">
+<h2>Замена и разделение</h2>
+<table>
+<tr><th>Функция</th><th>Описание</th></tr>
+<tr><td><code>regex.replace(s, pattern, repl)</code></td><td>Замена ВСЕХ вхождений</td></tr>
+<tr><td><code>regex.sub(pattern, repl, s, [count])</code></td><td>Замена до count вхождений (-1 = все)</td></tr>
+<tr><td><code>regex.split(s, pattern)</code></td><td>Разделение по шаблону</td></tr>
+<tr><td><code>regex.escape(s)</code></td><td>Экранирование спецсимволов</td></tr>
+</table>
+<p>Шаблоны используют синтаксис ECMAScript реализации <code>std::regex</code>. Строки преобразуются в UTF-8, но regex сопоставляет байты, поэтому классы вроде <code>\w</code> и границы символов не являются Unicode-aware. Ошибки шаблона в функциях модуля перехватываются; строковые методы <code>.regexmatch()</code>, <code>.regexsearch()</code> и другие могут выбросить исключение для некорректного шаблона.</p>
+</div>
+
+<footer><a href="index.html">← На главную</a></footer>
+</div>
+</body>
+</html>

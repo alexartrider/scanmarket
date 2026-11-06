@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UDP Plugin — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>UDP Plugin</h1><p>UDP client and UDP server — datagrams, broadcast, multicast, reply</p><div class="lang-switch"><a href="../udp.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="udp.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / <a href="plugins.html">Plugins</a> / UDP</p>
+
+<div class="doc-section">
+<h2>Loading the plugin</h2>
+<pre><code>loadPlugin(<span class="str">"udp"</span>);</code></pre>
+</div>
+
+<!-- ============================== UDP CLIENT ============================== -->
+
+<div class="doc-section">
+<h2>UdpClient — UDP client</h2>
+<p>Creates a UDP socket for sending and receiving datagrams. Calling <code>bind()</code> automatically starts a background receive thread.</p>
+
+<h3>Creation</h3>
+<pre><code><span class="kw">var</span> client = UdpClient();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Client properties</h2>
+<table>
+<tr><th>Property</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>bound</code></td><td>int</td><td>1 if bound to a port, 0 otherwise</td></tr>
+<tr><td><code>port</code></td><td>int</td><td>Bound port number</td></tr>
+<tr><td><code>AF_INET</code></td><td>int</td><td>Constant AF_INET = 2</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Client methods</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>open</code></td><td>—</td><td>int</td><td>Create UDP socket</td></tr>
+<tr><td><code>close</code></td><td>—</td><td>int</td><td>Close the socket and stop the receive thread</td></tr>
+<tr><td><code>isopen</code></td><td>—</td><td>int</td><td>Check: socket created (1/0)</td></tr>
+<tr><td><code>bind</code></td><td><code>port, [addr]</code></td><td>int</td><td>Bind to a port. port=0 — automatic selection. Starts recv thread</td></tr>
+<tr><td><code>isbound</code></td><td>—</td><td>int</td><td>Check: bound (1/0)</td></tr>
+<tr><td><code>localport</code></td><td>—</td><td>int</td><td>Bound port number</td></tr>
+<tr><td><code>send</code> / <code>sendto</code></td><td><code>host, port, data</code></td><td>int</td><td>Send a datagram (string or ByteArray)</td></tr>
+<tr><td><code>broadcast</code></td><td><code>port, data</code></td><td>int</td><td>Send to 255.255.255.255</td></tr>
+<tr><td><code>setbroadcast</code></td><td><code>enable</code></td><td>int</td><td>Enable SO_BROADCAST</td></tr>
+<tr><td><code>recv</code> / <code>recvfrom</code></td><td><code>[maxBytes], [asText], [peek]</code></td><td>tuple / null</td><td>Read from the buffer. Returns <code>#{"data": ..., "ip": "...", "port": ...}</code></td></tr>
+<tr><td><code>available</code></td><td>—</td><td>int</td><td>Number of datagrams in the buffer</td></tr>
+<tr><td><code>clear</code></td><td>—</td><td>int</td><td>Clear the buffer</td></tr>
+<tr><td><code>joingroup</code></td><td><code>mcastAddr, [localAddr]</code></td><td>int</td><td>Join a multicast group</td></tr>
+<tr><td><code>leavegroup</code></td><td><code>mcastAddr, [localAddr]</code></td><td>int</td><td>Leave a multicast group</td></tr>
+<tr><td><code>setmulticastttl</code></td><td><code>ttl</code></td><td>int</td><td>Set TTL for multicast</td></tr>
+<tr><td><code>setreuseaddr</code></td><td><code>[enable]</code></td><td>int</td><td>SO_REUSEADDR</td></tr>
+<tr><td><code>settimeout</code></td><td><code>ms</code></td><td>int</td><td>Socket timeout (send + recv)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>bind(port, [addr])</h2>
+<p>Binds the socket to a port and starts a background data receive thread. If port=0, the OS picks a free port automatically.</p>
+<table>
+<tr><th>Argument</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>port</code></td><td>int</td><td>—</td><td>Port number (0 = automatic selection)</td></tr>
+<tr><td><code>addr</code></td><td>string</td><td>"0.0.0.0"</td><td>Bind address</td></tr>
+</table>
+<pre><code><span class="kw">var</span> c = UdpClient();
+c.bind(<span class="num">0</span>);  <span class="cmt">// Automatic port selection</span>
+print(c.port);  <span class="cmt">// 54321 (example)</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>send(host, port, data)</h2>
+<p>Sends a UDP datagram. Accepts a string or a ByteArray.</p>
+<pre><code><span class="kw">var</span> c = UdpClient();
+c.bind(<span class="num">0</span>);
+
+<span class="cmt">// Sending a string</span>
+c.send(<span class="str">"127.0.0.1"</span>, <span class="num">9000</span>, <span class="str">"Hello!"</span>);
+
+<span class="cmt">// Sending a ByteArray</span>
+<span class="kw">var</span> data = file.readbytes(<span class="str">"photo.jpg"</span>);
+c.send(<span class="str">"192.168.1.100"</span>, <span class="num">8080</span>, data);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>recv([maxBytes], [asText], [peek])</h2>
+<p>Reads one datagram from the buffer. If there is no data — returns <code>null</code>.</p>
+<table>
+<tr><th>Argument</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>maxBytes</code></td><td>int</td><td>65535</td><td>Max datagram size</td></tr>
+<tr><td><code>asText</code></td><td>bool</td><td>false</td><td>true — data as a string, false — ByteArray</td></tr>
+<tr><td><code>peek</code></td><td>bool</td><td>false</td><td>true — do not remove from the buffer</td></tr>
+</table>
+<p>Returns a tuple:</p>
+<table>
+<tr><th>Field</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>data</code></td><td>string / bytearray</td><td>Datagram payload</td></tr>
+<tr><td><code>ip</code></td><td>string</td><td>Sender's IP address</td></tr>
+<tr><td><code>port</code></td><td>int</td><td>Sender's port</td></tr>
+</table>
+<pre><code><span class="kw">var</span> pkt = c.recv();
+<span class="kw">if</span> (pkt != <span class="kw">null</span>) {
+    print(<span class="str">"From: "</span> + pkt.ip + <span class="str">":"</span> + pkt.port);
+    print(<span class="str">"Data: "</span> + pkt.data);
+}
+
+<span class="cmt">// Reading as text</span>
+<span class="kw">var</span> pkt2 = c.recv(<span class="num">1024</span>, <span class="kw">true</span>);</code></pre>
+</div>
+
+<!-- ============================== UDP SERVER ============================== -->
+
+<div class="doc-section">
+<h2>UdpServer — UDP server</h2>
+<p>Creates a UDP socket for receiving and sending datagrams. Tracks peers automatically.</p>
+
+<h3>Creation</h3>
+<pre><code><span class="kw">var</span> server = UdpServer();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Server properties</h2>
+<table>
+<tr><th>Property</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>bound</code></td><td>int</td><td>1 if bound, 0 otherwise</td></tr>
+<tr><td><code>port</code></td><td>int</td><td>Bound port number</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Server methods</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>bind</code></td><td><code>port, [addr]</code></td><td>int</td><td>Bind to a port. port=0 — automatic selection. Starts recv thread</td></tr>
+<tr><td><code>close</code></td><td>—</td><td>int</td><td>Close the socket</td></tr>
+<tr><td><code>isbound</code></td><td>—</td><td>int</td><td>Check: bound (1/0)</td></tr>
+<tr><td><code>port</code></td><td>—</td><td>int</td><td>Method: port number</td></tr>
+<tr><td><code>receive</code></td><td><code>[asText], [maxBytes], [peek]</code></td><td>tuple / null</td><td>Receive a datagram</td></tr>
+<tr><td><code>send</code></td><td><code>ip, port, data</code></td><td>int</td><td>Send to an address</td></tr>
+<tr><td><code>reply</code></td><td><code>data</code></td><td>int</td><td>Reply to the last sender</td></tr>
+<tr><td><code>broadcast</code></td><td><code>port, data</code></td><td>int</td><td>Broadcast to 255.255.255.255</td></tr>
+<tr><td><code>available</code></td><td>—</td><td>int</td><td>Number of datagrams in the buffer</td></tr>
+<tr><td><code>clear</code></td><td>—</td><td>int</td><td>Clear the buffer</td></tr>
+<tr><td><code>peers</code></td><td>—</td><td>array</td><td>List of known peers</td></tr>
+<tr><td><code>clearpeers</code></td><td>—</td><td>int</td><td>Clear the peer list</td></tr>
+<tr><td><code>joingroup</code></td><td><code>mcastAddr, [localAddr]</code></td><td>int</td><td>Multicast: join group</td></tr>
+<tr><td><code>leavegroup</code></td><td><code>mcastAddr, [localAddr]</code></td><td>int</td><td>Multicast: leave group</td></tr>
+<tr><td><code>setmulticastttl</code></td><td><code>ttl</code></td><td>int</td><td>TTL for multicast</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>receive([asText], [maxBytes], [peek])</h2>
+<p>Reads one datagram from the buffer. The format matches <code>UdpClient.recv()</code>.</p>
+<table>
+<tr><th>Argument</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>asText</code></td><td>bool</td><td>false</td><td>true — data as a string</td></tr>
+<tr><td><code>maxBytes</code></td><td>int</td><td>65535</td><td>Max size</td></tr>
+<tr><td><code>peek</code></td><td>bool</td><td>false</td><td>Do not remove from the buffer</td></tr>
+</table>
+<pre><code><span class="kw">var</span> server = UdpServer();
+server.bind(<span class="num">9000</span>);
+
+<span class="cmt">// Waiting for data</span>
+<span class="kw">while</span> (<span class="kw">true</span>) {
+    <span class="kw">var</span> pkt = server.receive(<span class="kw">true</span>);
+    <span class="kw">if</span> (pkt != <span class="kw">null</span>) {
+        print(pkt.ip + <span class="str">": "</span> + pkt.data);
+        server.reply(<span class="str">"OK"</span>);  <span class="cmt">// Reply to the same sender</span>
+    }
+    system.sleep(<span class="num">0.01</span>);
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>reply(data)</h2>
+<p>Sends a reply to the last sender (from the most recent <code>receive()</code> call). Handy for implementing request-reply protocols.</p>
+<pre><code><span class="kw">var</span> pkt = server.receive(<span class="kw">true</span>);
+<span class="kw">if</span> (pkt != <span class="kw">null</span>) {
+    print(<span class="str">"Request from "</span> + pkt.ip + <span class="str">":"</span> + pkt.port);
+    server.reply(<span class="str">"Received: "</span> + pkt.data);
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>peers()</h2>
+<p>Returns the list of all peers that data has ever arrived from.</p>
+<pre><code><span class="kw">var</span> peers = server.peers();
+<span class="kw">for</span> (<span class="kw">var</span> p : peers) {
+    print(p.ip + <span class="str">":"</span> + p.port);
+}</code></pre>
+</div>
+
+<!-- ============================== EXAMPLES ============================== -->
+
+<div class="doc-section">
+<h2>Examples</h2>
+
+<h3>Basic datagram exchange</h3>
+<pre><code>loadPlugin(<span class="str">"udp"</span>);
+
+<span class="kw">var</span> sender = UdpClient();
+sender.bind(<span class="num">0</span>);
+
+<span class="kw">var</span> receiver = UdpServer();
+receiver.bind(<span class="num">9000</span>);
+
+sender.send(<span class="str">"127.0.0.1"</span>, <span class="num">9000</span>, <span class="str">"Hello UDP!"</span>);
+system.sleep(<span class="num">0.1</span>);
+
+<span class="kw">var</span> pkt = receiver.receive(<span class="kw">true</span>);
+print(pkt.data);  <span class="cmt">// Hello UDP!</span>
+print(pkt.ip);    <span class="cmt">// 127.0.0.1</span>
+
+sender.close();
+receiver.close();</code></pre>
+
+<h3>Request-Reply (echo server)</h3>
+<pre><code>loadPlugin(<span class="str">"udp"</span>);
+
+<span class="kw">var</span> server = UdpServer();
+server.bind(<span class="num">8080</span>);
+print(<span class="str">"Echo server started on port 8080"</span>);
+
+<span class="cmt">// Server loop</span>
+<span class="kw">while</span> (<span class="kw">true</span>) {
+    <span class="kw">var</span> pkt = server.receive(<span class="kw">true</span>);
+    <span class="kw">if</span> (pkt != <span class="kw">null</span>) {
+        print(pkt.ip + <span class="str">": "</span> + pkt.data);
+        server.reply(pkt.data);  <span class="cmt">// Echo</span>
+    }
+    system.sleep(<span class="num">0.01</span>);
+}</code></pre>
+
+<h3>Broadcast</h3>
+<pre><code>loadPlugin(<span class="str">"udp"</span>);
+
+<span class="kw">var</span> client = UdpClient();
+client.bind(<span class="num">0</span>);
+
+<span class="cmt">// Send to everyone on the network</span>
+client.broadcast(<span class="num">9000</span>, <span class="str">"Service discovery"</span>);</code></pre>
+
+<h3>Multicast</h3>
+<pre><code>loadPlugin(<span class="str">"udp"</span>);
+
+<span class="cmt">// Subscriber</span>
+<span class="kw">var</span> sub = UdpClient();
+sub.bind(<span class="num">9001</span>);
+sub.joingroup(<span class="str">"239.0.0.1"</span>, <span class="str">"192.168.1.100"</span>);
+
+<span class="cmt">// Publisher</span>
+<span class="kw">var</span> pub = UdpClient();
+pub.bind(<span class="num">0</span>);
+pub.send(<span class="str">"239.0.0.1"</span>, <span class="num">9001</span>, <span class="str">"Multicast hello!"</span>);</code></pre>
+
+<h3>Sending a ByteArray (binary data)</h3>
+<pre><code>loadPlugin(<span class="str">"udp"</span>);
+
+<span class="kw">var</span> client = UdpClient();
+client.bind(<span class="num">0</span>);
+
+<span class="cmt">// Reading a binary file</span>
+<span class="kw">var</span> data = file.readbytes(<span class="str">"firmware.bin"</span>);
+client.send(<span class="str">"192.168.1.50"</span>, <span class="num">5000</span>, data);
+
+<span class="cmt">// Receiving binary data</span>
+<span class="kw">var</span> server = UdpServer();
+server.bind(<span class="num">5001</span>);
+<span class="kw">var</span> pkt = server.receive();  <span class="cmt">// asText=false by default</span>
+<span class="kw">if</span> (pkt != <span class="kw">null</span>) {
+    print(typeName(pkt.data));  <span class="cmt">// "bytearray"</span>
+    print(pkt.data.size());
+}</code></pre>
+
+<h3>Peers — tracking senders</h3>
+<pre><code>loadPlugin(<span class="str">"udp"</span>);
+
+<span class="kw">var</span> server = UdpServer();
+server.bind(<span class="num">9000</span>);
+
+<span class="cmt">// Receive packets</span>
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i &lt; <span class="num">10</span>; i++) {
+    <span class="kw">var</span> pkt = server.receive();
+    system.sleep(<span class="num">0.1</span>);
+}
+
+<span class="cmt">// Check who sent data</span>
+<span class="kw">var</span> peers = server.peers();
+print(<span class="str">"Known peers: "</span> + peers.size());
+<span class="kw">for</span> (<span class="kw">var</span> p : peers) {
+    print(<span class="str">"  "</span> + p.ip + <span class="str">":"</span> + p.port);
+}</code></pre>
+</div>
+
+<!-- ============================== NOTES ============================== -->
+
+<div class="doc-section">
+<h2>Notes</h2>
+<ul>
+  <li><strong>Datagrams.</strong> UDP does not guarantee delivery or ordering. Each <code>send()</code> is one datagram.</li>
+  <li><strong>Buffering.</strong> Data is buffered by a background thread. <code>receive()</code> / <code>recv()</code> read from the buffer without blocking.</li>
+  <li><strong>bind(port=0).</strong> The OS picks a free port. To get the number: <code>client.port</code> / <code>server.port</code>.</li>
+  <li><strong>reply()</strong> sends to the last sender. If <code>receive()</code> was never called — returns 0.</li>
+  <li><strong>Multicast.</strong> Use <code>joingroup()</code> / <code>leavegroup()</code> to manage groups. Group address: 224.0.0.0 — 239.255.255.255.</li>
+  <li><strong>Broadcast.</strong> Address 255.255.255.255. May be blocked by a firewall.</li>
+  <li><strong>Datagram size.</strong> Maximum 65535 bytes. ≤ 1472 bytes is recommended to avoid fragmentation.</li>
+  <li><strong>Cleanup.</strong> When the script finishes, all sockets and threads are released automatically.</li>
+</ul>
+</div>
+
+<footer><a href="plugins.html">← Back to the plugin list</a></footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Плагин Crypto — Script</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Плагин Crypto</h1><p>Криптографические функции — хеширование, шифрование, подписи, генерация ключей, JWT</p><div class="lang-switch"><a class="active" href="crypto.html">RU</a><a href="en/crypto.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Главная</a> / <a href="plugins.html">Плагины</a> / Crypto</p>
+
+<div class="doc-section">
+<h2>Загрузка плагина</h2>
+<p>Два способа использования:</p>
+<pre><code><span class="cmt">// Способ 1: через объект</span>
+<span class="kw">if</span> (!loadPlugin(<span class="str">"plugins/crypto.dll"</span>)) { system.exit(<span class="num">1</span>); }
+<span class="kw">var</span> c = Crypto();
+<span class="kw">var</span> hash = c.sha256(<span class="str">"Hello"</span>);
+
+<span class="cmt">// Способ 2: через глобальный сервис</span>
+<span class="kw">if</span> (!loadPlugin(<span class="str">"plugins/crypto.dll"</span>)) { system.exit(<span class="num">1</span>); }
+<span class="kw">var</span> hash = crypto.sha256(<span class="str">"Hello"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Кодирование и декодирование</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>base64Encode</code></td><td><code>data, [urlSafe]</code></td><td>string</td><td>Base64 кодирование. urlSafe=true — URL-безопасный алфавит (-_ вместо +/)</td></tr>
+<tr><td><code>base64Decode</code></td><td><code>data, [urlSafe], [asBytes]</code></td><td>string / bytes</td><td>Base64 декодирование</td></tr>
+<tr><td><code>hexEncode</code></td><td><code>data</code></td><td>string</td><td>Кодирование в hex-строку (0-9a-f)</td></tr>
+<tr><td><code>hexDecode</code></td><td><code>data, [asBytes]</code></td><td>bytes / string</td><td>Декодирование hex-строки</td></tr>
+</table>
+<pre><code><span class="cmt">// Base64</span>
+<span class="kw">var</span> enc = crypto.base64Encode(<span class="str">"Привет мир"</span>);
+print(enc);  <span class="cmt">// "0J/RgNC40LLQtdGCINCr"</span>
+
+<span class="kw">var</span> dec = crypto.base64Decode(enc);
+print(dec);  <span class="cmt">// "Привет мир"</span>
+
+<span class="cmt">// URL-safe Base64</span>
+<span class="kw">var</span> url = crypto.base64Encode(<span class="str">"data/signature"</span>, <span class="kw">true</span>);
+
+<span class="cmt">// Hex</span>
+<span class="kw">var</span> hex = crypto.hexEncode(<span class="str">"Hello"</span>);
+print(hex);  <span class="cmt">// "48656c6c6f"</span>
+
+<span class="kw">var</span> raw = crypto.hexDecode(<span class="str">"48656c6c6f"</span>);
+print(raw);  <span class="cmt">// "Hello"</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Хеш-функции</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>md5</code></td><td><code>data, [asHex]</code></td><td>string / bytes</td><td>MD5 (128 бит)</td></tr>
+<tr><td><code>sha1</code></td><td><code>data, [asHex]</code></td><td>string / bytes</td><td>SHA-1 (160 бит)</td></tr>
+<tr><td><code>sha256</code></td><td><code>data, [asHex]</code></td><td>string / bytes</td><td>SHA-256 (256 бит)</td></tr>
+<tr><td><code>sha512</code></td><td><code>data, [asHex]</code></td><td>string / bytes</td><td>SHA-512 (512 бит)</td></tr>
+<tr><td><code>sha3_256</code></td><td><code>data, [asHex]</code></td><td>string / bytes</td><td>SHA3-256 (Keccak)</td></tr>
+<tr><td><code>sha3_512</code></td><td><code>data, [asHex]</code></td><td>string / bytes</td><td>SHA3-512 (Keccak)</td></tr>
+</table>
+<p>По умолчанию возвращают hex-строку. asHex=false — возвращают ByteArray.</p>
+<pre><code><span class="cmt">// Хеш строки</span>
+print(crypto.md5(<span class="str">"Hello"</span>));      <span class="cmt">// "8b1a9953c4611296a827abf8c47804d7"</span>
+print(crypto.sha256(<span class="str">"Hello"</span>));    <span class="cmt">// "185f8db32271fe25f561a6fc938b2e26..."</span>
+
+<span class="cmt">// Хеш файла</span>
+<span class="kw">var</span> data = file.readbytes(<span class="str">"image.png"</span>);
+print(crypto.sha256(data));
+
+<span class="cmt">// В виде ByteArray (не hex)</span>
+<span class="kw">var</span> hash = crypto.sha256(<span class="str">"test"</span>, <span class="kw">false</span>);
+print(hash.size());  <span class="cmt">// 32 байта</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>HMAC и проверка подписи</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>hmac</code></td><td><code>key, data, [algo], [asHex]</code></td><td>string / bytes</td><td>HMAC-подпись. algo: sha256 (по умолчанию), sha512, sha1, md5</td></tr>
+<tr><td><code>hmacVerify</code></td><td><code>key, data, signature, [algo]</code></td><td>int (0/1)</td><td>Проверка HMAC-подписи</td></tr>
+<tr><td><code>pbkdf2</code></td><td><code>password, salt, [iterations], [keyLen], [algo]</code></td><td>bytes</td><td>Деривация ключа. iterations=100000, keyLen=32, algo=sha256</td></tr>
+</table>
+<pre><code><span class="cmt">// HMAC-подпись</span>
+<span class="kw">var</span> key = <span class="str">"secret_key"</span>;
+<span class="kw">var</span> sig = crypto.hmac(key, <span class="str">"important data"</span>);
+print(sig);  <span class="cmt">// hex-строка</span>
+
+<span class="cmt">// Проверка подписи</span>
+<span class="kw">var</span> ok = crypto.hmacVerify(key, <span class="str">"important data"</span>, sig);
+print(ok);  <span class="cmt">// 1</span>
+
+<span class="cmt">// Неверная подпись</span>
+ok = crypto.hmacVerify(key, <span class="str">"tampered data"</span>, sig);
+print(ok);  <span class="cmt">// 0</span>
+
+<span class="cmt">// PBKDF2 — деривация ключа из пароля</span>
+<span class="kw">var</span> salt = crypto.randomBytes(<span class="num">16</span>);
+<span class="kw">var</span> key1 = crypto.pbkdf2(<span class="str">"password"</span>, salt, <span class="num">100000</span>, <span class="num">32</span>);
+<span class="kw">var</span> key2 = crypto.pbkdf2(<span class="str">"password"</span>, salt, <span class="num">100000</span>, <span class="num">32</span>);
+print(key1.toString() == key2.toString());  <span class="cmt">// 1 (детерминирован)</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>AES-шифрование (GCM)</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>aesEncrypt</code></td><td><code>data, key, [iv], [aad]</code></td><td>bytes</td><td>Шифрование AES-GCM. Формат: IV(12) + Tag(16) + Ciphertext</td></tr>
+<tr><td><code>aesDecrypt</code></td><td><code>data, key, [aad], [asString]</code></td><td>bytes / string</td><td>Дешифрование. asString=true — вернуть строку</td></tr>
+</table>
+<p>Ключи длиной не 16/24/32 байта автоматически хешируются через SHA-256.</p>
+<pre><code><span class="cmt">// Шифрование</span>
+<span class="kw">var</span> key = <span class="str">"my_secret_key"</span>;
+<span class="kw">var</span> encrypted = crypto.aesEncrypt(<span class="str">"Секретное сообщение"</span>, key);
+print(encrypted.size());  <span class="cmt">// IV(12) + Tag(16) + данные</span>
+
+<span class="cmt">// Дешифрование</span>
+<span class="kw">var</span> decrypted = crypto.aesDecrypt(encrypted, key, <span class="str">""</span>, <span class="kw">true</span>);
+print(decrypted);  <span class="cmt">// "Секретное сообщение"</span>
+
+<span class="cmt">// С AAD (Additional Authenticated Data)</span>
+<span class="kw">var</span> aad = <span class="str">"header_context"</span>;
+<span class="kw">var</span> enc = crypto.aesEncrypt(<span class="str">"данные"</span>, key, <span class="str">""</span>, aad);
+<span class="kw">var</span> dec = crypto.aesDecrypt(enc, key, aad, <span class="kw">true</span>);
+print(dec);  <span class="cmt">// "данные"</span>
+
+<span class="cmt">// Дешифрование неверным ключом — ошибка</span>
+<span class="kw">var</span> bad = crypto.aesDecrypt(enc, <span class="str">"wrong_key"</span>, aad);
+print(bad.isnull());  <span class="cmt">// true</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>RSA</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>rsaGenerate</code></td><td><code>[bits]</code></td><td>tuple</td><td>Генерация ключей. bits: 2048 (по умолч.), 4096. Возвращает {private, public} PEM</td></tr>
+<tr><td><code>rsaEncrypt</code></td><td><code>data, publicKey</code></td><td>bytes</td><td>Шифрование открытым ключом (PKCS1 OAEP)</td></tr>
+<tr><td><code>rsaDecrypt</code></td><td><code>data, privateKey</code></td><td>string</td><td>Дешифрование приватным ключом</td></tr>
+<tr><td><code>rsaSign</code></td><td><code>data, privateKey, [algo]</code></td><td>bytes</td><td>Цифровая подпись. algo: sha256 (по умолчанию)</td></tr>
+<tr><td><code>rsaVerify</code></td><td><code>data, signature, publicKey, [algo]</code></td><td>int (0/1)</td><td>Проверка подписи</td></tr>
+</table>
+<pre><code><span class="cmt">// Генерация ключей</span>
+<span class="kw">var</span> keys = crypto.rsaGenerate();
+print(keys.private);  <span class="cmt">// PEM приватного ключа</span>
+print(keys.public);   <span class="cmt">// PEM открытого ключа</span>
+
+<span class="cmt">// Шифрование/дешифрование</span>
+<span class="kw">var</span> enc = crypto.rsaEncrypt(<span class="str">"Secret message"</span>, keys.public);
+<span class="kw">var</span> dec = crypto.rsaDecrypt(enc, keys.private);
+print(dec);  <span class="cmt">// "Secret message"</span>
+
+<span class="cmt">// Цифровая подпись</span>
+<span class="kw">var</span> data = <span class="str">"Important document"</span>;
+<span class="kw">var</span> sig = crypto.rsaSign(data, keys.private);
+print(crypto.rsaVerify(data, sig, keys.public));  <span class="cmt">// 1</span>
+print(crypto.rsaVerify(<span class="str">"tampered"</span>, sig, keys.public));  <span class="cmt">// 0</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Ed25519</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>ed25519Generate</code></td><td>—</td><td>tuple</td><td>Генерация ключей Ed25519. Возвращает {private, public} PEM</td></tr>
+<tr><td><code>ed25519Sign</code></td><td><code>data, privateKey</code></td><td>bytes</td><td>Подпись Ed25519</td></tr>
+<tr><td><code>ed25519Verify</code></td><td><code>data, signature, publicKey</code></td><td>int (0/1)</td><td>Проверка подписи Ed25519</td></tr>
+</table>
+<pre><code><span class="cmt">// Генерация ключей</span>
+<span class="kw">var</span> keys = crypto.ed25519Generate();
+
+<span class="cmt">// Подпись</span>
+<span class="kw">var</span> data = <span class="str">"Message to sign"</span>;
+<span class="kw">var</span> sig = crypto.ed25519Sign(data, keys.private);
+
+<span class="cmt">// Проверка</span>
+print(crypto.ed25519Verify(data, sig, keys.public));  <span class="cmt">// 1</span>
+print(crypto.ed25519Verify(<span class="str">"forged"</span>, sig, keys.public));  <span class="cmt">// 0</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Случайные значения</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>randomBytes</code></td><td><code>[length]</code></td><td>bytes</td><td>Случайные байты. length=32 (по умолчанию), макс. 65535</td></tr>
+<tr><td><code>randomInt</code></td><td><code>[min], [max]</code></td><td>int</td><td>Случайное целое. min=0, max=100 (по умолчанию)</td></tr>
+<tr><td><code>uuid</code></td><td>—</td><td>string</td><td>UUID v4 (36 символов)</td></tr>
+</table>
+<pre><code><span class="cmt">// Случайные байты</span>
+<span class="kw">var</span> bytes = crypto.randomBytes(<span class="num">16</span>);
+print(bytes.size());  <span class="cmt">// 16</span>
+
+<span class="cmt">// Случайное число</span>
+print(crypto.randomInt(<span class="num">1</span>, <span class="num">100</span>));  <span class="cmt">// от 1 до 100</span>
+
+<span class="cmt">// UUID</span>
+<span class="kw">var</span> id = crypto.uuid();
+print(id);  <span class="cmt">// "550e8400-e29b-41d4-a716-446655440000"</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>OTP (одноразовые пароли)</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>totp</code></td><td><code>secret, [digits], [period]</code></td><td>string</td><td>Time-based OTP. digits=6, period=30 сек</td></tr>
+<tr><td><code>hotp</code></td><td><code>secret, counter, [digits]</code></td><td>string</td><td>HMAC-based OTP. counter — счётчик</td></tr>
+</table>
+<p>secret — строка в Base32 кодировке.</p>
+<pre><code><span class="cmt">// TOTP — одноразовый пароль</span>
+<span class="kw">var</span> secret = <span class="str">"JBSWY3DPEHPK3PXP"</span>;  <span class="cmt">// Base32</span>
+<span class="kw">var</span> code = crypto.totp(secret);
+print(code);  <span class="cmt">// "123456" (6 цифр)</span>
+
+<span class="cmt">// HOTP —.counter-based</span>
+<span class="kw">var</span> code1 = crypto.hotp(secret, <span class="num">0</span>);
+<span class="kw">var</span> code2 = crypto.hotp(secret, <span class="num">1</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>JWT (JSON Web Token)</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>jwtCreate</code></td><td><code>payload, key, [algo], [header]</code></td><td>string</td><td>Генерация JWT-токена</td></tr>
+<tr><td><code>jwtVerify</code></td><td><code>token, key, [algo]</code></td><td>string / null</td><td>Верификация подписи + проверка exp/nbf. Возвращает payload или null</td></tr>
+<tr><td><code>jwtDecode</code></td><td><code>token</code></td><td>tuple</td><td>Декодирование без проверки. Возвращает {header, payload, signature}</td></tr>
+</table>
+<p><b>Аргументы:</b></p>
+<ul>
+<li><code>payload</code> — JSON-строка или tuple (автоматически сериализуется в JSON)</li>
+<li><code>key</code> — секрет (строка/bytes) для HMAC, PEM-ключ приватного ключа для RSA/ECDSA/EdDSA</li>
+<li><code>algo</code> — алгоритм подписи (по умолчанию HS256)</li>
+<li><code>header</code> — tuple с дополнительными заголовочными полями (optional)</li>
+</ul>
+<p><b>Поддерживаемые алгоритмы:</b></p>
+<table>
+<tr><th>Тип</th><th>Алгоритмы</th><th>Ключ</th></tr>
+<tr><td>HMAC</td><td>HS256, HS384, HS512</td><td>Секретная строка или байты</td></tr>
+<tr><td>RSA</td><td>RS256, RS384, RS512</td><td>PEM-приватный ключ (создание) / PEM-открытый ключ (верификация)</td></tr>
+<tr><td>ECDSA</td><td>ES256, ES384, ES512</td><td>PEM-приватный ключ (создание) / PEM-открытый ключ (верификация)</td></tr>
+<tr><td>EdDSA</td><td>EdDSA</td><td>PEM-приватный ключ (создание) / PEM-открытый ключ (верификация)</td></tr>
+</table>
+<p><b>Валидация CLAIMS:</b> при верификации автоматически проверяются:</p>
+<ul>
+<li><code>exp</code> (expiration time) — токен отклонён, если текущее время больше exp</li>
+<li><code>nbf</code> (not before) — токен отклонён, если текущее время меньше nbf</li>
+</ul>
+<pre><code><span class="cmt">// === HS256 (секретная строка) ===</span>
+<span class="kw">var</span> token = crypto.jwtCreate(
+    <span class="str"> '{"sub":"user1","name":"Иван"}'</span>,
+    <span class="str">"my_secret"</span>
+);
+print(token);  <span class="cmt">// "eyJhbGciOiJI..."</span>
+
+<span class="cmt">// Верификация</span>
+<span class="kw">var</span> payload = crypto.jwtVerify(token, <span class="str">"my_secret"</span>);
+print(payload);  <span class="cmt">// '{"sub":"user1","name":"Иван"}'</span>
+
+<span class="cmt">// Неверный ключ — null</span>
+print(crypto.jwtVerify(token, <span class="str">"wrong_key"</span>).isnull());  <span class="cmt">// true</span>
+
+<span class="cmt">// === Payload как tuple (автосериализация) ===</span>
+<span class="kw">var</span> token2 = crypto.jwtCreate(
+    #{"sub": <span class="str">"user1"</span>, "role": <span class="str">"admin"</span>, "iat": <span class="num">1700000000</span>},
+    <span class="str">"secret"</span>
+);
+
+<span class="cmt">// === HS384 / HS512 ===</span>
+<span class="kw">var</span> token = crypto.jwtCreate(<span class="str">"{}"</span>, <span class="str">"key"</span>, <span class="str">"HS512"</span>);
+
+<span class="cmt">// === RS256 (RSA-подпись) ===</span>
+<span class="kw">var</span> keys = crypto.rsaGenerate();
+<span class="kw">var</span> token = crypto.jwtCreate(
+    <span class="str">'{"sub":"123"}'</span>,
+    keys.private,
+    <span class="str">"RS256"</span>
+);
+<span class="kw">var</span> payload = crypto.jwtVerify(token, keys.public, <span class="str">"RS256"</span>);
+
+<span class="cmt">// === ES256 (ECDSA-подпись) ===</span>
+<span class="cmt">// EC-ключи подаются готовым PEM (генерации EC в плагине нет):</span>
+<span class="cmt">// openssl ecparam -name prime256v1 -genkey -noout -out ec-private.pem</span>
+<span class="cmt">// openssl ec -in ec-private.pem -pubout -out ec-public.pem</span>
+<span class="kw">var</span> ecPrivateKey = file.readbytes(<span class="str">"ec-private.pem"</span>);
+<span class="kw">var</span> ecPublicKey  = file.readbytes(<span class="str">"ec-public.pem"</span>);
+<span class="kw">var</span> token = crypto.jwtCreate(<span class="str">"{}"</span>, ecPrivateKey, <span class="str">"ES256"</span>);
+<span class="kw">var</span> payload = crypto.jwtVerify(token, ecPublicKey, <span class="str">"ES256"</span>);
+
+<span class="cmt">// === EdDSA (Ed25519) ===</span>
+<span class="kw">var</span> keys = crypto.ed25519Generate();
+<span class="kw">var</span> token = crypto.jwtCreate(<span class="str">'{"data":"test"}'</span>, keys.private, <span class="str">"EdDSA"</span>);
+<span class="kw">var</span> payload = crypto.jwtVerify(token, keys.public, <span class="str">"EdDSA"</span>);
+
+<span class="cmt">// === Дополнительные заголовки ===</span>
+<span class="kw">var</span> token = crypto.jwtCreate(
+    <span class="str">"{}"</span>, <span class="str">"secret"</span>, <span class="str">"HS256"</span>,
+    #{"kid": <span class="str">"key_001"</span>, "x5c": <span class="str">"cert_data"</span>}
+);
+
+<span class="cmt">// === Автоматическая проверка exp ===</span>
+<span class="kw">var</span> now = datetime.timestamp(datetime.now());
+<span class="kw">var</span> token = crypto.jwtCreate(
+    #{"sub": <span class="str">"user1"</span>, "exp": now + <span class="num">3600</span>},
+    <span class="str">"secret"</span>
+);
+print(crypto.jwtVerify(token, <span class="str">"secret"</span>).isnull());  <span class="cmt">// false (ещё не истёк)</span>
+
+<span class="cmt">// === Декодирование без верификации ===</span>
+<span class="kw">var</span> parts = crypto.jwtDecode(token);
+print(parts.header);     <span class="cmt">// '{"alg":"HS256","typ":"JWT"}'</span>
+print(parts.payload);    <span class="cmt">// '{"sub":"user1",...}'</span>
+print(parts.signature);  <span class="cmt">// "base64url_подпись"</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Пример: шифрование файла</h2>
+<pre><code><span class="kw">if</span> (!loadPlugin(<span class="str">"plugins/crypto.dll"</span>)) { system.exit(<span class="num">1</span>); }
+
+<span class="kw">var</span> key = <span class="str">"мой_секретный_ключ"</span>;
+
+<span class="cmt">// Чтение файла</span>
+<span class="kw">var</span> data = file.readbytes(<span class="str">"document.pdf"</span>);
+
+<span class="cmt">// Шифрование</span>
+<span class="kw">var</span> encrypted = crypto.aesEncrypt(data, key);
+
+<span class="cmt">// Сохранение зашифрованного</span>
+file.writebytes(<span class="str">"document.pdf.enc"</span>, encrypted);
+print(<span class="cmt">"Зашифровано: "</span> + encrypted.size() + <span class="str">" байт"</span>);
+
+<span class="cmt">// Дешифрование</span>
+<span class="kw">var</span> loaded = file.readbytes(<span class="str">"document.pdf.enc"</span>);
+<span class="kw">var</span> decrypted = crypto.aesDecrypt(loaded, key);
+file.writebytes(<span class="str">"document_restored.pdf"</span>, decrypted);
+print(<span class="str">"Дешифровано!"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Пример: аутентификация по HMAC</h2>
+<pre><code><span class="kw">var</span> secret = <span class="str">"server_secret_key"</span>;
+
+<span class="cmt">// Клиент: подпись запроса</span>
+<span class="kw">var</span> request = <span class="str">"amount=100&to=user2"</span>;
+<span class="kw">var</span> sig = crypto.hmac(secret, request);
+
+<span class="cmt">// Сервер: проверка</span>
+<span class="kw">var</span> ok = crypto.hmacVerify(secret, request, sig);
+<span class="kw">if</span> (ok) {
+    print(<span class="str">"Запрос подлинный!"</span>);
+} <span class="kw">else</span> {
+    print(<span class="str">"ПОДДЕЛКА!"</span>);
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Пример: безопасное хранение пароля</h2>
+<pre><code><span class="kw">var</span> password = <span class="str">"user_password"</span>;
+
+<span class="cmt">// Генерация соли</span>
+<span class="kw">var</span> salt = crypto.randomBytes(<span class="num">16</span>);
+
+<span class="cmt">// Деривация ключа</span>
+<span class="kw">var</span> hash = crypto.pbkdf2(password, salt, <span class="num">100000</span>, <span class="num">32</span>);
+
+<span class="cmt">// Сохранение: соль + хеш</span>
+print(<span class="str">"Соль: "</span> + crypto.hexEncode(salt));
+print(<span class="str">"Хеш: "</span> + crypto.hexEncode(hash));
+
+<span class="cmt">// Проверка пароля</span>
+<span class="kw">var</span> check = crypto.pbkdf2(password, salt, <span class="num">100000</span>, <span class="num">32</span>);
+print(check.toString() == hash.toString());  <span class="cmt">// 1</span></code></pre>
+</div>
+
+<footer><a href="plugins.html">← К списку плагинов</a></footer>
+</div>
+</body>
+</html>

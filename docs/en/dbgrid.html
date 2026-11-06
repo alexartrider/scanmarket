@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QDbGridView — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header>
+<h1>QDbGridView — Data Grid</h1>
+<p>Viewing and editing data from a database in a tabular form</p>
+<div class="lang-switch"><a href="../dbgrid.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="dbgrid.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / <a href="qt.html">QT</a> / QDbGridView</p>
+
+<div class="doc-section">
+<h2>Description</h2>
+<p><code>QDbGridView</code> is a table widget (a QTableView subclass) for displaying and editing data from a database. It supports two operating modes:</p>
+<ul>
+<li><strong>External DataSet</strong> — data is passed from the script via <code>setDataSet()</code></li>
+<li><strong>Internal DataSet</strong> — data is loaded by an SQL query via <code>open()</code></li>
+</ul>
+</div>
+
+<div class="doc-section">
+<h2>Properties</h2>
+<table>
+<tr><th>Property</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>sql</code></td><td>string</td><td>SQL query to load the data</td></tr>
+<tr><td><code>columns</code></td><td>string (JSON)</td><td>Column definitions in JSON array format</td></tr>
+<tr><td><code>readOnly</code></td><td>bool</td><td>Read-only (editing disabled)</td></tr>
+<tr><td><code>showGridLines</code></td><td>bool</td><td>Show grid lines</td></tr>
+<tr><td><code>autoOpen</code></td><td>bool</td><td>Open automatically when created on a form</td></tr>
+</table>
+
+<h3>JSON format for columns</h3>
+<pre><code>[
+    {
+        "field": "NAME",       <span class="cmt">// field name in the DB</span>
+        "caption": "Name", <span class="cmt">// column caption</span>
+        "width": 150,          <span class="cmt">// width (default 100)</span>
+        "visible": true,       <span class="cmt">// visibility (default true)</span>
+        "align": 1,            <span class="cmt">// alignment: 1=Left, 2=Right, 4=Center</span>
+        "readOnly": false      <span class="cmt">// read-only (default false)</span>
+    }
+]</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Methods</h2>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>open()</code></td><td>Open the table by SQL query. Returns true on success</td></tr>
+<tr><td><code>close()</code></td><td>Close the table and release the data</td></tr>
+<tr><td><code>refresh()</code></td><td>Refresh the data (re-execute the SQL or update the model)</td></tr>
+<tr><td><code>isActive()</code></td><td>Whether the table is open (bool)</td></tr>
+<tr><td><code>currentRow()</code></td><td>Current row as a tuple keyed by field names (field_name: value); returns an empty tuple if no row is selected. SQL NULL is converted to <code>null</code></td></tr>
+<tr><td><code>currentRowIndex()</code></td><td>Zero-based index of the current row; <code>-1</code> if no row is selected</td></tr>
+<tr><td><code>setDataSet(ds)</code></td><td>Set an external DataSet</td></tr>
+<tr><td><code>dataSet()</code></td><td>Get the current DataSet</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Signals</h2>
+<table>
+<tr><th>Signal</th><th>Arguments</th><th>Description</th></tr>
+<tr><td><code>rowDoubleClicked</code></td><td>int row, QVariantMap rowData</td><td>Double-click on a row</td></tr>
+<tr><td><code>currentRowChanged</code></td><td>int rowIndex</td><td>Current row changed; passes the zero-based row index, not a QVariantMap</td></tr>
+<tr><td><code>beforeOpen</code></td><td>—</td><td>Before opening</td></tr>
+<tr><td><code>afterOpen</code></td><td>—</td><td>After opening</td></tr>
+<tr><td><code>beforeClose</code></td><td>—</td><td>Before closing</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Keyboard shortcuts</h2>
+<table>
+<tr><th>Key</th><th>Action</th></tr>
+<tr><td><code>F2</code></td><td>Edit the current cell</td></tr>
+<tr><td><code>F5</code></td><td>Refresh the data</td></tr>
+<tr><td><code>Enter</code></td><td>Go to the next row</td></tr>
+<tr><td><code>Escape</code></td><td>Cancel editing</td></tr>
+<tr><td><code>Ctrl+Home</code></td><td>First row</td></tr>
+<tr><td><code>Ctrl+End</code></td><td>Last row</td></tr>
+<tr><td><code>Ctrl+PageUp</code></td><td>Page up</td></tr>
+<tr><td><code>Ctrl+PageDown</code></td><td>Page down</td></tr>
+<tr><td><code>Backspace</code></td><td>Up (in DirectoryView)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Examples</h2>
+
+<h3>External DataSet</h3>
+<pre><code><span class="kw">var</span> ds = db.open(<span class="str">"SELECT * FROM users"</span>);
+<span class="kw">var</span> grid = qt.create(<span class="str">"QDbGridView"</span>, form);
+grid.setDataSet(ds);
+grid.columns = <span class="str">'[{"field":"ID","caption":"№","width":50},{"field":"NAME","caption":"Name","width":200}]'</span>;
+grid.align = <span class="str">"alClient"</span>;</code></pre>
+
+<p>For a JSON form with <code>autoOpen: true</code>, connect the database in the form's top-level script: SQL grids open after this code runs, but before the <code>formCreate</code> (OnCreate) handler. Named event handlers must also be declared in the form script so they exist when events are connected. See <a href="qt.html">JSON form lifecycle</a> for the full initialization phases.</p>
+
+<h3>Internal DataSet (SQL)</h3>
+<pre><code><span class="kw">var</span> grid = qt.create(<span class="str">"QDbGridView"</span>, form);
+grid.sql = <span class="str">"SELECT id, name, salary FROM employees WHERE department = 'IT'"</span>;
+grid.autoOpen = <span class="kw">true</span>;
+grid.columns = <span class="str">'[{"field":"id","width":50},{"field":"name","width":200},{"field":"salary","width":100,"align":2}]'</span>;
+grid.align = <span class="str">"alClient"</span>;</code></pre>
+
+<h3>Event handling</h3>
+<pre><code>grid.rowDoubleClicked = <span class="kw">function</span>(sender, row, rowData) {
+    print(<span class="str">"Selected row: \(rowData["NAME"])"</span>);
+};
+
+grid.currentRowChanged = <span class="kw">function</span>(sender, row) {
+    statusBar.showMessage(<span class="str">"Row \(row + 1) of \(sender.model.rowCount)"</span>);
+};</code></pre>
+
+<p><code>currentRowChanged</code> passes the row index; this signal form does not depend on QVariantMap conversion. To read a record by index, a separate SQL query with the same ordering can be used to select the corresponding row using database-specific SQL. This is a workaround for <code>currentRow()</code> in versions before the QVariantMap conversion fix.</p>
+
+<h3>Manual open/refresh</h3>
+<pre><code>grid.open();          <span class="cmt">// open by SQL</span>
+grid.refresh();       <span class="cmt">// refresh the data</span>
+<span class="kw">var</span> row = grid.currentRow();  <span class="cmt">// row["product_id"], row["name"]; NULL → null</span>
+grid.close();         <span class="cmt">// close</span></code></pre>
+</div>
+
+<footer><a href="qt.html">← QT integration</a></footer>
+</div>
+</body>
+</html>

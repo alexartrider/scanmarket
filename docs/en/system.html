@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module system — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Module system</h1><p>System functions — available globally</p><div class="lang-switch"><a href="../system.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="system.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / system</p>
+
+<div class="doc-section">
+<h2>Process execution</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>system.system(cmd)</code></td><td>Synchronous command execution</td></tr>
+<tr><td><code>system.exec(cmd, [timeoutMs])</code></td><td>Run a command and capture stdout/stderr. Returns {success, code, stdout, stderr}; default timeout is 60 seconds</td></tr>
+<tr><td><code>system.systemex(cmd, [workDir], [timeout])</code></td><td>Hidden launch with a working directory and timeout. Returns {success, code, killed}</td></tr>
+<tr><td><code>system.systemasync(cmd, [workDir], [timeout], [options])</code></td><td>Asynchronous. Returns a Process object. <code>options</code> controls console attachment (see below)</td></tr>
+</table>
+<p>The optional <code>options</code> argument is a tuple <code>#{"console": "..."}</code> that controls the child process
+attachment to the parent console:</p>
+<ul>
+<li><code>"inherit"</code> (default) — a console child process may share the parent console;</li>
+<li><code>"new"</code> — <code>CREATE_NEW_CONSOLE</code>: a separate console for a console child (ignored by Windows for GUI apps);</li>
+<li><code>"detached"</code> — <code>DETACHED_PROCESS</code>: the child process does not use the parent console. Recommended for browsers/long-running GUI apps.</li>
+</ul>
+<p>Example: <code>system.systemasync("start chrome ...", "", 60000, #{"console": "detached"})</code>.
+An unknown <code>console</code> value returns a diagnostic error. Existing calls without <code>options</code> behave as before.
+A child process without <code>DETACHED_PROCESS</code>/<code>CREATE_NEW_CONSOLE</code> may share the parent console and change its
+modes — see the <a href="log.html">Log</a> module for diagnostics/restore (<code>Log.consoleInfo()</code>/<code>Log.refreshConsole()</code>).</p>
+<p>On Windows, <code>system.exec</code> currently runs the command through <code>cmd.exe /c</code>. On timeout, the process is terminated and <code>success</code> is false; do not treat <code>code</code> as the command's exit code after forced termination.</p>
+
+<h3>Process object</h3>
+<table>
+<tr><th>Property/Method</th><th>Description</th></tr>
+<tr><td><code>p.isReady</code></td><td>Process has finished</td></tr>
+<tr><td><code>p.runtime</code></td><td>Execution time (ms)</td></tr>
+<tr><td><code>p.result</code></td><td>Result {success, code, killed}</td></tr>
+<tr><td><code>p.kill()</code></td><td>Kill the process</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Environment</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>system.env()</code></td><td>Environment variables</td></tr>
+<tr><td><code>system.getcommandline()</code></td><td>Command line arguments (see below)</td></tr>
+</table>
+<h3>system.getcommandline()</h3>
+<p>Returns a tuple:</p>
+<table>
+<tr><th>Key</th><th>Description</th></tr>
+<tr><td><code>app / basename / dirname / filename</code></td><td>Information about the executable (qodeqt.exe)</td></tr>
+<tr><td><code>argv0</code></td><td>The first argument as passed by the shell (normalized)</td></tr>
+<tr><td><code>raw</code></td><td>All arguments as-is, in order (<code>raw[0]</code> is the script path for qodeqt)</td></tr>
+<tr><td><code>args</code></td><td>Only non-flag arguments (the script path is the first element)</td></tr>
+<tr><td><code>count</code></td><td>Number of non-flag arguments</td></tr>
+<tr><td><code>flags</code></td><td>Parsed flags: <code>--name=value</code>, <code>--flag</code>, grouped short flags <code>-abc</code>. A value from <code>=</code> is converted to bool when recognized (<code>true/false/1/0/yes/no/on/off</code>). A repeated flag keeps the <b>first</b> value (tuple/emplace semantics — see the <a href="automation.html">cli</a> library for an explicit policy)</td></tr>
+<tr><td><code>parsed</code></td><td>Ordered tokens for CLI libraries: each element is <code>#{"flag": name}</code>, <code>#{"flag": name, "value": string}</code>, <code>#{"pos": text}</code> or <code>#{"end": 1}</code> (the <code>--</code> separator, after which everything is positional). Values from <code>=</code> are stored as raw strings (type coercion is up to the consumer). <code>parsed[0]</code> is the script path</td></tr>
+</table>
+<p>In <code>flags</code>/<code>args</code>, <code>--</code> behaves as before (the separator is not put into <code>args</code>; subsequent <code>-…</code> tokens still go into <code>flags</code>); correct end-of-flags handling is done through <code>parsed</code>. A full argparse-style flag schema is provided by the <a href="automation.html">cli</a> library.</p>
+</div>
+
+<div class="doc-section">
+<h2>Profiling</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>system.sleep(seconds)</code></td><td>Pause in seconds (fractional allowed)</td></tr>
+<tr><td><code>system.gettickcount()</code></td><td>Current time (ms) for profiling</td></tr>
+<tr><td><code>system.timeit(func, args...)</code></td><td>Measure function execution time</td></tr>
+<tr><td><code>system.benchmark(func, n)</code></td><td>Benchmark: n function calls</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>System information</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>system.computername()</code></td><td>Computer name</td></tr>
+<tr><td><code>system.username()</code></td><td>User name</td></tr>
+<tr><td><code>system.cpuid()</code></td><td>CPU identifier</td></tr>
+<tr><td><code>system.vendor()</code></td><td>CPU vendor</td></tr>
+<tr><td><code>system.id()</code></td><td>Unique identifier</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Power management</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>system.shutdown()</code></td><td>Shut down</td></tr>
+<tr><td><code>system.reboot()</code></td><td>Reboot</td></tr>
+<tr><td><code>system.logoff()</code></td><td>Log off</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Sound</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>system.beep(freq, duration)</code></td><td>Beep</td></tr>
+<tr><td><code>system.messagebeep(type)</code></td><td>System sound</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>WMI — system information (Windows)</h2>
+<p>Access via WMI (CIM). Returns arrays of tuples; the keys are WMI property names.</p>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>system.wmi.systeminfo()</code></td><td>Tuple: computername, domain, os, version, buildnumber, architecture, manufacturer, model, totalmemory, processors, logicalprocessors, registereduser, lastboot</td></tr>
+<tr><td><code>system.wmi.processes()</code></td><td>Array of processes: Name, ProcessId, ParentProcessId, ExecutablePath, CommandLine, CreationDate, WorkingSetSize</td></tr>
+<tr><td><code>system.wmi.services()</code></td><td>Array of services: Name, DisplayName, State, Started, StartMode, PathName, ProcessId</td></tr>
+<tr><td><code>system.wmi.query(wql)</code></td><td>Arbitrary WQL query, array of tuples with all properties</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Windows services (Windows)</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>system.service.list()</code></td><td>Array: name, displayname, state, pid, running</td></tr>
+<tr><td><code>system.service.status(name)</code></td><td>Tuple: name, state, statecode, running, startmode, path</td></tr>
+<tr><td><code>system.service.exists(name)</code></td><td>Whether the service exists</td></tr>
+<tr><td><code>system.service.install(name, path, [displayName], [description], [autoStart])</code></td><td>Install a service (autoStart=true — autostart)</td></tr>
+<tr><td><code>system.service.uninstall(name)</code></td><td>Stop and remove a service</td></tr>
+<tr><td><code>system.service.start(name)</code></td><td>Start a service</td></tr>
+<tr><td><code>system.service.stop(name)</code></td><td>Stop a service (waiting for it to finish)</td></tr>
+<tr><td><code>system.service.restart(name)</code></td><td>Restart a service</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Toast notifications (Windows)</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>system.notify.show(title, message)</code></td><td>Shows a popup notification in the tray. true — sent</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Task Scheduler (Windows)</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>system.scheduled_tasks.list()</code></td><td>Array of tasks: name, path, state, statecode, enabled, lastrun, nextrun, lastresult</td></tr>
+<tr><td><code>system.scheduled_tasks.query(name)</code></td><td>Task information (or null)</td></tr>
+<tr><td><code>system.scheduled_tasks.exists(name)</code></td><td>Whether the task exists</td></tr>
+<tr><td><code>system.scheduled_tasks.run(name)</code></td><td>Run a task</td></tr>
+<tr><td><code>system.scheduled_tasks.stop(name)</code></td><td>Stop a running task</td></tr>
+<tr><td><code>system.scheduled_tasks.delete(name)</code></td><td>Delete a task</td></tr>
+<tr><td><code>system.scheduled_tasks.create(name, xml)</code></td><td>Create/update a task from Task Scheduler XML (schema mit/task)</td></tr>
+<tr><td><code>system.scheduled_tasks.createexec(name, program, [args], [time], [workdir])</code></td><td>Daily task to run program at time "HH:MM" (default 09:00)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Input/output and control</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>system.write(text)</code></td><td>Write without a newline</td></tr>
+<tr><td><code>system.writeln(text)</code></td><td>Write with a newline</td></tr>
+<tr><td><code>system.exit(code)</code></td><td>Exit with a code (alternative — <code>return code;</code> at the top level of the script)</td></tr>
+<tr><td><code>system.abort()</code></td><td>Abort abnormally</td></tr>
+<tr><td><code>system.exec(cmd, [timeout])</code></td><td>Run a command through cmd.exe; → <code>#{"success","code","stdout","stderr"}</code></td></tr>
+<tr><td><code>system.execArgv(argv, [opts])</code></td><td>Run WITHOUT a shell: an array of arguments (no escaping needed); <code>opts</code>: <code>{"cwd","timeout","outfile","errfile","console"}</code>; throws an exception on a launch error</td></tr>
+</table>
+</div>
+
+<footer><a href="index.html">← Back to home</a></footer>
+</div>
+</body>
+</html>

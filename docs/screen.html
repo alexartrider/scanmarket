@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Плагин Screen — Script</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Плагин Screen (захват экрана)</h1><p>Скриншоты — весь экран, область или отдельные мониторы</p><div class="lang-switch"><a class="active" href="screen.html">RU</a><a href="en/screen.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Главная</a> / <a href="plugins.html">Плагины</a> / Screen</p>
+
+<div class="doc-section">
+<h2>Загрузка плагина</h2>
+<p>Плагин работает только в Windows (Win32 GDI). Захват выполняется в интерактивной пользовательской сессии.</p>
+<pre><code><span class="kw">var</span> ok = loadPlugin(file.apppath() + <span class="str">"/plugins/screen.dll"</span>);
+<span class="kw">if</span> (!ok) throw <span class="str">"Не удалось загрузить плагин screen"</span>;</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Информация об экранах</h2>
+<table>
+<tr><th>Функция</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>ScreenCount()</code></td><td>—</td><td>int</td><td>Количество мониторов</td></tr>
+<tr><td><code>ScreenWidth()</code></td><td>—</td><td>int</td><td>Ширина основного монитора, px</td></tr>
+<tr><td><code>ScreenHeight()</code></td><td>—</td><td>int</td><td>Высота основного монитора, px</td></tr>
+<tr><td><code>ScreenVirtualRect()</code></td><td>—</td><td>Tuple</td><td>Границы виртуального рабочего стола, см. ниже</td></tr>
+<tr><td><code>ScreenMonitors()</code></td><td>—</td><td>Array&lt;Tuple&gt;</td><td>Список всех мониторов, см. ниже</td></tr>
+</table>
+
+<p><code>ScreenVirtualRect()</code> возвращает кортеж <code>{left, top, width, height}</code> — область, покрывающая все мониторы. Начало координат виртуального экрана — левый верхний угол основного монитора, поэтому при мониторе слева/сверху координаты <code>left</code>/<code>top</code> отрицательные.</p>
+
+<p><code>ScreenMonitors()</code> возвращает массив кортежей:</p>
+<table>
+<tr><th>Поле</th><th>Тип</th><th>Описание</th></tr>
+<tr><td><code>left</code>, <code>top</code></td><td>int</td><td>Позиция монитора в координатах виртуального экрана</td></tr>
+<tr><td><code>width</code>, <code>height</code></td><td>int</td><td>Разрешение монитора, px</td></tr>
+<tr><td><code>primary</code></td><td>int (0/1)</td><td>1 — основной монитор</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Захват экрана</h2>
+<p>Результат захвата — <strong>полный файл BMP</strong> (32 бита на пиксель) в виде <code>ByteArray</code>. Его можно сразу сохранить на диск через <code>file.writebytes</code>, передать в буфер обмена плагином <code>clipboard</code> (<code>ClipboardSetImage</code>) или обработать байтовыми функциями.</p>
+
+<table>
+<tr><th>Функция</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>ScreenCapture([cursor])</code></td><td><code>cursor</code>: 0/1 (по умолч. 0)</td><td>ByteArray (BMP) | null</td><td>Снимок основного монитора целиком</td></tr>
+<tr><td><code>ScreenCaptureRect(x, y, w, h, [cursor])</code></td><td><code>x, y, w, h</code>, <code>cursor</code>: 0/1</td><td>ByteArray (BMP) | null</td><td>Снимок прямоугольной области виртуального экрана</td></tr>
+</table>
+
+<p>Особенности:</p>
+<ul>
+<li>Координаты <code>ScreenCaptureRect</code> задаются в системе координат виртуального экрана (см. <code>ScreenVirtualRect</code>).</li>
+<li>Части области за пределами экранов заполняются чёрным.</li>
+<li>При <code>cursor = 1</code> на снимок добавляется системный курсор (в точке его фактического положения).</li>
+</ul>
+</div>
+
+<div class="doc-section">
+<h2>Примеры</h2>
+
+<h3>Скриншот всего экрана с курсором</h3>
+<pre><code><span class="kw">var</span> shot = ScreenCapture(<span class="num">1</span>);           <span class="cmt">// с курсором</span>
+<span class="kw">if</span> (!shot.isnull())
+    file.writebytes(file.apppath() + <span class="str">"/screen.bmp"</span>, shot);</code></pre>
+
+<h3>Снимок области и передача в буфер обмена</h3>
+<pre><code><span class="kw">var</span> img = ScreenCaptureRect(<span class="num">0</span>, <span class="num">0</span>, <span class="num">640</span>, <span class="num">480</span>);
+<span class="kw">if</span> (!img.isnull()) {
+    loadPlugin(file.apppath() + <span class="str">"/plugins/clipboard.dll"</span>);
+    ClipboardSetImage(img);            <span class="cmt">// теперь можно вставить в любой редактор</span>
+}</code></pre>
+
+<h3>Скриншот всех мониторов</h3>
+<pre><code><span class="kw">var</span> v = ScreenVirtualRect();
+<span class="kw">var</span> all = ScreenCaptureRect(v.left, v.top, v.width, v.height);  <span class="cmt">// весь виртуальный рабочий стол</span>
+file.writebytes(<span class="str">"all_monitors.bmp"</span>, all);
+
+<span class="cmt">// Или по одному монитору:</span>
+<span class="kw">for</span> (<span class="kw">var</span> m : ScreenMonitors())
+    file.writebytes(<span class="str">"monitor_"</span> + m.left + <span class="str">"_"</span> + m.top + <span class="str">".bmp"</span>,
+                    ScreenCaptureRect(m.left, m.top, m.width, m.height));</code></pre>
+</div>
+
+<footer><a href="plugins.html">← К списку плагинов</a></footer>
+</div>
+</body>
+</html>

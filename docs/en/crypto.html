@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crypto Plugin — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Crypto Plugin</h1><p>Cryptographic functions — hashing, encryption, signatures, key generation, JWT</p><div class="lang-switch"><a href="../crypto.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="crypto.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / <a href="plugins.html">Plugins</a> / Crypto</p>
+
+<div class="doc-section">
+<h2>Loading the Plugin</h2>
+<p>Two ways to use it:</p>
+<pre><code><span class="cmt">// Method 1: via the object</span>
+<span class="kw">if</span> (!loadPlugin(<span class="str">"plugins/crypto.dll"</span>)) { system.exit(<span class="num">1</span>); }
+<span class="kw">var</span> c = Crypto();
+<span class="kw">var</span> hash = c.sha256(<span class="str">"Hello"</span>);
+
+<span class="cmt">// Method 2: via the global service</span>
+<span class="kw">if</span> (!loadPlugin(<span class="str">"plugins/crypto.dll"</span>)) { system.exit(<span class="num">1</span>); }
+<span class="kw">var</span> hash = crypto.sha256(<span class="str">"Hello"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Encoding and Decoding</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>base64Encode</code></td><td><code>data, [urlSafe]</code></td><td>string</td><td>Base64 encoding. urlSafe=true — URL-safe alphabet (-_ instead of +/)</td></tr>
+<tr><td><code>base64Decode</code></td><td><code>data, [urlSafe], [asBytes]</code></td><td>string / bytes</td><td>Base64 decoding</td></tr>
+<tr><td><code>hexEncode</code></td><td><code>data</code></td><td>string</td><td>Encode to a hex string (0-9a-f)</td></tr>
+<tr><td><code>hexDecode</code></td><td><code>data, [asBytes]</code></td><td>bytes / string</td><td>Decode a hex string</td></tr>
+</table>
+<pre><code><span class="cmt">// Base64</span>
+<span class="kw">var</span> enc = crypto.base64Encode(<span class="str">"Hello world"</span>);
+print(enc);  <span class="cmt">// "SGVsbG8gd29ybGQ="</span>
+
+<span class="kw">var</span> dec = crypto.base64Decode(enc);
+print(dec);  <span class="cmt">// "Hello world"</span>
+
+<span class="cmt">// URL-safe Base64</span>
+<span class="kw">var</span> url = crypto.base64Encode(<span class="str">"data/signature"</span>, <span class="kw">true</span>);
+
+<span class="cmt">// Hex</span>
+<span class="kw">var</span> hex = crypto.hexEncode(<span class="str">"Hello"</span>);
+print(hex);  <span class="cmt">// "48656c6c6f"</span>
+
+<span class="kw">var</span> raw = crypto.hexDecode(<span class="str">"48656c6c6f"</span>);
+print(raw);  <span class="cmt">// "Hello"</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Hash Functions</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>md5</code></td><td><code>data, [asHex]</code></td><td>string / bytes</td><td>MD5 (128 bits)</td></tr>
+<tr><td><code>sha1</code></td><td><code>data, [asHex]</code></td><td>string / bytes</td><td>SHA-1 (160 bits)</td></tr>
+<tr><td><code>sha256</code></td><td><code>data, [asHex]</code></td><td>string / bytes</td><td>SHA-256 (256 bits)</td></tr>
+<tr><td><code>sha512</code></td><td><code>data, [asHex]</code></td><td>string / bytes</td><td>SHA-512 (512 bits)</td></tr>
+<tr><td><code>sha3_256</code></td><td><code>data, [asHex]</code></td><td>string / bytes</td><td>SHA3-256 (Keccak)</td></tr>
+<tr><td><code>sha3_512</code></td><td><code>data, [asHex]</code></td><td>string / bytes</td><td>SHA3-512 (Keccak)</td></tr>
+</table>
+<p>By default they return a hex string. asHex=false — they return a ByteArray.</p>
+<pre><code><span class="cmt">// Hash of a string</span>
+print(crypto.md5(<span class="str">"Hello"</span>));      <span class="cmt">// "8b1a9953c4611296a827abf8c47804d7"</span>
+print(crypto.sha256(<span class="str">"Hello"</span>));    <span class="cmt">// "185f8db32271fe25f561a6fc938b2e26..."</span>
+
+<span class="cmt">// Hash of a file</span>
+<span class="kw">var</span> data = file.readbytes(<span class="str">"image.png"</span>);
+print(crypto.sha256(data));
+
+<span class="cmt">// As a ByteArray (not hex)</span>
+<span class="kw">var</span> hash = crypto.sha256(<span class="str">"test"</span>, <span class="kw">false</span>);
+print(hash.size());  <span class="cmt">// 32 bytes</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>HMAC and Signature Verification</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>hmac</code></td><td><code>key, data, [algo], [asHex]</code></td><td>string / bytes</td><td>HMAC signature. algo: sha256 (default), sha512, sha1, md5</td></tr>
+<tr><td><code>hmacVerify</code></td><td><code>key, data, signature, [algo]</code></td><td>int (0/1)</td><td>HMAC signature verification</td></tr>
+<tr><td><code>pbkdf2</code></td><td><code>password, salt, [iterations], [keyLen], [algo]</code></td><td>bytes</td><td>Key derivation. iterations=100000, keyLen=32, algo=sha256</td></tr>
+</table>
+<pre><code><span class="cmt">// HMAC signature</span>
+<span class="kw">var</span> key = <span class="str">"secret_key"</span>;
+<span class="kw">var</span> sig = crypto.hmac(key, <span class="str">"important data"</span>);
+print(sig);  <span class="cmt">// hex string</span>
+
+<span class="cmt">// Signature verification</span>
+<span class="kw">var</span> ok = crypto.hmacVerify(key, <span class="str">"important data"</span>, sig);
+print(ok);  <span class="cmt">// 1</span>
+
+<span class="cmt">// Invalid signature</span>
+ok = crypto.hmacVerify(key, <span class="str">"tampered data"</span>, sig);
+print(ok);  <span class="cmt">// 0</span>
+
+<span class="cmt">// PBKDF2 — key derivation from a password</span>
+<span class="kw">var</span> salt = crypto.randomBytes(<span class="num">16</span>);
+<span class="kw">var</span> key1 = crypto.pbkdf2(<span class="str">"password"</span>, salt, <span class="num">100000</span>, <span class="num">32</span>);
+<span class="kw">var</span> key2 = crypto.pbkdf2(<span class="str">"password"</span>, salt, <span class="num">100000</span>, <span class="num">32</span>);
+print(key1.toString() == key2.toString());  <span class="cmt">// 1 (deterministic)</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>AES Encryption (GCM)</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>aesEncrypt</code></td><td><code>data, key, [iv], [aad]</code></td><td>bytes</td><td>AES-GCM encryption. Format: IV(12) + Tag(16) + Ciphertext</td></tr>
+<tr><td><code>aesDecrypt</code></td><td><code>data, key, [aad], [asString]</code></td><td>bytes / string</td><td>Decryption. asString=true — return a string</td></tr>
+</table>
+<p>Keys that are not 16/24/32 bytes long are automatically hashed with SHA-256.</p>
+<pre><code><span class="cmt">// Encryption</span>
+<span class="kw">var</span> key = <span class="str">"my_secret_key"</span>;
+<span class="kw">var</span> encrypted = crypto.aesEncrypt(<span class="str">"Secret message"</span>, key);
+print(encrypted.size());  <span class="cmt">// IV(12) + Tag(16) + data</span>
+
+<span class="cmt">// Decryption</span>
+<span class="kw">var</span> decrypted = crypto.aesDecrypt(encrypted, key, <span class="str">""</span>, <span class="kw">true</span>);
+print(decrypted);  <span class="cmt">// "Secret message"</span>
+
+<span class="cmt">// With AAD (Additional Authenticated Data)</span>
+<span class="kw">var</span> aad = <span class="str">"header_context"</span>;
+<span class="kw">var</span> enc = crypto.aesEncrypt(<span class="str">"data"</span>, key, <span class="str">""</span>, aad);
+<span class="kw">var</span> dec = crypto.aesDecrypt(enc, key, aad, <span class="kw">true</span>);
+print(dec);  <span class="cmt">// "data"</span>
+
+<span class="cmt">// Decryption with a wrong key — an error</span>
+<span class="kw">var</span> bad = crypto.aesDecrypt(enc, <span class="str">"wrong_key"</span>, aad);
+print(bad.isnull());  <span class="cmt">// true</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>RSA</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>rsaGenerate</code></td><td><code>[bits]</code></td><td>tuple</td><td>Key generation. bits: 2048 (default), 4096. Returns {private, public} PEM</td></tr>
+<tr><td><code>rsaEncrypt</code></td><td><code>data, publicKey</code></td><td>bytes</td><td>Encryption with the public key (PKCS1 OAEP)</td></tr>
+<tr><td><code>rsaDecrypt</code></td><td><code>data, privateKey</code></td><td>string</td><td>Decryption with the private key</td></tr>
+<tr><td><code>rsaSign</code></td><td><code>data, privateKey, [algo]</code></td><td>bytes</td><td>Digital signature. algo: sha256 (default)</td></tr>
+<tr><td><code>rsaVerify</code></td><td><code>data, signature, publicKey, [algo]</code></td><td>int (0/1)</td><td>Signature verification</td></tr>
+</table>
+<pre><code><span class="cmt">// Key generation</span>
+<span class="kw">var</span> keys = crypto.rsaGenerate();
+print(keys.private);  <span class="cmt">// PEM of the private key</span>
+print(keys.public);   <span class="cmt">// PEM of the public key</span>
+
+<span class="cmt">// Encryption/decryption</span>
+<span class="kw">var</span> enc = crypto.rsaEncrypt(<span class="str">"Secret message"</span>, keys.public);
+<span class="kw">var</span> dec = crypto.rsaDecrypt(enc, keys.private);
+print(dec);  <span class="cmt">// "Secret message"</span>
+
+<span class="cmt">// Digital signature</span>
+<span class="kw">var</span> data = <span class="str">"Important document"</span>;
+<span class="kw">var</span> sig = crypto.rsaSign(data, keys.private);
+print(crypto.rsaVerify(data, sig, keys.public));  <span class="cmt">// 1</span>
+print(crypto.rsaVerify(<span class="str">"tampered"</span>, sig, keys.public));  <span class="cmt">// 0</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Ed25519</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>ed25519Generate</code></td><td>—</td><td>tuple</td><td>Ed25519 key generation. Returns {private, public} PEM</td></tr>
+<tr><td><code>ed25519Sign</code></td><td><code>data, privateKey</code></td><td>bytes</td><td>Ed25519 signature</td></tr>
+<tr><td><code>ed25519Verify</code></td><td><code>data, signature, publicKey</code></td><td>int (0/1)</td><td>Ed25519 signature verification</td></tr>
+</table>
+<pre><code><span class="cmt">// Key generation</span>
+<span class="kw">var</span> keys = crypto.ed25519Generate();
+
+<span class="cmt">// Signing</span>
+<span class="kw">var</span> data = <span class="str">"Message to sign"</span>;
+<span class="kw">var</span> sig = crypto.ed25519Sign(data, keys.private);
+
+<span class="cmt">// Verification</span>
+print(crypto.ed25519Verify(data, sig, keys.public));  <span class="cmt">// 1</span>
+print(crypto.ed25519Verify(<span class="str">"forged"</span>, sig, keys.public));  <span class="cmt">// 0</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Random Values</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>randomBytes</code></td><td><code>[length]</code></td><td>bytes</td><td>Random bytes. length=32 (default), max 65535</td></tr>
+<tr><td><code>randomInt</code></td><td><code>[min], [max]</code></td><td>int</td><td>Random integer. min=0, max=100 (default)</td></tr>
+<tr><td><code>uuid</code></td><td>—</td><td>string</td><td>UUID v4 (36 characters)</td></tr>
+</table>
+<pre><code><span class="cmt">// Random bytes</span>
+<span class="kw">var</span> bytes = crypto.randomBytes(<span class="num">16</span>);
+print(bytes.size());  <span class="cmt">// 16</span>
+
+<span class="cmt">// Random number</span>
+print(crypto.randomInt(<span class="num">1</span>, <span class="num">100</span>));  <span class="cmt">// from 1 to 100</span>
+
+<span class="cmt">// UUID</span>
+<span class="kw">var</span> id = crypto.uuid();
+print(id);  <span class="cmt">// "550e8400-e29b-41d4-a716-446655440000"</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>OTP (One-Time Passwords)</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>totp</code></td><td><code>secret, [digits], [period]</code></td><td>string</td><td>Time-based OTP. digits=6, period=30 sec</td></tr>
+<tr><td><code>hotp</code></td><td><code>secret, counter, [digits]</code></td><td>string</td><td>HMAC-based OTP. counter — the counter</td></tr>
+</table>
+<p>secret is a string in Base32 encoding.</p>
+<pre><code><span class="cmt">// TOTP — one-time password</span>
+<span class="kw">var</span> secret = <span class="str">"JBSWY3DPEHPK3PXP"</span>;  <span class="cmt">// Base32</span>
+<span class="kw">var</span> code = crypto.totp(secret);
+print(code);  <span class="cmt">// "123456" (6 digits)</span>
+
+<span class="cmt">// HOTP —.counter-based</span>
+<span class="kw">var</span> code1 = crypto.hotp(secret, <span class="num">0</span>);
+<span class="kw">var</span> code2 = crypto.hotp(secret, <span class="num">1</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>JWT (JSON Web Token)</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>jwtCreate</code></td><td><code>payload, key, [algo], [header]</code></td><td>string</td><td>JWT token generation</td></tr>
+<tr><td><code>jwtVerify</code></td><td><code>token, key, [algo]</code></td><td>string / null</td><td>Signature verification + exp/nbf check. Returns the payload or null</td></tr>
+<tr><td><code>jwtDecode</code></td><td><code>token</code></td><td>tuple</td><td>Decoding without verification. Returns {header, payload, signature}</td></tr>
+</table>
+<p><b>Arguments:</b></p>
+<ul>
+<li><code>payload</code> — a JSON string or tuple (automatically serialized to JSON)</li>
+<li><code>key</code> — the secret (string/bytes) for HMAC, the PEM private key for RSA/ECDSA/EdDSA</li>
+<li><code>algo</code> — the signature algorithm (default HS256)</li>
+<li><code>header</code> — a tuple with additional header fields (optional)</li>
+</ul>
+<p><b>Supported algorithms:</b></p>
+<table>
+<tr><th>Type</th><th>Algorithms</th><th>Key</th></tr>
+<tr><td>HMAC</td><td>HS256, HS384, HS512</td><td>Secret string or bytes</td></tr>
+<tr><td>RSA</td><td>RS256, RS384, RS512</td><td>PEM private key (creation) / PEM public key (verification)</td></tr>
+<tr><td>ECDSA</td><td>ES256, ES384, ES512</td><td>PEM private key (creation) / PEM public key (verification)</td></tr>
+<tr><td>EdDSA</td><td>EdDSA</td><td>PEM private key (creation) / PEM public key (verification)</td></tr>
+</table>
+<p><b>CLAIMS validation:</b> during verification the following are checked automatically:</p>
+<ul>
+<li><code>exp</code> (expiration time) — the token is rejected if the current time is greater than exp</li>
+<li><code>nbf</code> (not before) — the token is rejected if the current time is less than nbf</li>
+</ul>
+<pre><code><span class="cmt">// === HS256 (secret string) ===</span>
+<span class="kw">var</span> token = crypto.jwtCreate(
+    <span class="str"> '{"sub":"user1","name":"Ivan"}'</span>,
+    <span class="str">"my_secret"</span>
+);
+print(token);  <span class="cmt">// "eyJhbGciOiJI..."</span>
+
+<span class="cmt">// Verification</span>
+<span class="kw">var</span> payload = crypto.jwtVerify(token, <span class="str">"my_secret"</span>);
+print(payload);  <span class="cmt">// '{"sub":"user1","name":"Ivan"}'</span>
+
+<span class="cmt">// Wrong key — null</span>
+print(crypto.jwtVerify(token, <span class="str">"wrong_key"</span>).isnull());  <span class="cmt">// true</span>
+
+<span class="cmt">// === Payload as a tuple (auto-serialization) ===</span>
+<span class="kw">var</span> token2 = crypto.jwtCreate(
+    #{"sub": <span class="str">"user1"</span>, "role": <span class="str">"admin"</span>, "iat": <span class="num">1700000000</span>},
+    <span class="str">"secret"</span>
+);
+
+<span class="cmt">// === HS384 / HS512 ===</span>
+<span class="kw">var</span> token = crypto.jwtCreate(<span class="str">"{}"</span>, <span class="str">"key"</span>, <span class="str">"HS512"</span>);
+
+<span class="cmt">// === RS256 (RSA signature) ===</span>
+<span class="kw">var</span> keys = crypto.rsaGenerate();
+<span class="kw">var</span> token = crypto.jwtCreate(
+    <span class="str">'{"sub":"123"}'</span>,
+    keys.private,
+    <span class="str">"RS256"</span>
+);
+<span class="kw">var</span> payload = crypto.jwtVerify(token, keys.public, <span class="str">"RS256"</span>);
+
+<span class="cmt">// === ES256 (ECDSA signature) ===</span>
+<span class="cmt">// EC keys are supplied as ready-made PEM (no EC generation in the plugin):</span>
+<span class="cmt">// openssl ecparam -name prime256v1 -genkey -noout -out ec-private.pem</span>
+<span class="cmt">// openssl ec -in ec-private.pem -pubout -out ec-public.pem</span>
+<span class="kw">var</span> ecPrivateKey = file.readbytes(<span class="str">"ec-private.pem"</span>);
+<span class="kw">var</span> ecPublicKey  = file.readbytes(<span class="str">"ec-public.pem"</span>);
+<span class="kw">var</span> token = crypto.jwtCreate(<span class="str">"{}"</span>, ecPrivateKey, <span class="str">"ES256"</span>);
+<span class="kw">var</span> payload = crypto.jwtVerify(token, ecPublicKey, <span class="str">"ES256"</span>);
+
+<span class="cmt">// === EdDSA (Ed25519) ===</span>
+<span class="kw">var</span> keys = crypto.ed25519Generate();
+<span class="kw">var</span> token = crypto.jwtCreate(<span class="str">'{"data":"test"}'</span>, keys.private, <span class="str">"EdDSA"</span>);
+<span class="kw">var</span> payload = crypto.jwtVerify(token, keys.public, <span class="str">"EdDSA"</span>);
+
+<span class="cmt">// === Additional headers ===</span>
+<span class="kw">var</span> token = crypto.jwtCreate(
+    <span class="str">"{}"</span>, <span class="str">"secret"</span>, <span class="str">"HS256"</span>,
+    #{"kid": <span class="str">"key_001"</span>, "x5c": <span class="str">"cert_data"</span>}
+);
+
+<span class="cmt">// === Automatic exp check ===</span>
+<span class="kw">var</span> now = datetime.timestamp(datetime.now());
+<span class="kw">var</span> token = crypto.jwtCreate(
+    #{"sub": <span class="str">"user1"</span>, "exp": now + <span class="num">3600</span>},
+    <span class="str">"secret"</span>
+);
+print(crypto.jwtVerify(token, <span class="str">"secret"</span>).isnull());  <span class="cmt">// false (not expired yet)</span>
+
+<span class="cmt">// === Decoding without verification ===</span>
+<span class="kw">var</span> parts = crypto.jwtDecode(token);
+print(parts.header);     <span class="cmt">// '{"alg":"HS256","typ":"JWT"}'</span>
+print(parts.payload);    <span class="cmt">// '{"sub":"user1",...}'</span>
+print(parts.signature);  <span class="cmt">// "base64url_signature"</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Example: File Encryption</h2>
+<pre><code><span class="kw">if</span> (!loadPlugin(<span class="str">"plugins/crypto.dll"</span>)) { system.exit(<span class="num">1</span>); }
+
+<span class="kw">var</span> key = <span class="str">"my_secret_key"</span>;
+
+<span class="cmt">// Reading the file</span>
+<span class="kw">var</span> data = file.readbytes(<span class="str">"document.pdf"</span>);
+
+<span class="cmt">// Encryption</span>
+<span class="kw">var</span> encrypted = crypto.aesEncrypt(data, key);
+
+<span class="cmt">// Saving the encrypted data</span>
+file.writebytes(<span class="str">"document.pdf.enc"</span>, encrypted);
+print(<span class="cmt">"Encrypted: "</span> + encrypted.size() + <span class="str">" bytes"</span>);
+
+<span class="cmt">// Decryption</span>
+<span class="kw">var</span> loaded = file.readbytes(<span class="str">"document.pdf.enc"</span>);
+<span class="kw">var</span> decrypted = crypto.aesDecrypt(loaded, key);
+file.writebytes(<span class="str">"document_restored.pdf"</span>, decrypted);
+print(<span class="str">"Decrypted!"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Example: HMAC Authentication</h2>
+<pre><code><span class="kw">var</span> secret = <span class="str">"server_secret_key"</span>;
+
+<span class="cmt">// Client: signing the request</span>
+<span class="kw">var</span> request = <span class="str">"amount=100&to=user2"</span>;
+<span class="kw">var</span> sig = crypto.hmac(secret, request);
+
+<span class="cmt">// Server: verification</span>
+<span class="kw">var</span> ok = crypto.hmacVerify(secret, request, sig);
+<span class="kw">if</span> (ok) {
+    print(<span class="str">"Request is authentic!"</span>);
+} <span class="kw">else</span> {
+    print(<span class="str">"FORGERY!"</span>);
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Example: Secure Password Storage</h2>
+<pre><code><span class="kw">var</span> password = <span class="str">"user_password"</span>;
+
+<span class="cmt">// Generating the salt</span>
+<span class="kw">var</span> salt = crypto.randomBytes(<span class="num">16</span>);
+
+<span class="cmt">// Key derivation</span>
+<span class="kw">var</span> hash = crypto.pbkdf2(password, salt, <span class="num">100000</span>, <span class="num">32</span>);
+
+<span class="cmt">// Saving: salt + hash</span>
+print(<span class="str">"Salt: "</span> + crypto.hexEncode(salt));
+print(<span class="str">"Hash: "</span> + crypto.hexEncode(hash));
+
+<span class="cmt">// Password check</span>
+<span class="kw">var</span> check = crypto.pbkdf2(password, salt, <span class="num">100000</span>, <span class="num">32</span>);
+print(check.toString() == hash.toString());  <span class="cmt">// 1</span></code></pre>
+</div>
+
+<footer><a href="plugins.html">← Back to the plugin list</a></footer>
+</div>
+</body>
+</html>

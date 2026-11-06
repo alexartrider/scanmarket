@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Язык Script — Синтаксис</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header>
+<h1>Синтаксис языка Script</h1>
+<p>Полный справочник синтаксиса скриптового языка</p>
+<div class="lang-switch"><a class="active" href="language.html">RU</a><a href="en/language.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Главная</a> / Язык</p>
+
+<div class="doc-section">
+<h2>Ключевые слова</h2>
+<table>
+<tr><th>Английское</th><th>Русское</th><th>Назначение</th></tr>
+<tr><td><code>if</code></td><td><code>если</code></td><td>Условный оператор</td></tr>
+<tr><td><code>else</code></td><td><code>иначе</code></td><td>Ветка else</td></tr>
+<tr><td><code>for</code></td><td><code>для</code></td><td>Цикл for / for-each</td></tr>
+<tr><td><code>while</code></td><td><code>пока</code></td><td>Цикл while</td></tr>
+<tr><td><code>do</code></td><td><code>цикл</code></td><td>Цикл do-while</td></tr>
+<tr><td><code>return</code></td><td><code>возврат</code></td><td>Возврат из функции</td></tr>
+<tr><td><code>switch</code></td><td><code>выборпо</code></td><td>Оператор switch</td></tr>
+<tr><td><code>case</code></td><td><code>выбор</code></td><td>Ветка case</td></tr>
+<tr><td><code>default</code></td><td><code>умолчание</code></td><td>Ветка default</td></tr>
+<tr><td><code>break</code></td><td><code>прервать</code></td><td>Выход из цикла</td></tr>
+<tr><td><code>continue</code></td><td><code>продолжить</code></td><td>Следующая итерация</td></tr>
+<tr><td><code>goto</code></td><td><code>перейти</code></td><td>Безусловный переход</td></tr>
+<tr><td><code>function</code></td><td><code>функция</code></td><td>Объявление функции</td></tr>
+<tr><td><code>var</code></td><td><code>перем</code></td><td>Объявление переменной</td></tr>
+<tr><td><code>export</code></td><td><code>экспорт</code></td><td>Экспорт из модуля (постфиксный: после function или var)</td></tr>
+<tr><td><code>class</code></td><td><code>класс</code></td><td>Объявление класса</td></tr>
+<tr><td><code>throw</code></td><td><code>исключение</code></td><td>Бросок исключения</td></tr>
+<tr><td><code>try</code></td><td><code>попытка</code></td><td>Блок try</td></tr>
+<tr><td><code>catch</code></td><td><code>перехват</code></td><td>Блок catch</td></tr>
+<tr><td><code>finally</code></td><td><code>вконце</code></td><td>Блок finally</td></tr>
+<tr><td><code>uses</code> / <code>import</code></td><td><code>использовать</code> / <code>импорт</code></td><td>Подключение модуля</td></tr>
+<tr><td><code>as</code></td><td><code>как</code></td><td>Псевдоним при импорте</td></tr>
+<tr><td><code>or</code> / <code>||</code></td><td><code>или</code></td><td>Логическое ИЛИ</td></tr>
+<tr><td><code>and</code> / <code>&amp;&amp;</code></td><td><code>и</code></td><td>Логическое И</td></tr>
+<tr><td><code>not</code></td><td><code>не</code></td><td>Логическое НЕ</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Типы данных</h2>
+<h3>Скалярные типы</h3>
+<table>
+<tr><th>Тип</th><th>Пример</th><th>Описание</th></tr>
+<tr><td>Целое</td><td><code>42</code>, <code>0xFF</code>, <code>0b1010</code>, <code>0o755</code></td><td>int64,supports hex/bin/oct</td></tr>
+<tr><td>Вещественное</td><td><code>3.14</code>, <code>1e10</code>, <code>.5</code></td><td>double</td></tr>
+<tr><td>Строка</td><td><code>"Hello"</code>, <code>"val=\(x)"</code></td><td>UTF-16, интерполяция</td></tr>
+<tr><td>Дата/время</td><td><code>'2024-01-15'</code>, <code>'14.30.00'</code></td><td>В одинарных кавычках</td></tr>
+<tr><td>Логическое</td><td><code>true</code>, <code>false</code></td><td>Булев тип</td></tr>
+<tr><td>Пустое</td><td><code>null</code></td><td>Пустое значение (nil)</td></tr>
+</table>
+
+<h3>Коллекции</h3>
+<table>
+<tr><th>Тип</th><th>Синтаксис</th><th>Описание</th></tr>
+<tr><td>Массив</td><td><code>#[1, 2, 3]</code></td><td>Индексируемый список</td></tr>
+<tr><td>Кортеж</td><td><code>#tuple{}</code> или <code>#{"a": 1, "b": 2}</code></td><td>Неизменяемый ассоциативный массив</td></tr>
+<tr><td>Множество</td><td><code>#set{}</code> или <code>#{1, 2, 3}</code></td><td>Уникальные элементы</td></tr>
+<tr><td>Очередь</td><td><code>#queue{1, 2}</code></td><td>Очередь FIFO</td></tr>
+<tr><td>Стек</td><td><code>#stack{1, 2}</code></td><td>Стек LIFO</td></tr>
+<tr><td>Приоритетная очередь</td><td><code>#priorityqueue{}</code></td><td>С приоритетами</td></tr>
+<tr><td>Словарь</td><td><code>#dictionary{}</code></td><td>Ассоциативный массив</td></tr>
+</table>
+<p><strong>Автоопределение типа</strong> для <code>#{...}</code>: если элементы — пары <code>"key": value</code>, это кортеж; если простые значения — множество. <strong>Пустой литерал <code>#{}</code> — это пустое МНОЖЕСТВО</strong>; для пустого кортежа используйте <code>#tuple{}</code>.</p>
+
+<h3>Коллекции: семантика (важно для библиотек)</h3>
+<ul>
+<li><strong>Передача по значению (COW):</strong> кортежи и массивы передаются в функции по значению. Изменения параметра-контейнера внутри функции (…<code>push()</code>, присваивание полю) <strong>не видны вызывающему</strong> — возвращайте новое значение из функции.</li>
+<li><strong>Встроенные методы кортежа перекрывают поля:</strong> имена <code>size, empty, clone, type, tostring, has, get, set, remove, contains, keys, values, …</code> — это методы; поле кортежа с таким именем в вызове <code>t.name()</code> недоступно. Не называйте полями объектов имена встроенных методов.</li>
+<li><code>json.setPath / removePath</code> возвращают <strong>новый</strong> корень (исходный не меняется).</li>
+</ul>
+
+<h3>Идентификаторы</h3>
+<p>Поддерживаются: латиница (<code>a-zA-Z</code>), кириллица (<code>А-Яа-яЁё</code>), цифры, подчёркивание. Не может начинаться с цифры.</p>
+</div>
+
+<div class="doc-section">
+<h2>Операторы</h2>
+<h3>Приоритет (от низшего к высшему)</h3>
+<table>
+<tr><th>Приоритет</th><th>Оператор</th><th>Описание</th></tr>
+<tr><td>1</td><td><code>,</code></td><td>Запятая</td></tr>
+<tr><td>2</td><td><code>||</code> / <code>or</code> / <code>или</code></td><td>Логическое ИЛИ</td></tr>
+
+<tr><td>2</td><td><code>&amp;&amp;</code> / <code>and</code> / <code>и</code></td><td>Логическое И</td></tr>
+<tr><td>3</td><td><code>=</code> <code>+=</code> <code>-=</code> <code>*=</code> <code>/=</code> <code>%=</code></td><td>Присваивание</td></tr>
+<tr><td>3</td><td><code>&amp;=</code> <code>|=</code> <code>^=</code> <code>&lt;&lt;=</code> <code>&gt;&gt;=</code></td><td>Побитовое присваивание</td></tr>
+<tr><td>4</td><td><code>?</code> <code>:</code></td><td>Тернарный оператор</td></tr>
+<tr><td>5</td><td><code>|</code> <code>^</code> <code>&amp;</code></td><td>Побитовые: ИЛИ, XOR, И</td></tr>
+<tr><td>6</td><td><code>&lt;</code> <code>&gt;</code> <code>&lt;=</code> <code>&gt;=</code> <code>==</code> <code>!=</code></td><td>Сравнение</td></tr>
+<tr><td>7</td><td><code>&lt;&lt;</code> <code>&gt;&gt;</code></td><td>Побитовые сдвиги</td></tr>
+<tr><td>8</td><td><code>+</code> <code>-</code></td><td>Сложение / Вычитание</td></tr>
+<tr><td>9</td><td><code>*</code> <code>/</code> <code>%</code></td><td>Умножение / Деление / Остаток</td></tr>
+<tr><td>10</td><td><code>**</code></td><td>Возведение в степень (правоассоциативный: <code>2**3**2</code> = <code>2**(3**2)</code> = 512)</td></tr>
+<tr><td>10</td><td><code>!</code> <code>not</code> <code>~</code> <code>++</code> <code>--</code></td><td>Унарные: НЕ, инверсия, инкремент/декремент</td></tr>
+<tr><td>11</td><td><code>.</code> <code>[]</code> <code>::</code></td><td>Доступ: свойство, индекс, скоуп</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Строки</h2>
+<h3>Литералы</h3>
+<pre><code><span class="str">"Простая строка"</span>
+<span class="str">"Интерполяция: \(x + 1)"</span>
+<span class="str">"Склейка: "   "две строки"</span>    <span class="cmt">// результат: "Склейка: две строки"</span>
+<span class="str">"Многострочная\
+строка"</span></code></pre>
+<p>Продолжение строки через <code>\</code> в конце строки или склейка соседних литералов.</p>
+
+<h3>Escape-последовательности</h3>
+<table>
+<tr><th>Последовательность</th><th>Значение</th></tr>
+<tr><td><code>\n</code></td><td>Перевод строки</td></tr>
+<tr><td><code>\t</code></td><td>Табуляция</td></tr>
+<tr><td><code>\\</code></td><td>Обратный слеш</td></tr>
+<tr><td><code>\"</code></td><td>Двойная кавычка</td></tr>
+<tr><td><code>\xNN</code></td><td>Hex-код символа (1-2 цифры)</td></tr>
+<tr><td><code>\uNNNN</code></td><td>Unicode (4 hex-цифры)</td></tr>
+<tr><td><code>\UNNNNNNNN</code></td><td>Unicode (8 hex-цифр)</td></tr>
+<tr><td><code>\0NN</code></td><td>Восьмеричный код (1-3 цифры)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Переменные</h2>
+<pre><code><span class="kw">var</span> x = <span class="num">10</span>;          <span class="cmt">// изменяемая</span>
+<span class="kw">var</span> name = <span class="str">"Hello"</span>;  <span class="cmt">// строка</span>
+<span class="kw">var</span> arr[<span class="num">10</span>];          <span class="cmt">// массив размером 10</span>
+<span class="kw">var</span> a = <span class="num">1</span>, b = <span class="num">2</span>;  <span class="cmt">// несколько объявлений</span>
+<span class="kw">var</span> x = <span class="num">0</span> <span class="kw">export</span>;    <span class="cmt">// экспортируемая переменная</span>
+<span class="kw">var</span> y <span class="kw">export</span>;        <span class="cmt">// экспортируемая без инициализации</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Функции</h2>
+<pre><code><span class="cmt">// Именованная функция</span>
+<span class="kw">function</span> <span class="fn">add</span>(a, b) {
+    <span class="kw">return</span> a + b;
+}
+
+<span class="cmt">// Экспортируемая функция</span>
+<span class="kw">function</span> <span class="fn">helper</span>() <span class="kw">export</span> { ... }
+
+<span class="cmt">// Лямбда</span>
+<span class="kw">var</span> square = <span class="kw">function</span>(x) { <span class="kw">return</span> x * x; };
+
+<span class="cmt">// Параметры по умолчанию — любое выражение</span>
+<span class="kw">function</span> <span class="fn">greet</span>(name = <span class="str">"мир"</span>) {
+    print(<span class="str">"Привет, \(name)!"</span>);
+}
+
+<span class="cmt">// Вызов функции как дефолт</span>
+<span class="kw">function</span> <span class="fn">getData</span>(path = file.getcwd()) { ... }
+
+<span class="cmt">// Выражение</span>
+<span class="kw">function</span> <span class="fn">calc</span>(x = y + <span class="num">1</span>) { ... }
+
+<span class="cmt">// Переменная</span>
+<span class="kw">var</span> defaultColor = <span class="str">"red"</span>;
+<span class="kw">function</span> <span class="fn">paint</span>(color = defaultColor) { ... }
+
+<span class="cmt">// Лямбда</span>
+<span class="kw">function</span> <span class="fn">apply</span>(fn = <span class="kw">function</span>(x) { <span class="kw">return</span> x * <span class="num">2</span>; }) {
+    <span class="kw">return</span> fn(<span class="num">10</span>);
+}
+
+<span class="cmt">// Коллекция</span>
+<span class="kw">function</span> <span class="fn">process</span>(items = #[<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>]) { ... }</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Экспорт</h2>
+<p>Ключевое слово <code>export</code> ставится <strong>после</strong> объявления (не перед ним).</p>
+<pre><code><span class="kw">function</span> <span class="fn">helper</span>() <span class="kw">export</span> { ... }     <span class="cmt">// функция видна извне модуля</span>
+<span class="kw">var</span> x = <span class="num">0</span> <span class="kw">export</span>;                    <span class="cmt">// переменная видна извне модуля</span>
+<span class="kw">var</span> y <span class="kw">export</span>;                        <span class="cmt">// экспортируемая без инициализации</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Управляющие конструкции</h2>
+<h3>if / else</h3>
+<pre><code><span class="kw">if</span> (x > <span class="num">0</span>) {
+    print(<span class="str">"Положительное"</span>);
+} <span class="kw">else if</span> (x == <span class="num">0</span>) {
+    print(<span class="str">"Ноль"</span>);
+} <span class="kw">else</span> {
+    print(<span class="str">"Отрицательное"</span>);
+}</code></pre>
+
+<h3>for / for-each</h3>
+<pre><code><span class="cmt">// Классический for</span>
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i &lt; <span class="num">10</span>; i++) {
+    print(i);
+}
+
+<span class="cmt">// For-each по коллекции</span>
+<span class="kw">for</span> (<span class="kw">var</span> item : arr) {
+    print(item);
+}
+
+<span class="cmt">// Деструктуризация</span>
+<span class="kw">for</span> (<span class="kw">var</span> [key, value] : dict) {
+    print(<span class="str">"\(key) = \(value)"</span>);
+}</code></pre>
+
+<h3>while / do-while</h3>
+<pre><code><span class="kw">while</span> (condition) { ... }
+<span class="kw">do</span> { ... } <span class="kw">while</span> (condition);</code></pre>
+
+<h3>switch</h3>
+<pre><code><span class="kw">switch</span> (x) {
+    <span class="kw">case</span> <span class="num">1</span>: print(<span class="str">"один"</span>);
+    <span class="kw">case</span> <span class="num">2</span>: print(<span class="str">"два"</span>);
+    <span class="kw">default</span>: print(<span class="str">"другое"</span>);  <span class="cmt">// или else:</span>
+}</code></pre>
+
+<h3>try-catch-finally</h3>
+<pre><code><span class="kw">try</span> {
+    riskyOperation();
+} <span class="kw">catch</span> (e) {
+    print(<span class="str">"Ошибка: \(e)"</span>);
+} <span class="kw">finally</span> {
+    cleanup();
+}
+
+<span class="cmt">// Несколько catch-блоков</span>
+<span class="kw">try</span> { ... }
+<span class="kw">catch</span> (TypeError) { ... }
+<span class="kw">catch</span> (Error) { ... }</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Классы</h2>
+<pre><code><span class="kw">class</span> Person {
+    <span class="kw">var</span> name;
+    <span class="kw">var</span> age;
+
+    <span class="cmt">// Конструктор</span>
+    Person(name, age) {
+        <span class="kw">this</span>.name = name;
+        <span class="kw">this</span>.age = age;
+    }
+
+    <span class="cmt">// Метод</span>
+    <span class="kw">function</span> <span class="fn">greet</span>() {
+        <span class="kw">return</span> <span class="str">"Я \(</span><span class="kw">this</span>.name<span class="str">), \(</span><span class="kw">this</span>.age<span class="str">) лет"</span>;
+    }
+
+    <span class="cmt">// Деструктор</span>
+    ~Person() { }
+}
+
+<span class="cmt">// Наследование</span>
+<span class="kw">class</span> Student : Person {
+    <span class="kw">var</span> university;
+
+    Student(name, age, university) {
+        <span class="kw">this</span>::Person(name, age);  <span class="cmt">// вызов конструктора базового</span>
+        <span class="kw">this</span>.university = university;
+    }
+}
+
+<span class="kw">var</span> s = Student(<span class="str">"Иван"</span>, <span class="num">20</span>, <span class="str">"МГУ"</span>);
+print(s.greet());          <span class="cmt">// Я Иван, 20 лет</span>
+print(s.university);       <span class="cmt">// МГУ</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Модули</h2>
+<pre><code><span class="cmt">// Подключение модуля</span>
+<span class="kw">uses</span> file;
+<span class="kw">uses</span> math;
+
+<span class="cmt">// С псевдонимом</span>
+<span class="kw">import</span> math <span class="kw">as</span> m;
+
+<span class="cmt">// Вызов функции модуля</span>
+file.write(<span class="str">"test.txt"</span>, <span class="str">"Hello"</span>);
+print(math.pi);
+
+<span class="cmt">// Вызов функции модуля</span>
+math.sqrt(<span class="num">16</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Макросы времени компиляции</h2>
+<table>
+<tr><th>Макрос</th><th>Описание</th></tr>
+<tr><td><code>__FILENAME__</code></td><td>Имя текущего файла</td></tr>
+<tr><td><code>__LINE__</code></td><td>Номер текущей строки</td></tr>
+<tr><td><code>__DATE__</code></td><td>Текущая дата</td></tr>
+<tr><td><code>__TIME__</code></td><td>Текущее время</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Комментарии</h2>
+<pre><code><span class="cmt">// Однострочный комментарий</span>
+
+<span class="cmt">/*
+   Многострочный
+   комментарий
+*/</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Примеры из sample/</h2>
+
+<h3>Классы и наследование</h3>
+<pre><code><span class="kw">class</span> Animal {
+    Animal(name, sound) {
+        <span class="kw">this</span>.name = name;
+        <span class="kw">this</span>.sound = sound;
+    }
+    <span class="kw">function</span> <span class="fn">speak</span>() {
+        <span class="kw">return</span> <span class="str">"\(</span><span class="kw">this</span>.name<span class="str">) говорит \(</span><span class="kw">this</span>.sound<span class="str">)!"</span>;
+    }
+}
+
+<span class="kw">class</span> Dog : Animal {
+    Dog(name) : Animal(name, <span class="str">"Гав"</span>) {   <span class="cmt">// вызов базового конструктора</span>
+        <span class="kw">this</span>.tricks = <span class="num">0</span>;
+    }
+    <span class="kw">function</span> <span class="fn">fetch</span>() {
+        <span class="kw">this</span>.tricks = <span class="kw">this</span>.tricks + <span class="num">1</span>;
+        <span class="kw">return</span> <span class="str">"\(</span><span class="kw">this</span>.name<span class="str">) приносит палку! (трюк #\(</span><span class="kw">this</span>.tricks<span class="str">))"</span>;
+    }
+}
+
+<span class="kw">var</span> rex = Dog(<span class="str">"Рекс"</span>);
+print(rex.speak());       <span class="cmt">// Рекс говорит Гав!</span>
+print(rex.fetch());       <span class="cmt">// Рекс приносит палку! (трюк #1)</span></code></pre>
+
+<h3>Коллекции — методы</h3>
+
+<h4>Array — базовые</h4>
+<pre><code><span class="kw">var</span> arr = #[<span class="num">3</span>, <span class="num">1</span>, <span class="num">4</span>, <span class="num">1</span>, <span class="num">5</span>];
+arr.size();                   <span class="cmt">// 5 — количество элементов</span>
+arr.empty();                  <span class="cmt">// false</span>
+arr.sort();                   <span class="cmt">// сортировка (мутирует)</span>
+arr.reverse();                <span class="cmt">// реверс (мутирует)</span>
+arr.clear();                  <span class="cmt">// очистка массива</span>
+arr.reserve(<span class="num">100</span>);             <span class="cmt">// резерв памяти</span>
+arr.add(<span class="num">6</span>);                   <span class="cmt">// добавление элемента</span>
+arr.push(<span class="num">7</span>, <span class="num">8</span>);               <span class="cmt">// добавление нескольких</span>
+arr.pop();                    <span class="cmt">// удаление и возврат последнего</span>
+arr.insert(<span class="num">0</span>, <span class="num">99</span>);            <span class="cmt">// вставка по индексу</span>
+arr.removeAt(<span class="num">0</span>);              <span class="cmt">// удаление по индексу</span>
+arr.remove(<span class="num">4</span>);                <span class="cmt">// удаление всех вхождений</span>
+arr.removeAll(<span class="num">1</span>);             <span class="cmt">// удаление всех вхождений</span>
+arr.swap(<span class="num">0</span>, <span class="num">2</span>);               <span class="cmt">// обмен элементов</span>
+arr.clone();                  <span class="cmt">// глубокая копия</span></code></pre>
+
+<h4>Array — поиск и проверки</h4>
+<pre><code>arr.contains(<span class="num">4</span>);               <span class="cmt">// true — содержит ли элемент</span>
+arr.indexOf(<span class="num">4</span>);                <span class="cmt">// индекс первого вхождения, -1 если нет</span>
+arr.lastIndexOf(<span class="num">1</span>);            <span class="cmt">// индекс последнего вхождения</span>
+arr.count(<span class="num">1</span>);                  <span class="cmt">// количество вхождений</span>
+arr.min();                     <span class="cmt">// минимальный элемент</span>
+arr.max();                     <span class="cmt">// максимальный элемент</span>
+arr.sum();                     <span class="cmt">// сумма элементов</span>
+arr.average();                 <span class="cmt">// среднее значение</span></code></pre>
+
+<h4>Array — срезы</h4>
+<pre><code>arr.sliced(<span class="num">0</span>, <span class="num">3</span>);              <span class="cmt">// новый массив [0..3)</span>
+arr.mid(<span class="num">1</span>);                    <span class="cmt">// срез с позиции до конца</span>
+arr.mid(<span class="num">1</span>, <span class="num">3</span>);                 <span class="cmt">// срез [pos, pos+count)</span>
+arr.first();                    <span class="cmt">// первый элемент</span>
+arr.last();                     <span class="cmt">// последний элемент</span></code></pre>
+
+<h4>Array — сортировка</h4>
+<pre><code>arr.sort();                    <span class="cmt">// по умолчанию</span>
+arr.sort(function(a, b) { <span class="kw">return</span> a - b; });  <span class="cmt">// кастомная сортировка</span>
+arr.reversed();                <span class="cmt">// новый отсортированный массив (не мутирует)</span></code></pre>
+
+<h4>Array — функциональные</h4>
+<pre><code><span class="kw">var</span> doubled = map(arr, <span class="kw">function</span>(x) { <span class="kw">return</span> x * <span class="num">2</span>; });
+<span class="kw">var</span> evens = filter(arr, <span class="kw">function</span>(x) { <span class="kw">return</span> x % <span class="num">2</span> == <span class="num">0</span>; });
+<span class="kw">var</span> total = reduce(arr, <span class="kw">function</span>(acc, x) { <span class="kw">return</span> acc + x; }, <span class="num">0</span>);
+arr.forEach(<span class="kw">function</span>(x) { print(x); });   <span class="cmt">// для каждого</span>
+<span class="kw">var</span> result = arr.map(<span class="kw">function</span>(x) { <span class="kw">return</span> x * <span class="num">2</span>; });
+<span class="kw">var</span> filtered = arr.filter(<span class="kw">function</span>(x) { <span class="kw">return</span> x > <span class="num">2</span>; });
+arr.some(<span class="kw">function</span>(x) { <span class="kw">return</span> x > <span class="num">3</span>; });    <span class="cmt">// есть ли хотя бы один</span>
+arr.every(<span class="kw">function</span>(x) { <span class="kw">return</span> x > <span class="num">0</span>; });  <span class="cmt">// все ли подходят</span></code></pre>
+
+<h4>Array — группировка</h4>
+<pre><code><span class="kw">var</span> words = #[<span class="str">"apple"</span>, <span class="str">"banana"</span>, <span class="str">"avocado"</span>, <span class="str">"blueberry"</span>];
+<span class="kw">var</span> groups = words.grouped(<span class="kw">function</span>(w) { <span class="kw">return</span> w.first(); });
+<span class="cmt">// #{"a": #["apple","avocado"], "b": #["banana","blueberry"]}</span>
+
+<span class="kw">var</span> nums = #[<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>, <span class="num">6</span>];
+<span class="kw">var</span> groups2 = nums.grouped(<span class="kw">function</span>(n) { <span class="kw">return</span> n % <span class="num">2</span> == <span class="num">0</span> ? <span class="str">"чёт"</span> : <span class="str">"нечёт"</span>; });
+<span class="cmt">// #{"нечёт": #[1,3,5], "чёт": #[2,4,6]}</span></code></pre>
+
+<h4>Array — склейка</h4>
+<pre><code>arr.joined(<span class="str">", "</span>);              <span class="cmt">// "3, 1, 4, 1, 5"</span>
+arr.toString();                <span class="cmt">// "[3, 1, 4, 1, 5]"</span></code></pre>
+
+<h4>Array — статические</h4>
+<pre><code>array.resize(arr, <span class="num">10</span>);         <span class="cmt">// изменить размер</span>
+array.swap(arr, <span class="num">0</span>, <span class="num">2</span>);         <span class="cmt">// обмен по индексам</span></code></pre>
+
+<span class="cmt">// Tuple (ассоциативный массив)</span>
+<span class="kw">var</span> t = #{<span class="str">"name"</span>: <span class="str">"Иван"</span>, <span class="str">"age"</span>: <span class="num">30</span>};
+t.keys(); t.values(); t.get(<span class="str">"name"</span>); t.has(<span class="str">"age"</span>);
+t.set(<span class="str">"email"</span>, <span class="str">"test@mail.ru"</span>);
+
+<span class="cmt">// Set (множество)</span>
+<span class="kw">var</span> s1 = #set{<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>};
+s1.add(<span class="num">4</span>); s1.remove(<span class="num">1</span>); s1.has(<span class="num">3</span>);
+s1.isSubsetOf(#set{<span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>,<span class="num">4</span>});
+
+<span class="cmt">// Stack / Queue</span>
+<span class="kw">var</span> stk = #stack{};  stk.push(<span class="num">10</span>); stk.pop(); stk.peek();
+<span class="kw">var</span> que = #queue{};  que.push(<span class="num">10</span>); que.pop(); que.front();
+
+<span class="cmt">// Dictionary</span>
+<span class="kw">var</span> dic = #dictionary{};
+dic.set(<span class="str">"name"</span>, <span class="str">"Иван"</span>);  dic.get(<span class="str">"name"</span>);  dic.has(<span class="str">"name"</span>);  dic.remove(<span class="str">"name"</span>);
+dic.keys();  dic.values();  dic.size();</code></pre>
+
+<h3>Строковые методы</h3>
+
+<h4>Поиск</h4>
+<pre><code><span class="str">"Hello World"</span>.contains(<span class="str">"World"</span>)       <span class="cmt">// true</span>
+<span class="str">"Hello World"</span>.pos(<span class="str">"World"</span>)            <span class="cmt">// 6 — индекс подстроки, -1 если нет</span>
+<span class="str">"Hello World"</span>.rfind(<span class="str">"l"</span>)              <span class="cmt">// 9 — поиск с конца</span>
+<span class="str">"Hello World"</span>.rfind(<span class="str">"l"</span>, <span class="num">8</span>)            <span class="cmt">// 3 — rfind с позиции</span>
+<span class="str">"hello"</span>.find_first_of(<span class="str">"aeiou"</span>)         <span class="cmt">// 1 — первый символ из набора</span>
+<span class="str">"hello"</span>.find_last_of(<span class="str">"aeiou"</span>)          <span class="cmt">// 4 — последний символ из набора</span>
+<span class="str">"hello"</span>.find_first_not_of(<span class="str">"h"</span>)        <span class="cmt">// 1 — первый символ не из набора</span>
+<span class="str">"hello"</span>.find_last_not_of(<span class="str">"o"</span>)         <span class="cmt">// 3 — последний символ не из набора</span></code></pre>
+
+<h4>Проверки</h4>
+<pre><code><span class="str">"Hello World"</span>.startswith(<span class="str">"Hello"</span>)     <span class="cmt">// true</span>
+<span class="str">"Hello World"</span>.endswith(<span class="str">"World"</span>)       <span class="cmt">// true</span>
+<span class="str">"hello"</span>.comparenocase(<span class="str">"HELLO"</span>)         <span class="cmt">// 0 — регистронезависимое сравнение</span>
+<span class="str">"hello"</span>.comparenocase(<span class="str">"world"</span>)         <span class="cmt">// -1</span></code></pre>
+
+<h4>Регистр</h4>
+<pre><code><span class="str">"Hello World"</span>.upper()                 <span class="cmt">// "HELLO WORLD"</span>
+<span class="str">"Hello World"</span>.lower()                 <span class="cmt">// "hello world"</span>
+<span class="str">"Hello World"</span>.swapcase()              <span class="cmt">// "hELLO wORLD"</span></code></pre>
+
+<h4>Форматирование</h4>
+<pre><code><span class="str">"hi"</span>.center(<span class="num">10</span>)                      <span class="cmt">// "    hi    "</span>
+<span class="str">"hi"</span>.center(<span class="num">10</span>, <span class="str">"*"</span>)                  <span class="cmt">// "****hi****"</span>
+<span class="str">"hi"</span>.ljust(<span class="num">10</span>)                       <span class="cmt">// "hi        "</span>
+<span class="str">"hi"</span>.ljust(<span class="num">10</span>, <span class="str">"*"</span>)                   <span class="cmt">// "hi********"</span>
+<span class="str">"hi"</span>.rjust(<span class="num">10</span>)                       <span class="cmt">// "        hi"</span>
+<span class="str">"hi"</span>.rjust(<span class="num">10</span>, <span class="str">"*"</span>)                   <span class="cmt">// "********hi"</span>
+<span class="str">"42"</span>.zfill(<span class="num">6</span>)                         <span class="cmt">// "000042"</span>
+<span class="str">"hi"</span>.pad(<span class="num">10</span>, <span class="str">"-"</span>)                     <span class="cmt">// "hi--------"</span></code></pre>
+
+<h4>Извлечение подстрок</h4>
+<pre><code><span class="str">"hello"</span>.sub(<span class="num">0</span>, <span class="num">3</span>)                    <span class="cmt">// "hel" — подстрока [pos, pos+count)</span>
+<span class="str">"hello"</span>.left(<span class="num">3</span>)                      <span class="cmt">// "hel"</span>
+<span class="str">"hello"</span>.right(<span class="num">3</span>)                     <span class="cmt">// "llo"</span>
+<span class="str">"hello"</span>.mid(<span class="num">1</span>)                       <span class="cmt">// "ello" — с позиции до конца</span>
+<span class="str">"hello"</span>.first(<span class="num">3</span>)                     <span class="cmt">// "hel" — первые N символов</span>
+<span class="str">"hello"</span>.first()                      <span class="cmt">// "h" — первый символ</span>
+<span class="str">"hello"</span>.last(<span class="num">3</span>)                      <span class="cmt">// "llo" — последние N символов</span>
+<span class="str">"hello"</span>.last()                       <span class="cmt">// "o" — последний символ</span>
+<span class="str">"hello world"</span>.chopped(<span class="num">3</span>)             <span class="cmt">// "hello wor" — без последних N символов</span>
+<span class="str">"hello world"</span>.chopped(<span class="num">1</span>)             <span class="cmt">// "hello worl"</span></code></pre>
+
+<h4>Обрезка и нормализация</h4>
+<pre><code><span class="str">"  Hello  "</span>.trim()                   <span class="cmt">// "Hello"</span>
+<span class="str">"  Hello  "</span>.trimleft()               <span class="cmt">// "Hello  "</span>
+<span class="str">"  Hello  "</span>.trimright()              <span class="cmt">// "  Hello"</span>
+<span class="str">"  hello   world  "</span>.simplified()     <span class="cmt">// "hello world" — нормализация пробелов</span>
+<span class="str">'"hello"'</span>.stripquotes()               <span class="cmt">// "hello" — убирает внешние кавычки</span>
+<span class="str">"hello"</span>.quoted()                     <span class="cmt">// "&amp;quot;hello&amp;quot;" — оборачивает в кавычки</span>
+<span class="str">"dir/sub/"</span>.trimtrailingslashes()     <span class="cmt">// "dir/sub" — убирает завершающие /</span></code></pre>
+
+<h4>Разделение и склейка</h4>
+<pre><code><span class="str">"a,b,c"</span>.split(<span class="str">","</span>)                    <span class="cmt">// #["a", "b", "c"]</span>
+#[<span class="str">"a"</span>,<span class="str">"b"</span>,<span class="str">"c"</span>].join(<span class="str">"-"</span>)              <span class="cmt">// "a-b-c"</span>
+#[<span class="str">"a"</span>,<span class="str">"b"</span>,<span class="str">"c"</span>].joined(<span class="str">"-"</span>)            <span class="cmt">// "a-b-c"</span></code></pre>
+
+<h4>Регулярные выражения</h4>
+<p>Шаблоны используют ECMAScript <code>std::regex</code>. Строки сопоставляются как UTF-8 байты, не как Unicode-символы; <code>\w</code>, точка и границы символов не учитывают Unicode. Строковые regex-методы могут выбросить исключение для некорректного шаблона.</p>
+<pre><code><span class="str">"12345"</span>.regexmatch(<span class="str">"\\d+"</span>)            <span class="cmt">// true — вся строка совпадает</span>
+<span class="str">"hello 123"</span>.regexsearch(<span class="str">"\\d+"</span>)       <span class="cmt">// true — частичное совпадение</span>
+<span class="str">"hello 123 world"</span>.regexreplace(<span class="str">"\\d+"</span>, <span class="str">"NUM"</span>)  <span class="cmt">// "hello NUM world"</span>
+<span class="str">"a,b,,c"</span>.regexsplit(<span class="str">","</span>).size()       <span class="cmt">// 4</span>
+<span class="str">"a1 b2 c3"</span>.regexfindall(<span class="str">"\\d"</span>)       <span class="cmt">// #["1","2","3"]</span></code></pre>
+
+<h4>Unicode</h4>
+<p>Индексы и позиции методов поиска строк считаются в кодовых единицах UTF-16; code point вне BMP занимает две позиции.</p>
+<pre><code><span class="str">"hello"</span>.codepointcount()             <span class="cmt">// 5 — количество codepoints</span>
+<span class="str">"ABC"</span>.codepointat(<span class="num">0</span>)                  <span class="cmt">// 65 — Unicode код символа</span>
+<span class="str">"hello"</span>.isvalidutf16()               <span class="cmt">// true</span>
+<span class="str">"ABC"</span>.tocodepoints()                  <span class="cmt">// #[65, 66, 67]</span></code></pre>
+
+<h4>Утилиты</h4>
+<pre><code><span class="str">"abc 123 def 456"</span>.extractnumbers()   <span class="cmt">// #[123, 456]</span>
+<span class="str">"Hello World"</span>.len()                   <span class="cmt">// 11</span>
+<span class="str">"Hello"</span>.repeat(<span class="num">3</span>)                     <span class="cmt">// "HelloHelloHello"</span>
+<span class="str">"hello"</span>.replace(<span class="str">"l"</span>, <span class="str">"r"</span>)              <span class="cmt">// "herro"</span>
+<span class="str">"a,b,c"</span>.toArray()                    <span class="cmt">// #["a","b","c"]</span>
+<span class="str">"a,b,c"</span>.tobytes()                    <span class="cmt">// ByteArray</span>
+<span class="kw">var</span> n = <span class="str">"123"</span>.tonumber()              <span class="cmt">// 123</span></code></pre>
+
+<h4>Цепочки методов</h4>
+<pre><code><span class="str">"  Hello World  "</span>.trim().upper()                          <span class="cmt">// "HELLO WORLD"</span>
+<span class="str">"a,b,c"</span>.split(<span class="str">","</span>).reverse().joined(<span class="str">"-"</span>)                  <span class="cmt">// "c-b-a"</span>
+<span class="str">"hello world"</span>.simplified().upper()                        <span class="cmt">// "HELLO WORLD"</span></code></pre>
+
+<h3>Глобальные функции</h3>
+<pre><code>type(<span class="num">42</span>);           <span class="cmt">// 0=null, 1=int, 3=string, 4=object, 5=array</span>
+typeName(<span class="num">42</span>);       <span class="cmt">// "int"</span>
+size(#[<span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>]);     <span class="cmt">// 3</span>
+empty(<span class="str">""</span>);          <span class="cmt">// true</span>
+coalesce(<span class="kw">null</span>, <span class="num">42</span>); <span class="cmt">// 42</span>
+min(<span class="num">3</span>, <span class="num">7</span>);          <span class="cmt">// 3</span>
+max(<span class="num">3</span>, <span class="num">7</span>);          <span class="cmt">// 7</span>
+format(<span class="str">"Hello %s!"</span>, <span class="str">"World"</span>);  <span class="cmt">// "Hello World!"</span>
+eval(<span class="str">"print('dynamic')"</span>);      <span class="cmt">// динамический код</span>
+tojson(#[<span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>]);             <span class="cmt">// JSON строка</span>
+fromjson(<span class="str">"[1,2,3]"</span>);          <span class="cmt">// парсинг JSON</span></code></pre>
+</div>
+
+<footer><a href="index.html">← На главную</a></footer>
+</div>
+</body>
+</html>

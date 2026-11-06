@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Модуль Log — Script</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Модуль Log</h1><p>Логирование и вывод — доступен глобально</p><div class="lang-switch"><a class="active" href="log.html">RU</a><a href="en/log.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Главная</a> / Log</p>
+
+<div class="doc-section">
+<h2>Свойства</h2>
+<table>
+<tr><th>Свойство</th><th>Тип</th><th>Описание</th></tr>
+<tr><td><code>Log.IsWindowsTerminal</code></td><td>bool</td><td>Запущен ли в Windows Terminal</td></tr>
+<tr><td><code>Log.console</code></td><td>bool</td><td>Видимость окна консоли (чтение/запись). Показ/скрытие окна, не объект настроек</td></tr>
+<tr><td><code>Log.filePrefix</code></td><td>string</td><td>Префикс имени лог-файла</td></tr>
+<tr><td><code>Log.remoteFilePath</code></td><td>string</td><td>Путь к удалённому лог-файлу</td></tr>
+<tr><td><code>Log.localFilePath</code></td><td>string</td><td>Путь к локальному лог-файлу</td></tr>
+<tr><td><code>Log.writeToRemote</code></td><td>bool</td><td>Запись в удалённый файл</td></tr>
+<tr><td><code>Log.writeToLocal</code></td><td>bool</td><td>Запись в локальный файл</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Методы</h2>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>Log.rotate()</code></td><td>Ротация лог-файла</td></tr>
+<tr><td><code>Log.print(args...)</code></td><td>Вывод в консоль</td></tr>
+<tr><td><code>Log.trace(args...)</code></td><td>Трассировка (уровень TRACE)</td></tr>
+<tr><td><code>Log.error(args...)</code></td><td>Ошибка (уровень ERROR)</td></tr>
+<tr><td><code>Log.format(args...)</code></td><td>Форматирование без вывода</td></tr>
+<tr><td><code>Log.consoleInfo()</code></td><td>Диагностический снимок состояния консоли (без изменений)</td></tr>
+<tr><td><code>Log.refreshConsole()</code></td><td>Перепроверяет дескрипторы и повторно применяет режимы вывода после дочерних процессов</td></tr>
+</table>
+</div>
+<div class="doc-section">
+<p><code>Log.consoleInfo()</code> и <code>Log.refreshConsole()</code> возвращают кортеж с ключами:
+<code>attached</code>, <code>visible</code>, <code>stdoutIsConsole</code>, <code>stderrIsConsole</code>,
+<code>outputRedirected</code>, <code>outputCodePage</code>, <code>inputCodePage</code>,
+<code>stdoutMode</code>, <code>stderrMode</code>, <code>vtProcessing</code>, <code>processedOutput</code>,
+<code>ansiColorsEnabled</code>, <code>lastError</code>, <code>refreshSucceeded</code>.</p>
+<p><code>Log.refreshConsole()</code> не вызывает FreeConsole/AllocConsole и не уничтожает консоль:
+он безопасно переполучает дескриптор вывода и включает VT только если он действительно поддерживается.
+После запуска дочерних процессов (которые могут разделять консоль родителя) эта проверка
+диагностирует и восстанавливает состояние родительской консоли.</p>
+</div>
+
+<div class="doc-section">
+<h2>Примеры</h2>
+<pre><code>Log.print(<span class="str">"Запуск скрипта"</span>);
+Log.trace(<span class="str">"Отладка:"</span>, variable);
+Log.error(<span class="str">"Ошибка:"</span>, errorMessage);
+
+Log.writeToLocal = <span class="kw">true</span>;
+Log.filePrefix = <span class="str">"myscript"</span>;
+Log.rotate();</code></pre>
+</div>
+
+<footer><a href="index.html">← На главную</a></footer>
+</div>
+</body>
+</html>

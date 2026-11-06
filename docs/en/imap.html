@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IMAP Plugin — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>IMAP Plugin</h1><p>IMAP mail protocol client — reading, searching, deleting and managing messages</p><div class="lang-switch"><a href="../imap.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="imap.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / <a href="plugins.html">Plugins</a> / IMAP</p>
+
+<div class="doc-section">
+<h2>Loading the Plugin</h2>
+<pre><code><span class="kw">if</span> (!loadPlugin(<span class="str">"plugins/imap.dll"</span>)) {
+    print(<span class="str">"ERROR: imap.dll is not loaded!"</span>);
+    system.exit(<span class="num">1</span>);
+}
+
+<span class="kw">var</span> imap = ImapClient();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Connection and Authorization</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>connect</code></td><td><code>host, [port], [tls]</code></td><td>int (1/0)</td><td>Connection to an IMAP server. port defaults to 143 (993 if tls=true). tls — SSL/TLS encryption</td></tr>
+<tr><td><code>starttls</code></td><td>—</td><td>int (1/0)</td><td>Switch to TLS (after connecting without encryption)</td></tr>
+<tr><td><code>login</code></td><td><code>user, pass</code></td><td>int (1/0)</td><td>Authorization with login and password</td></tr>
+<tr><td><code>authenticate</code></td><td><code>user, token</code></td><td>int (1/0)</td><td>Authorization via XOAUTH2 (Gmail, Yandex)</td></tr>
+<tr><td><code>disconnect</code></td><td>—</td><td>—</td><td>Closing the connection</td></tr>
+<tr><td><code>ping</code></td><td>—</td><td>int (1/0)</td><td>NOOP command — keep the connection alive, check activity</td></tr>
+<tr><td><code>getStatus</code></td><td>—</td><td>tuple</td><td>Connection status</td></tr>
+</table>
+<h3>Return value of getStatus()</h3>
+<table>
+<tr><th>Field</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>connected</code></td><td>int</td><td>1 — connected, 0 — not</td></tr>
+<tr><td><code>loggedIn</code></td><td>int</td><td>1 — authorized, 0 — not</td></tr>
+<tr><td><code>sslEnabled</code></td><td>int</td><td>1 — SSL active, 0 — not</td></tr>
+<tr><td><code>currentFolder</code></td><td>string</td><td>Currently selected folder</td></tr>
+</table>
+<pre><code><span class="kw">var</span> imap = ImapClient();
+
+<span class="cmt">// Connecting to Mail.ru with SSL</span>
+<span class="kw">var</span> ok = imap.connect(<span class="str">"imap.mail.ru"</span>, <span class="num">993</span>, <span class="kw">true</span>);
+print(<span class="str">"Connection: "</span> + ok);  <span class="cmt">// 1</span>
+
+<span class="cmt">// Authorization</span>
+ok = imap.login(<span class="str">"user@mail.ru"</span>, <span class="str">"password"</span>);
+print(<span class="str">"Login: "</span> + ok);  <span class="cmt">// 1</span>
+
+<span class="cmt">// Checking the status</span>
+<span class="kw">var</span> st = imap.getStatus();
+print(<span class="str">"Connected: "</span> + st.connected);     <span class="cmt">// 1</span>
+print(<span class="str">"Authorized: "</span> + st.loggedIn);      <span class="cmt">// 1</span>
+print(<span class="str">"SSL: "</span> + st.sslEnabled);             <span class="cmt">// 1</span>
+print(<span class="str">"Folder: "</span> + st.currentFolder);        <span class="cmt">// (empty)</span>
+
+<span class="cmt">// Keeping the connection alive</span>
+imap.ping();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Working with Folders</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>listfolders</code></td><td><code>[reference], [pattern]</code></td><td>array</td><td>Folder list. reference — the base folder, pattern — the search pattern (default "*")</td></tr>
+<tr><td><code>select</code></td><td><code>folder</code></td><td>int</td><td>Select a folder. Returns the number of messages or -1 on error</td></tr>
+</table>
+<pre><code><span class="cmt">// Get the list of all folders</span>
+<span class="kw">var</span> folders = imap.listfolders();
+print(<span class="str">"Folders: "</span> + folders.size());
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i < folders.size(); i++) {
+    print(<span class="str">"  "</span> + folders[i]);
+}
+
+<span class="cmt">// Select INBOX</span>
+<span class="kw">var</span> count = imap.select(<span class="str">"INBOX"</span>);
+print(<span class="str">"Messages in INBOX: "</span> + count);
+
+<span class="cmt">// Check the selected folder</span>
+<span class="kw">var</span> st = imap.getStatus();
+print(<span class="str">"Current folder: "</span> + st.currentFolder);  <span class="cmt">// INBOX</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Searching Messages</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>search</code></td><td><code>[criteria]</code></td><td>array of int</td><td>Search message UIDs by an IMAP criterion. With no arguments — all messages</td></tr>
+</table>
+<h3>IMAP Search Criteria</h3>
+<table>
+<tr><th>Criterion</th><th>Description</th><th>Example</th></tr>
+<tr><td><code>ALL</code></td><td>All messages</td><td><code>search("ALL")</code></td></tr>
+<tr><td><code>UNSEEN</code></td><td>Unread</td><td><code>search("UNSEEN")</code></td></tr>
+<tr><td><code>SEEN</code></td><td>Read</td><td><code>search("SEEN")</code></td></tr>
+<tr><td><code>FROM "string"</code></td><td>From the sender</td><td><code>search("FROM \"user@example.com\"")</code></td></tr>
+<tr><td><code>TO "string"</code></td><td>Recipient</td><td><code>search("TO \"me@example.com\"")</code></td></tr>
+<tr><td><code>SUBJECT "string"</code></td><td>Message subject</td><td><code>search("SUBJECT \"test\"")</code></td></tr>
+<tr><td><code>BODY "string"</code></td><td>Body text</td><td><code>search("BODY \"important\"")</code></td></tr>
+<tr><td><code>SINCE date</code></td><td>After a date</td><td><code>search("SINCE 01-Jan-2024")</code></td></tr>
+<tr><td><code>BEFORE date</code></td><td>Before a date</td><td><code>search("BEFORE 31-Dec-2023")</code></td></tr>
+<tr><td><code>UID min:max</code></td><td>UID range</td><td><code>search("UID 1:100")</code></td></tr>
+<tr><td><code>Larger n</code></td><td>Larger than n bytes</td><td><code>search("Larger 1024")</code></td></tr>
+<tr><td><code>NOT criterion</code></td><td>Negation</td><td><code>search("NOT SEEN")</code></td></tr>
+<tr><td><code>OR (crit1) (crit2)</code></td><td>Logical OR</td><td><code>search("OR (FROM \"a\") (FROM \"b\")")</code></td></tr>
+</table>
+<pre><code><span class="cmt">// All messages</span>
+<span class="kw">var</span> all = imap.search(<span class="str">"ALL"</span>);
+print(<span class="str">"Total: "</span> + all.size());
+
+<span class="cmt">// Unread</span>
+<span class="kw">var</span> unread = imap.search(<span class="str">"UNSEEN"</span>);
+print(<span class="str">"Unread: "</span> + unread.size());
+
+<span class="cmt">// Last 10 messages</span>
+<span class="kw">var</span> recent = [];
+<span class="kw">var</span> start = max(<span class="num">0</span>, all.size() - <span class="num">10</span>);
+<span class="kw">for</span> (<span class="kw">var</span> i = start; i < all.size(); i++) {
+    recent.push(all[i]);
+}
+
+<span class="cmt">// Search for UIDs and filter by headers in the script</span>
+<span class="kw">var</span> uids = imap.search(<span class="str">"ALL"</span>);
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i < uids.size(); i++) {
+    <span class="kw">var</span> h = imap.header(uids[i]);
+    <span class="kw">if</span> (!h.isnull()) {
+        <span class="kw">var</span> subj = h[<span class="str">"Subject"</span>];
+        <span class="kw">if</span> (!subj.isnull() && subj.toString().contains(<span class="str">"Important"</span>)) {
+            print(<span class="str">"Found: UID="</span> + uids[i] + <span class="str">"Subject="</span> + subj);
+        }
+    }
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Reading Messages</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>header</code></td><td><code>uid</code></td><td>tuple</td><td>Message headers as a key-value tuple (From, To, Subject, Date, ...)</td></tr>
+<tr><td><code>fetch</code></td><td><code>uid, [part]</code></td><td>string</td><td>Reading the message content</td></tr>
+<tr><td><code>attachments</code></td><td><code>uid</code></td><td>array of tuple</td><td>Attachment list from BODYSTRUCTURE</td></tr>
+<tr><td><code>fetchattachment</code></td><td><code>uid, partNo, [path_or_bytes]</code></td><td>int / bytearray</td><td>Download an attachment to a file (specify a path) or ByteArray (no path)</td></tr>
+</table>
+<h3>part parameters for fetch()</h3>
+<table>
+<tr><th>Value</th><th>Description</th></tr>
+<tr><td><code>BODY.PEEK[HEADER]</code></td><td>Headers only (does not mark as read)</td></tr>
+<tr><td><code>BODY.PEEK[TEXT]</code></td><td>Body only (does not mark as read)</td></tr>
+<tr><td><code>BODY.PEEK[]</code></td><td>Headers + body (does not mark as read)</td></tr>
+<tr><td><code>BODY[HEADER]</code></td><td>Headers (marks as read)</td></tr>
+<tr><td><code>BODY[TEXT]</code></td><td>Body (marks as read)</td></tr>
+<tr><td><code>BODY[]</code></td><td>Headers + body (marks as read)</td></tr>
+<tr><td><code>BODY[1]</code></td><td>First part (text)</td></tr>
+<tr><td><code>BODY[2]</code></td><td>Second part (usually an attachment)</td></tr>
+</table>
+<h3>Fields of the return value of attachments()</h3>
+<table>
+<tr><th>Field</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>partNo</code></td><td>string</td><td>Part number (for fetchattachment)</td></tr>
+<tr><td><code>filename</code></td><td>string</td><td>File name</td></tr>
+<tr><td><code>type</code></td><td>string</td><td>MIME type (application, text, image...)</td></tr>
+<tr><td><code>subtype</code></td><td>string</td><td>Subtype (pdf, octet-stream, plain...)</td></tr>
+<tr><td><code>size</code></td><td>int</td><td>Size in bytes</td></tr>
+</table>
+<pre><code><span class="kw">var</span> uid = uids[<span class="num">0</span>];
+
+<span class="cmt">// --- Headers ---</span>
+<span class="kw">var</span> h = imap.header(uid);
+print(<span class="str">"From:   "</span> + h[<span class="str">"From"</span>]);
+print(<span class="str">"To:     "</span> + h[<span class="str">"To"</span>]);
+print(<span class="str">"Subject:"</span> + h[<span class="str">"Subject"</span>]);
+print(<span class="str">"Date:   "</span> + h[<span class="str">"Date"</span>]);
+
+<span class="cmt">// --- Message body ---</span>
+<span class="kw">var</span> body = imap.fetch(uid, <span class="str">"BODY.PEEK[TEXT]"</span>);
+print(body);
+
+<span class="cmt">// --- Headers + body (no read mark) ---</span>
+<span class="kw">var</span> full = imap.fetch(uid, <span class="str">"BODY.PEEK[]"</span>);
+
+<span class="cmt">// --- Attachments ---</span>
+<span class="kw">var</span> atts = imap.attachments(uid);
+print(<span class="str">"Attachments: "</span> + atts.size());
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i < atts.size(); i++) {
+    print(<span class="str">"  ["</span> + i + <span class="str">"] "</span> + atts[i].filename
+        + <span class="str">" ("</span> + atts[i].type + <span class="str">"/"</span> + atts[i].subtype + <span class="str">") "</span>
+        + atts[i].size + <span class="str">" bytes"</span>);
+}
+
+<span class="cmt">// --- Download an attachment to a file ---</span>
+<span class="kw">if</span> (atts.size() > <span class="num">0</span>) {
+    <span class="kw">var</span> saved = imap.fetchattachment(uid, atts[<span class="num">0</span>].partNo, <span class="str">"C:/temp/att.pdf"</span>);
+    print(<span class="str">"Saved: "</span> + saved + <span class="str">" bytes"</span>);
+}
+
+<span class="cmt">// --- Download an attachment to a ByteArray ---</span>
+<span class="kw">if</span> (atts.size() > <span class="num">0</span>) {
+    <span class="kw">var</span> data = imap.fetchattachment(uid, atts[<span class="num">0</span>].partNo);
+    print(<span class="str">"Size: "</span> + data.size() + <span class="str">" bytes"</span>);
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Deleting and Managing Flags</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>delete</code></td><td><code>uid</code></td><td>int (1/0)</td><td>Deleting a message: marks \Deleted + EXPUNGE</td></tr>
+<tr><td><code>setflag</code></td><td><code>uid, flag, [value]</code></td><td>int (1/0)</td><td>Setting/unsetting a flag. value: true (default) or false</td></tr>
+<tr><td><code>copy</code></td><td><code>uid, folder</code></td><td>int (1/0)</td><td>Copying a message to another folder</td></tr>
+<tr><td><code>move</code></td><td><code>uid, folder</code></td><td>int (1/0)</td><td>Moving a message (COPY + STORE \Deleted + EXPUNGE)</td></tr>
+</table>
+<h3>IMAP Flags</h3>
+<table>
+<tr><th>Flag</th><th>Description</th></tr>
+<tr><td><code>\Seen</code></td><td>Read</td></tr>
+<tr><td><code>\Answered</code></td><td>The message has been replied to</td></tr>
+<tr><td><code>\Flagged</code></td><td>Flagged (important)</td></tr>
+<tr><td><code>\Deleted</code></td><td>Marked for deletion</td></tr>
+<tr><td><code>\Draft</code></td><td>Draft</td></tr>
+</table>
+<pre><code><span class="cmt">// Delete a message (STORE +FLAGS \Deleted + EXPUNGE)</span>
+<span class="kw">var</span> ok = imap.delete(uid);
+print(<span class="str">"Deleted: "</span> + ok);
+
+<span class="cmt">// Mark as read</span>
+imap.setflag(uid, <span class="str">"\\Seen"</span>);
+
+<span class="cmt">// Flag as "important"</span>
+imap.setflag(uid, <span class="str">"\\Flagged"</span>);
+
+<span class="cmt">// Remove the flag</span>
+imap.setflag(uid, <span class="str">"\\Flagged"</span>, <span class="kw">false</span>);
+
+<span class="cmt">// Mark as draft</span>
+imap.setflag(uid, <span class="str">"\\Draft"</span>);
+
+<span class="cmt">// Copy to the "Backup" folder</span>
+imap.copy(uid, <span class="str">"Backup"</span>);
+
+<span class="cmt">// Move to the archive</span>
+imap.move(uid, <span class="str">"Archive/2024"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Example: Receiving Mail</h2>
+<pre><code><span class="kw">if</span> (!loadPlugin(<span class="str">"plugins/imap.dll"</span>)) {
+    print(<span class="str">"imap.dll is not loaded!"</span>);
+    system.exit(<span class="num">1</span>);
+}
+
+<span class="kw">var</span> imap = ImapClient();
+imap.connect(<span class="str">"imap.mail.ru"</span>, <span class="num">993</span>, <span class="kw">true</span>);
+imap.login(<span class="str">"user@mail.ru"</span>, <span class="str">"password"</span>);
+
+<span class="cmt">// Select INBOX</span>
+<span class="kw">var</span> count = imap.select(<span class="str">"INBOX"</span>);
+print(<span class="str">"Messages: "</span> + count);
+
+<span class="cmt">// Find unread</span>
+<span class="kw">var</span> uids = imap.search(<span class="str">"UNSEEN"</span>);
+print(<span class="str">"Unread: "</span> + uids.size());
+
+<span class="cmt">// Read each one</span>
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i < uids.size(); i++) {
+    <span class="kw">var</span> h = imap.header(uids[i]);
+    <span class="kw">if</span> (!h.isnull()) {
+        print(<span class="str">"--- Message "</span> + uids[i] + <span class="str">" ---"</span>);
+        print(<span class="str">"  From: "</span> + h[<span class="str">"From"</span>]);
+        print(<span class="str">"  Subject: "</span> + h[<span class="str">"Subject"</span>]);
+        print(<span class="str">"  Date: "</span> + h[<span class="str">"Date"</span>]);
+    }
+}
+
+imap.disconnect();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Example: Sending and Deleting</h2>
+<pre><code><span class="kw">if</span> (!loadPlugin(<span class="str">"plugins/smtp.dll"</span>)) { system.exit(<span class="num">1</span>); }
+<span class="kw">if</span> (!loadPlugin(<span class="str">"plugins/imap.dll"</span>)) { system.exit(<span class="num">1</span>); }
+
+<span class="cmt">// Sending a message</span>
+<span class="kw">var</span> smtp = SmtpClient();
+smtp.connect(<span class="str">"smtp.yandex.com"</span>, <span class="num">465</span>, <span class="kw">true</span>);
+smtp.login(<span class="str">"sender@yandex.ru"</span>, <span class="str">"password"</span>);
+smtp.send(<span class="str">"sender@yandex.ru"</span>, <span class="str">"recipient@mail.ru"</span>,
+    <span class="str">"Test"</span>, <span class="str">"Hello from QodeScript!"</span>);
+smtp.disconnect();
+
+<span class="cmt">// Reading and deleting</span>
+<span class="kw">var</span> imap = ImapClient();
+imap.connect(<span class="str">"imap.mail.ru"</span>, <span class="num">993</span>, <span class="kw">true</span>);
+imap.login(<span class="str">"recipient@mail.ru"</span>, <span class="str">"password"</span>);
+imap.select(<span class="str">"INBOX"</span>);
+
+<span class="cmt">// Searching by headers</span>
+<span class="kw">var</span> all = imap.search(<span class="str">"ALL"</span>);
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i < all.size(); i++) {
+    <span class="kw">var</span> h = imap.header(all[i]);
+    <span class="kw">if</span> (!h.isnull() && h[<span class="str">"Subject"</span>].toString() == <span class="str">"Test"</span>) {
+        print(<span class="str">"Found! Deleting..."</span>);
+        imap.delete(all[i]);
+        print(<span class="str">"Deleted!"</span>);
+        <span class="kw">break</span>;
+    }
+}
+
+imap.disconnect();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Example: Working with Folders</h2>
+<pre><code><span class="kw">var</span> imap = ImapClient();
+imap.connect(<span class="str">"imap.gmail.com"</span>, <span class="num">993</span>, <span class="kw">true</span>);
+imap.login(<span class="str">"user@gmail.com"</span>, <span class="str">"password"</span>);
+
+<span class="cmt">// List of all folders</span>
+<span class="kw">var</span> folders = imap.listfolders();
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i < folders.size(); i++) {
+    print(folders[i]);
+}
+
+<span class="cmt">// Copy a message to another folder</span>
+imap.select(<span class="str">"INBOX"</span>);
+<span class="kw">var</span> uids = imap.search(<span class="str">"ALL"</span>);
+<span class="kw">if</span> (uids.size() > <span class="num">0</span>) {
+    imap.copy(uids[<span class="num">0</span>], <span class="str">"Important"</span>);
+    print(<span class="str">"Copied!"</span>);
+}
+
+<span class="cmt">// Move to the archive</span>
+imap.move(uids[<span class="num">0</span>], <span class="str">"Archive"</span>);
+print(<span class="str">"Moved!"</span>);
+
+imap.disconnect();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Error Handling</h2>
+<pre><code><span class="kw">var</span> imap = ImapClient();
+
+<span class="cmt">// Checking the connection</span>
+<span class="kw">if</span> (!imap.connect(<span class="str">"imap.mail.ru"</span>, <span class="num">993</span>, <span class="kw">true</span>)) {
+    print(<span class="str">"Failed to connect!"</span>);
+    system.exit(<span class="num">1</span>);
+}
+
+<span class="cmt">// Checking the login</span>
+<span class="kw">if</span> (!imap.login(<span class="str">"user@mail.ru"</span>, <span class="str">"wrong"</span>)) {
+    print(<span class="str">"Wrong login/password!"</span>);
+    imap.disconnect();
+    system.exit(<span class="num">1</span>);
+}
+
+<span class="cmt">// Checking select</span>
+<span class="kw">var</span> count = imap.select(<span class="str">"INBOX"</span>);
+<span class="kw">if</span> (count == -<span class="num">1</span>) {
+    print(<span class="str">"Folder not found!"</span>);
+}
+
+<span class="cmt">// Checking fetch</span>
+<span class="kw">var</span> body = imap.fetch(<span class="num">999999</span>);
+<span class="kw">if</span> (body.isnull()) {
+    print(<span class="str">"Message not found!"</span>);
+}
+
+<span class="cmt">// Checking getStatus()</span>
+<span class="kw">var</span> st = imap.getStatus();
+<span class="kw">if</span> (!st.connected) {
+    print(<span class="str">"Connection lost!"</span>);
+}
+
+imap.disconnect();</code></pre>
+</div>
+
+<footer><a href="plugins.html">← Back to the plugin list</a></footer>
+</div>
+</body>
+</html>

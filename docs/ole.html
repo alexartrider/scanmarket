@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OLE/COM — Script</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header>
+<h1>Модуль OLE — Компонентная модель (Windows)</h1>
+<p>Доступ к COM-объектам через IDispatch</p>
+<div class="lang-switch"><a class="active" href="ole.html">RU</a><a href="en/ole.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Главная</a> / OLE</p>
+
+<div class="doc-section">
+<h2>Функции</h2>
+<table>
+<tr><th>Функция</th><th>Описание</th></tr>
+<tr><td><code>ole.create(progId)</code></td><td>Создание COM-объекта по ProgID (например, "Excel.Application")</td></tr>
+<tr><td><code>ole.getActive(progId)</code></td><td>Получение уже запущенного COM-объекта</td></tr>
+<tr><td><code>ole.isAvailable(progId)</code></td><td>Проверка доступности COM-класса (bool)</td></tr>
+</table>
+
+<h3>Пример</h3>
+<pre><code><span class="kw">var</span> excel = ole.create(<span class="str">"Excel.Application"</span>);
+excel.Visible = <span class="kw">true</span>;
+<span class="kw">var</span> wb = excel.Workbooks.Add();
+<span class="kw">var</span> sheet = wb.Sheets(1);
+sheet.Cells(1, 1).Value = <span class="str">"Привет"</span>;
+wb.SaveAs(<span class="str">"C:\\test.xlsx"</span>);
+excel.Quit();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Свойства и методы OLE-объекта</h2>
+<p>Доступ к свойствам и методам COM-объекта — через точечную нотацию. Имена без учёта регистра.</p>
+
+<h3>Свойства</h3>
+<pre><code>obj.PropertyName           <span class="cmt">// чтение</span>
+obj.PropertyName = value   <span class="cmt">// запись</span></code></pre>
+
+<h3>Методы</h3>
+<pre><code>obj.MethodName(arg1, arg2)  <span class="cmt">// вызов метода</span></code></pre>
+
+<h3>Примеры</h3>
+<pre><code><span class="cmt">// Word</span>
+<span class="kw">var</span> word = ole.create(<span class="str">"Word.Application"</span>);
+word.Visible = <span class="kw">true</span>;
+<span class="kw">var</span> doc = word.Documents.Add();
+doc.Content.Text = <span class="str">"Hello, World!"</span>;
+doc.SaveAs2(<span class="str">"C:\\doc.docx"</span>);
+word.Quit();
+
+<span class="cmt">// Получение активного экземпляра</span>
+<span class="kw">var</span> excel = ole.getActive(<span class="str">"Excel.Application"</span>);
+<span class="kw">if</span> (excel) {
+    print(<span class="str">"Excel уже запущен"</span>);
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Ограничения</h2>
+<ul>
+<li>Доступно только на Windows (OLE/COM)</li>
+<li>Массивы конвертируются в SAFEARRAY (1D и 2D)</li>
+<li>Тип VT_DISPATCH возвращается как OLE-объект</li>
+<li>3D+ массивы не поддерживаются</li>
+</ul>
+</div>
+
+<footer>Script Documentation</footer>
+</div>
+</body>
+</html>

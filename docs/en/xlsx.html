@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Excel (XLSX) — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header>
+<h1>qt module — QXlsxDocument</h1>
+<p>Reading and writing XLSX/CSV files via QXlsx</p>
+<div class="lang-switch"><a href="../xlsx.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="xlsx.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / <a href="qt.html">QT</a> / XLSX</p>
+
+<div class="doc-section">
+    <h2>QXlsxDocument - Working with Excel files</h2>
+    <p>The <code>qt.XlsxDocument()</code> class provides an API for reading/writing XLSX files via Qt. Available only in GUI projects (<code>qodeqt</code>, <code>qodegui</code>).</p>
+
+    <h3>Main methods</h3>
+    <table>
+        <tr><th>Method</th><th>Description</th></tr>
+        <tr><td><code>doc.open(filename)</code></td><td>Opens an existing XLSX file. Supported formats: .xlsx, .xls (via conversion), .csv</td></tr>
+        <tr><td><code>doc.create(filename)</code></td><td>Creates a new file. If the file exists - overwrites it</td></tr>
+        <tr><td><code>doc.save()</code></td><td>Saves to the current file</td></tr>
+        <tr><td><code>doc.saveAs(filename)</code></td><td>Saves to another file</td></tr>
+        <tr><td><code>doc.saveAsCSV(filename)</code></td><td>Exports data to a CSV file (without formatting)</td></tr>
+    </table>
+
+    <h3>Working with data</h3>
+    <table>
+        <tr><td><code>doc.read(row, col)</code></td><td>Reads a cell (1-based indices). Returns a QVariant</td></tr>
+        <tr><td><code>doc.write(row, col, value)</code></td><td>Writes a value. Supports: numbers, strings, dates, booleans</td></tr>
+        <tr><td><code>doc.readAll()</code></td><td>Returns an array of arrays (QVariantList) with all data</td></tr>
+    </table>
+<pre><code>var doc = qt.XlsxDocument();    <span class="cmt">// or</span>
+var doc = qt.QXlsxDocument();</code></pre>
+<p>Returns a QXlsxDocument object (via QtAdapter). Available only in GUI projects (<code>qodeqt</code>, <code>qodegui</code>).</p>
+
+<h3>Methods</h3>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>doc.open(filename)</code></td><td>Opens an existing XLSX file</td></tr>
+<tr><td><code>doc.create(filename)</code></td><td>Creates a new XLSX file</td></tr>
+<tr><td><code>doc.save()</code></td><td>Saves to the current file</td></tr>
+<tr><td><code>doc.saveAs(filename)</code></td><td>Saves to another file</td></tr>
+<tr><td><code>doc.saveAsCSV(filename)</code></td><td>Saves to CSV</td></tr>
+<tr><td><code>doc.read(row, col)</code></td><td>Cell value (1-based indices)</td></tr>
+<tr><td><code>doc.write(row, col, value)</code></td><td>Writes a value into a cell</td></tr>
+<tr><td><code>doc.readAll()</code></td><td>All data as an array of arrays (QVariantList)</td></tr>
+<tr><td><code>doc.rowCount()</code></td><td>Number of rows</td></tr>
+<tr><td><code>doc.columnCount()</code></td><td>Number of columns</td></tr>
+<tr><td><code>doc.sheetCount()</code></td><td>Number of sheets</td></tr>
+<tr><td><code>doc.sheetNames()</code></td><td>Array of sheet names</td></tr>
+<tr><td><code>doc.addSheet(name)</code></td><td>Adds a sheet</td></tr>
+<tr><td><code>doc.selectSheet(index)</code></td><td>Selects a sheet by index (0-based)</td></tr>
+</table>
+
+<h3>Usage examples</h3>
+    <div class="example">
+        <h4>Basic example</h4>
+        <pre><code>var doc = qt.XlsxDocument();
+        doc.open("data.xlsx");
+        
+        // Reading data
+        var rows = doc.readAll();
+        for (var i = 0; i < rows.size(); i++) {
+            print(rows[i][0] + " | " + rows[i][1]);
+        }
+        
+        // Writing data
+        doc.write(2, 1, "New value");
+        doc.save();</code></pre>
+    </div>
+    <div class="example">
+        <h4>Working with sheets</h4>
+        <pre><code>doc.addSheet("Reports");
+        doc.selectSheet(1);
+        doc.write(1, 1, "Data from the second sheet");</code></pre>
+    </div>
+<pre><code><span class="kw">var</span> doc = qt.XlsxDocument();
+doc.open(<span class="str">"data.xlsx"</span>);
+print(<span class="str">"Rows: "</span> + doc.rowCount());
+print(<span class="str">"Columns: "</span> + doc.columnCount());
+
+<span class="kw">var</span> rows = doc.readAll();
+<span class="kw">for</span> (<span class="kw">var</span> i = 0; i &lt; rows.size(); i++) {
+    <span class="kw">var</span> row = rows[i];
+    print(row[0] + <span class="str">" | "</span> + row[1] + <span class="str">" | "</span> + row[2]);
+}
+
+<span class="cmt">// Reading a single cell</span>
+<span class="kw">var</span> val = doc.read(1, 1);
+
+<span class="cmt">// Writing</span>
+doc.write(1, 1, <span class="str">"Name"</span>);
+doc.write(1, 2, <span class="str">"Age"</span>);
+doc.save();
+
+<span class="cmt">// Creating a new file</span>
+<span class="kw">var</span> newDoc = qt.XlsxDocument();
+newDoc.create(<span class="str">"new.xlsx"</span>);
+newDoc.write(1, 1, <span class="str">"Hello"</span>);
+newDoc.save();
+
+<span class="cmt">// Sheets</span>
+doc.addSheet(<span class="str">"Sheet2"</span>);
+doc.selectSheet(1);
+doc.write(1, 1, <span class="str">"Sheet 2 data"</span>);
+doc.save();</code></pre>
+</div>
+
+<div class="doc-section">
+    <h3>Compatibility and limitations</h3>
+    <ul>
+        <li>Supports XLSX (Office 2007+), CSV, XLS (via conversion)</li>
+        <li>Maximum number of rows: 1,048,576</li>
+        <li>Maximum number of columns: 16,384</li>
+        <li>Cell formatting (color, font) is not preserved when reading/writing</li>
+    </ul>
+
+    <h3>Data types</h3>
+    <p>Supported types:</p>
+    <ul>
+        <li>Numbers (integers, floating point)</li>
+        <li>Strings</li>
+        <li>Dates (YYYY-MM-DD format)</li>
+        <li>Boolean values (true/false)</li>
+    </ul>
+
+    <h3>Performance tips</h3>
+    <ul>
+        <li>Use <code>readAll()</code> only for small files (&lt;10k rows)</li>
+        <li>For bulk writing, use <code>write(row, col, value)</code> in a loop</li>
+        <li>Avoid frequent <code>save()</code> calls - prefer <code>saveAs()</code> when needed</li>
+    </ul>
+
+</div>
+<footer>Script Documentation</footer>
+</div>
+</body>
+</html>

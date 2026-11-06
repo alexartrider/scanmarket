@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plugins — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Plugins</h1><p>Loadable modules for extending functionality</p><div class="lang-switch"><a href="../plugins.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="plugins.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / Plugins</p>
+
+<div class="doc-section">
+<h2>Loading plugins</h2>
+<p>Plugins are loaded via the global function <code>loadPlugin</code>:</p>
+<pre><code><span class="cmt">// Load a plugin by file name (without the .dll/.so extension)</span>
+loadPlugin(<span class="str">"archive7zip"</span>);
+
+<span class="cmt">// With an alias</span>
+loadPlugin(<span class="str">"archive7zip"</span>, <span class="str">"zip"</span>);</code></pre>
+<p>Returns <code>true</code> on successful load, <code>false</code> if not found.</p>
+<p><strong>Note:</strong> the <code>uses</code> keyword is only for built-in modules (<code>str</code>, <code>math</code>, <code>file</code>, <code>datetime</code>, etc.).</p>
+<p><strong>Plugin development:</strong> detailed guide — <a href="plugin_development.html">Plugin Development</a></p>
+</div>
+
+<div class="doc-section">
+<h2>Archives (7-Zip)</h2>
+<p><strong>Plugin:</strong> <code>archive7zip.dll</code> — work with 7z, ZIP, TAR, GZIP archives. <a href="archive7zip.html">Detailed reference →</a></p>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>archive7zip()</code></td><td>Create an object (requires 7z.exe)</td></tr>
+<tr><td><code>zip.list(archive)</code></td><td>List files with metadata</td></tr>
+<tr><td><code>zip.extract(archive, dest)</code></td><td>Extract the entire archive</td></tr>
+<tr><td><code>zip.extractFile(archive, file, dest)</code></td><td>Extract a single file</td></tr>
+<tr><td><code>zip.create(archive, files, [format])</code></td><td>Create an archive (zip/7z/tar/gzip)</td></tr>
+<tr><td><code>zip.test(archive)</code></td><td>Integrity check</td></tr>
+<tr><td><code>zip.info(archive)</code></td><td>Archive information</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Archives (ZIP, native)</h2>
+<p><strong>Plugin:</strong> <code>zip.dll</code> — work with ZIP archives without external tools (based on miniz). <a href="zip.html">Detailed reference →</a></p>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>zip()</code></td><td>Create an object</td></tr>
+<tr><td><code>zip.list(archive)</code></td><td>List files with metadata</td></tr>
+<tr><td><code>zip.extract(archive, dest, [password], [withPaths])</code></td><td>Extract the entire archive</td></tr>
+<tr><td><code>zip.extractFile(archive, file, dest)</code></td><td>Extract a single file</td></tr>
+<tr><td><code>zip.create(archive, files, [format], [password], [level])</code></td><td>Create a ZIP archive (files or folders)</td></tr>
+<tr><td><code>zip.test(archive)</code></td><td>Integrity check</td></tr>
+<tr><td><code>zip.info(archive)</code></td><td>Archive information</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>HTTP</h2>
+<p><strong>Plugin:</strong> <code>http.dll</code> — HTTP/HTTPS client and HTTP server. GET, POST, PUT, DELETE, headers, authentication, file upload/download, multipart, proxy, built-in web server with a callback model. <a href="http.html">Detailed reference →</a></p>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>HttpClient()</code></td><td>Create a client</td></tr>
+<tr><td><code>http.get(url)</code></td><td>GET request</td></tr>
+<tr><td><code>http.post(url, [body], [contentType])</code></td><td>POST request</td></tr>
+<tr><td><code>http.put/del/patch/head</code></td><td>PUT, DELETE, PATCH, HEAD requests</td></tr>
+<tr><td><code>http.request(method, url)</code></td><td>Arbitrary HTTP method</td></tr>
+<tr><td><code>http.download(url, path)</code></td><td>Download a file</td></tr>
+<tr><td><code>http.upload(url, path, [field])</code></td><td>Multipart upload</td></tr>
+<tr><td><code>http.setHeader/clearHeaders</code></td><td>Manage headers</td></tr>
+<tr><td><code>http.setBasicAuth/setBearerAuth</code></td><td>Authentication</td></tr>
+<tr><td><code>http.status/getResponse/getResponseBytes</code></td><td>Request result</td></tr>
+<tr><td><code>http.urlEncode/urlDecode/getMimeType</code></td><td>Utilities</td></tr>
+</table>
+<h3>HttpServer</h3>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>HttpServer()</code></td><td>Create a server</td></tr>
+<tr><td><code>server.listen(port)</code></td><td>Start listening on a port</td></tr>
+<tr><td><code>server.process([timeout_ms])</code></td><td>Get a request (tuple/null)</td></tr>
+<tr><td><code>server.respond(socketId, resp)</code></td><td>Send a response</td></tr>
+<tr><td><code>server.stop()</code></td><td>Stop the server</td></tr>
+<tr><td><code>server.islistening/port/lastError</code></td><td>Server state</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>WebSocket</h2>
+<p><strong>Plugin:</strong> <code>websocket.dll</code> — WebSocket client. Bidirectional real-time communication, text and binary messages, ping/pong, ws:// and wss://. <a href="websocket.html">Detailed reference →</a></p>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>WebSocket()</code></td><td>Create an object</td></tr>
+<tr><td><code>ws.connect(url)</code></td><td>Connect (ws:// or wss://)</td></tr>
+<tr><td><code>ws.send(text)</code></td><td>Send a text message</td></tr>
+<tr><td><code>ws.sendBinary(data)</code></td><td>Send binary data</td></tr>
+<tr><td><code>ws.recv()</code></td><td>Receive a text message</td></tr>
+<tr><td><code>ws.recvBinary()</code></td><td>Receive a binary message (ByteArray)</td></tr>
+<tr><td><code>ws.ping()</code></td><td>Send a ping</td></tr>
+<tr><td><code>ws.close()</code></td><td>Graceful close (close frame)</td></tr>
+<tr><td><code>ws.disconnect()</code></td><td>Disconnect without a close frame</td></tr>
+<tr><td><code>ws.isconnected()</code></td><td>Check connection status</td></tr>
+<tr><td><code>ws.hasMessage() / ws.messageCount()</code></td><td>Message queue</td></tr>
+<tr><td><code>ws.clearMessages()</code></td><td>Clear the queue</td></tr>
+<tr><td><code>ws.setTimeout([ms])</code></td><td>Read timeout</td></tr>
+<tr><td><code>ws.lastError()</code></td><td>Last error</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>COM ports</h2>
+<p><strong>Plugin:</strong> <code>comport.dll</code> — work with COM ports. <a href="comport.html">Detailed reference →</a></p>
+<table>
+<tr><th>Method/Property</th><th>Description</th></tr>
+<tr><td><code>ComPort([name])</code></td><td>Create a port object</td></tr>
+<tr><td><code>port</code>, <code>baudrate</code>, <code>bytesize</code>, <code>stopbits</code>, <code>parity</code>, <code>timeout</code></td><td>Properties (R/W)</td></tr>
+<tr><td><code>open()</code>, <code>close()</code>, <code>isopen()</code></td><td>Port control</td></tr>
+<tr><td><code>write(data)</code>, <code>writeline(text)</code></td><td>Write data</td></tr>
+<tr><td><code>read()</code>, <code>readline()</code>, <code>available()</code></td><td>Read data</td></tr>
+<tr><td><code>clear()</code>, <code>clearrx()</code>, <code>cleartx()</code></td><td>Clear buffers</td></tr>
+<tr><td><code>listports()</code></td><td>List available ports</td></tr>
+<tr><td><code>setondata(callback)</code></td><td>Callback on incoming data</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Crypto</h2>
+<p><strong>Plugin:</strong> <code>crypto.dll</code> — hashing, encryption, signatures, key generation, JWT. <a href="crypto.html">Detailed reference →</a></p>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>md5/sha1/sha256/sha512(data)</code></td><td>Hash functions</td></tr>
+<tr><td><code>sha3_256/sha3_512(data)</code></td><td>SHA3 (Keccak)</td></tr>
+<tr><td><code>hmac(key, data, [algo])</code></td><td>HMAC signature</td></tr>
+<tr><td><code>hmacVerify(key, data, sig)</code></td><td>HMAC verification</td></tr>
+<tr><td><code>pbkdf2(pass, salt, [iter], [len])</code></td><td>Key derivation</td></tr>
+<tr><td><code>aesEncrypt(data, key)</code></td><td>AES-GCM encryption</td></tr>
+<tr><td><code>aesDecrypt(data, key)</code></td><td>AES-GCM decryption</td></tr>
+<tr><td><code>rsaGenerate/Encrypt/Decrypt/Sign/Verify</code></td><td>RSA operations</td></tr>
+<tr><td><code>ed25519Generate/Sign/Verify</code></td><td>Ed25519 operations</td></tr>
+<tr><td><code>base64Encode/Decode</code></td><td>Base64 encoding</td></tr>
+<tr><td><code>hexEncode/Decode</code></td><td>Hex encoding</td></tr>
+<tr><td><code>randomBytes/randomInt/uuid</code></td><td>Random values</td></tr>
+<tr><td><code>totp/hotp</code></td><td>One-time passwords</td></tr>
+<tr><td><code>jwtCreate/Verify/Decode</code></td><td>JWT (HS/RS/ES/EdDSA)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Excel (XLSX)</h2>
+<p><strong>Plugin:</strong> <code>excel.dll</code> — read and write XLSX files (native implementation based on OpenXLSX): cells, sheets, merging, formatting, document properties. <a href="excel.html">Detailed reference →</a></p>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>XlsxDocument()</code></td><td>Create an object</td></tr>
+<tr><td><code>doc.create/open(filename)</code></td><td>Create/open an XLSX file</td></tr>
+<tr><td><code>doc.save() / saveAs(filename)</code></td><td>Save</td></tr>
+<tr><td><code>doc.read/write(row, col[, value])</code></td><td>Read/write a cell (1-based)</td></tr>
+<tr><td><code>doc.readAll/readRow/readColumn</code></td><td>Read data ranges</td></tr>
+<tr><td><code>doc.sheetCount/sheetNames/currentSheetName</code></td><td>Sheet information</td></tr>
+<tr><td><code>doc.selectSheet/addSheet/insertSheet</code></td><td>Select and add sheets</td></tr>
+<tr><td><code>doc.renameSheet/copySheet/moveSheet/deleteSheet</code></td><td>Manage sheets</td></tr>
+<tr><td><code>doc.mergeCells/unmergeCells</code></td><td>Merge cells</td></tr>
+<tr><td><code>doc.setColumnWidth/setRowHeight</code>, <code>setColumnHidden/setRowHidden</code></td><td>Formatting</td></tr>
+<tr><td><code>doc.documentProperty/setDocumentProperty</code></td><td>Document properties</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>dBASE (DBF)</h2>
+<p><strong>Plugin:</strong> <code>dbf.dll</code> — read, write, create and manage dBASE (DBF) files. <a href="dbf.html">Detailed reference →</a></p>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>dbffile()</code></td><td>Create an object</td></tr>
+<tr><td><code>open(path, [enc])</code></td><td>Open a file (enc: 1251/866)</td></tr>
+<tr><td><code>create(path, fields, [enc])</code></td><td>Create a new DBF</td></tr>
+<tr><td><code>readAll([asTuple])</code></td><td>Read all records</td></tr>
+<tr><td><code>row(n)</code></td><td>Read a record by number</td></tr>
+<tr><td><code>append(...)</code></td><td>Append a record</td></tr>
+<tr><td><code>updateRow(n, data)</code></td><td>Update a record</td></tr>
+<tr><td><code>deleteRow(n)</code></td><td>Mark for deletion</td></tr>
+<tr><td><code>pack()</code></td><td>Physically remove marked records</td></tr>
+<tr><td><code>save([path])</code></td><td>Save to a file</td></tr>
+<tr><td><code>locate(field, value)</code></td><td>Search by value</td></tr>
+<tr><td><code>fields()</code></td><td>Field metadata</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>IMAP</h2>
+<p><strong>Plugin:</strong> <code>imap.dll</code> — IMAP client for reading, searching, deleting and managing email. <a href="imap.html">Detailed reference →</a></p>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>connect(host, [port], [tls])</code></td><td>Connect to an IMAP server</td></tr>
+<tr><td><code>login(user, pass)</code></td><td>Login</td></tr>
+<tr><td><code>select(folder)</code></td><td>Select a folder (returns the message count)</td></tr>
+<tr><td><code>search([criteria])</code></td><td>Search by IMAP criteria (ALL, UNSEEN, FROM, SUBJECT...)</td></tr>
+<tr><td><code>header(uid)</code></td><td>Message headers (From, To, Subject, Date)</td></tr>
+<tr><td><code>fetch(uid, [part])</code></td><td>Fetch body/headers</td></tr>
+<tr><td><code>attachments(uid)</code></td><td>List attachments</td></tr>
+<tr><td><code>fetchattachment(uid, part, [path])</code></td><td>Download an attachment to a file or ByteArray</td></tr>
+<tr><td><code>delete(uid)</code></td><td>Delete a message</td></tr>
+<tr><td><code>setflag(uid, flag, [val])</code></td><td>Set/clear flags (\Seen, \Flagged...)</td></tr>
+<tr><td><code>copy(uid, folder)</code></td><td>Copy to a folder</td></tr>
+<tr><td><code>move(uid, folder)</code></td><td>Move to a folder</td></tr>
+<tr><td><code>listfolders()</code></td><td>List folders</td></tr>
+<tr><td><code>disconnect()</code></td><td>Disconnect</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>MAX Messenger</h2>
+<p><strong>Plugin:</strong> <code>max.dll</code> — bot client for the MAX messenger (platform <code>platform-api2.max.ru</code>): connection, sending messages, receiving via long polling. <a href="max.html">Detailed reference →</a></p>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>maxclient()</code></td><td>Create an object</td></tr>
+<tr><td><code>mx.connect(token)</code></td><td>Connect (token check via GET /me)</td></tr>
+<tr><td><code>mx.send(recipientId, text, [mode])</code></td><td>Send a text message: to a user (<code>user_id</code>) or to a chat/channel when <code>mode</code> = <code>"chat"</code>/<code>"channel"</code> (<code>chat_id</code>)</td></tr>
+<tr><td><code>mx.recv()</code></td><td>Receive a message (tuple/null), long polling when the queue is empty</td></tr>
+<tr><td><code>mx.hasMessage() / messageCount()</code></td><td>Message queue</td></tr>
+<tr><td><code>mx.setTimeout(sec)</code></td><td>Long polling timeout (1–90 seconds)</td></tr>
+<tr><td><code>mx.setVerify([bool]) / setCA(file)</code></td><td>SSL certificate verification</td></tr>
+<tr><td><code>mx.disconnect() / lastError()</code></td><td>Disconnect and errors</td></tr>
+<tr><td><code>mx.connected / pollTimeout / botUsername</code></td><td>State properties</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>INI / CSV</h2>
+<p><strong>Plugin:</strong> <code>inicsv.dll</code> — read/write INI and CSV files. <a href="inicsv.html">Detailed reference →</a></p>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>iniRead(path)</code></td><td>Read an INI file into a tuple of tuples</td></tr>
+<tr><td><code>iniWrite(path, data, [enc])</code></td><td>Write an INI file from a tuple</td></tr>
+<tr><td><code>iniReadValue(path, section, key)</code></td><td>Read a single value</td></tr>
+<tr><td><code>iniWriteValue(path, section, key, value, [enc])</code></td><td>Write/update a single value</td></tr>
+<tr><td><code>csvRead(path, fields, [enc], [sep])</code></td><td>Read CSV into an array of tuples</td></tr>
+<tr><td><code>csvWrite(path, fields, data, [enc], [sep])</code></td><td>Write CSV from an array of tuples</td></tr>
+<tr><td><code>csvRowCount(path)</code></td><td>Row count (excluding the header)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>LDAP / Active Directory</h2>
+<p><strong>Plugin:</strong> <code>ldap.dll</code> — enterprise environment: AD authentication, searching users and groups in an LDAP directory. <a href="ldap.html">Detailed reference →</a></p>
+<table>
+<tr><th>Function/Method</th><th>Description</th></tr>
+<tr><td><code>LDAPAuthenticate(server, port, user, password)</code></td><td>Authenticate a user (UPN, DN or DOMAIN\user)</td></tr>
+<tr><td><code>LDAP([server], [port], [secure])</code></td><td>Create a connection object</td></tr>
+<tr><td><code>ld.open / bind / bindAnonymous</code></td><td>Connect and authenticate</td></tr>
+<tr><td><code>ld.search(base, filter, [attrs], [scope])</code></td><td>Directory search (paged, RFC 2696)</td></tr>
+<tr><td><code>ld.escapeFilter(value)</code></td><td>Escape a value for an LDAP filter</td></tr>
+<tr><td><code>ld.errorCode / errorText / isConnected</code></td><td>Errors and connection state</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Windows Registry</h2>
+<p><strong>Plugin:</strong> <code>registry.dll</code> — read/write the Windows registry. <a href="registry.html">Detailed reference →</a></p>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>RegistryOpen(root, path, [access])</code></td><td>Open a registry key</td></tr>
+<tr><td><code>RegistryReadString/Int(root, path, name)</code></td><td>Read a string / number</td></tr>
+<tr><td><code>RegistryWriteString/Int(root, path, name, val)</code></td><td>Write a string / number</td></tr>
+<tr><td><code>RegistryEnumKeys/Values(root, path)</code></td><td>Enumerate subkeys / values</td></tr>
+<tr><td><code>RegistryKeyExists/ValueExists</code></td><td>Check existence</td></tr>
+<tr><td><code>RegistryDeleteValue/Key</code></td><td>Delete a value / key</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Clipboard</h2>
+<p><strong>Plugin:</strong> <code>clipboard.dll</code> — read/write text and images in the Windows system clipboard. <a href="clipboard.html">Detailed reference →</a></p>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>ClipboardGetText()</code></td><td>Text from the clipboard</td></tr>
+<tr><td><code>ClipboardSetText(text)</code></td><td>Put text on the clipboard</td></tr>
+<tr><td><code>ClipboardHasText()</code></td><td>Check whether text is present</td></tr>
+<tr><td><code>ClipboardHasImage()</code></td><td>Check whether an image is present</td></tr>
+<tr><td><code>ClipboardGetImage()</code></td><td>Image as a full BMP file (ByteArray)</td></tr>
+<tr><td><code>ClipboardGetImageInfo()</code></td><td>Metadata {width, height, bpp}</td></tr>
+<tr><td><code>ClipboardSetImage(bmpBytes)</code></td><td>Put an image on the clipboard (BMP file or DIB)</td></tr>
+<tr><td><code>ClipboardClear()</code></td><td>Clear the clipboard</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Screen capture</h2>
+<p><strong>Plugin:</strong> <code>screen.dll</code> — screenshots: full screen, region, all monitors. <a href="screen.html">Detailed reference →</a></p>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>ScreenCount()</code></td><td>Number of monitors</td></tr>
+<tr><td><code>ScreenWidth() / ScreenHeight()</code></td><td>Primary monitor resolution</td></tr>
+<tr><td><code>ScreenVirtualRect()</code></td><td>Virtual desktop bounds {left, top, width, height}</td></tr>
+<tr><td><code>ScreenMonitors()</code></td><td>Monitor list {left, top, width, height, primary}</td></tr>
+<tr><td><code>ScreenCapture([cursor])</code></td><td>Capture the primary screen as BMP (ByteArray)</td></tr>
+<tr><td><code>ScreenCaptureRect(x, y, w, h, [cursor])</code></td><td>Capture a region as BMP (ByteArray)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>SMTP</h2>
+<p><strong>Plugin:</strong> <code>smtp.dll</code> — send email via SMTP. <a href="smtp.html">Detailed reference →</a></p>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>SmtpClient()</code></td><td>Create a client</td></tr>
+<tr><td><code>smtp.connect(host, [port], [useSSL])</code></td><td>Connect (SSL/STARTTLS)</td></tr>
+<tr><td><code>smtp.login(user, pass)</code></td><td>Login</td></tr>
+<tr><td><code>smtp.send(from, to, subject, body, [isHtml])</code></td><td>Send a MIME message</td></tr>
+<tr><td><code>smtp.attach(filename, data, [type])</code></td><td>Add an attachment</td></tr>
+<tr><td><code>smtp.disconnect()</code></td><td>Disconnect</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>TCP</h2>
+<p><strong>Plugin:</strong> <code>tcp.dll</code> — TCP client and TCP server. <a href="tcp.html">Detailed reference →</a></p>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>TcpClient([name])</code></td><td>Create a TCP client</td></tr>
+<tr><td><code>client.connect(host, port)</code></td><td>Connect to a server</td></tr>
+<tr><td><code>client.send(data)</code></td><td>Send data (string or ByteArray)</td></tr>
+<tr><td><code>client.sendline(text)</code></td><td>Send a line with \n</td></tr>
+<tr><td><code>client.recv([maxBytes], [asText])</code></td><td>Receive data from the buffer</td></tr>
+<tr><td><code>client.recvline([timeout])</code></td><td>Receive a line up to \n</td></tr>
+<tr><td><code>client.disconnect()</code></td><td>Disconnect</td></tr>
+<tr><td><code>TcpServer([name])</code></td><td>Create a TCP server</td></tr>
+<tr><td><code>server.listen(port)</code></td><td>Start listening</td></tr>
+<tr><td><code>server.stop()</code></td><td>Stop the server</td></tr>
+<tr><td><code>server.broadcast(data)</code></td><td>Send to all clients</td></tr>
+<tr><td><code>server.setonconnect(func)</code></td><td>Connection handler</td></tr>
+<tr><td><code>server.clients()</code></td><td>Array of connected clients</td></tr>
+<tr><td><code>server.closeall()</code></td><td>Disconnect all clients</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>UDP</h2>
+<p><strong>Plugin:</strong> <code>udp.dll</code> — UDP client and UDP server. <a href="udp.html">Detailed reference →</a></p>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>UdpClient()</code></td><td>Create a UDP client</td></tr>
+<tr><td><code>client.open()</code></td><td>Create a socket</td></tr>
+<tr><td><code>client.bind(port)</code></td><td>Bind to a port (with auto-recv)</td></tr>
+<tr><td><code>client.send(host, port, data)</code></td><td>Send a datagram</td></tr>
+<tr><td><code>client.recv([max], [text])</code></td><td>Receive data</td></tr>
+<tr><td><code>client.broadcast(port, data)</code></td><td>Broadcast send</td></tr>
+<tr><td><code>client.close()</code></td><td>Close the socket</td></tr>
+<tr><td><code>UdpServer()</code></td><td>Create a UDP server</td></tr>
+<tr><td><code>server.bind(port)</code></td><td>Bind to a port (with auto-recv)</td></tr>
+<tr><td><code>server.receive([text])</code></td><td>Receive a datagram</td></tr>
+<tr><td><code>server.send(ip, port, data)</code></td><td>Send to an address</td></tr>
+<tr><td><code>server.reply(data)</code></td><td>Reply to the last sender</td></tr>
+<tr><td><code>server.broadcast(port, data)</code></td><td>Broadcast send</td></tr>
+<tr><td><code>server.peers()</code></td><td>List of known peers</td></tr>
+<tr><td><code>server.close()</code></td><td>Close the socket</td></tr>
+</table>
+</div>
+
+<div class="doc-section" id="arena">
+<h2>Arena safety (ScriptValueArena)</h2>
+<p>ScriptValueArena is a lifetime management system for fast script values. Values allocated with <code>MakeTempValue</code> live only on the current arena level. When <code>ArenaLevelScope</code> is invoked a new level is created; when leaving scopes the level is destroyed together with all values allocated on it.</p>
+
+<h3>Safety rule</h3>
+<p><strong>Never return pointers/references to values allocated inside <code>ArenaLevelScope</code>.</strong></p>
+<p>If you created a value with <code>MakeTempValue</code> inside a scope, you <strong>must</strong> either:</p>
+<ul>
+  <li>Copy the value (<code>Clone</code>) <strong>before</strong> the scope ends</li>
+  <li>Or move the value to the heap via <code>ScriptValue</code> (shared_ptr)</li>
+</ul>
+
+<h3>Example of a mistake</h3>
+<pre><code><span class="cmt">// WRONG — the value is destroyed when leaving the scope</span>
+QScriptValueHandle HostObjectGet(QScriptContextHandle ctx, QScriptValueHandle obj)
+{
+    ArenaLevelScope scope{ctx->arena};
+    QScriptValueHandle val = MakeTempValue(ctx, ScriptValue(int64_t(42)));
+    return val; <span class="cmt">// val points to destroyed memory!</span>
+}
+
+<span class="cmt">// RIGHT — copy the value before the scope ends</span>
+QScriptValueHandle HostObjectGet(QScriptContextHandle ctx, QScriptValueHandle obj)
+{
+    ArenaLevelScope scope{ctx->arena};
+    QScriptValueHandle val = MakeTempValue(ctx, ScriptValue(int64_t(42)));
+    return val->Clone(); <span class="cmt">// return a copy in permanent storage</span>
+}</code></pre>
+
+<h3>Where this is critical</h3>
+<p>This issue affects plugin callback functions: <code>HostObjectGetProperty</code>, <code>HostObjectCallMethod</code>, <code>HostObjectGetPropertyNames</code>, <code>HostObjectCall</code>. The arena level is already managed by the calling code (<code>PluginFuncWrapper</code>, <code>ExternalObjectWrapper::CallMethod</code>); creating nested <code>ArenaLevelScope</code> in these functions is <strong>not allowed</strong>.</p>
+
+<h3>Symptoms</h3>
+<p>Violating this rule causes the <code>FATAL: corrupted variant</code> error — memory allocated on the arena is overwritten by other values after the level is destroyed, and the script engine tries to read invalid data.</p>
+</div>
+
+<footer><a href="index.html">← Home</a></footer>
+</div>
+</body>
+</html>

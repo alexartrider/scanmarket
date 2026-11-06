@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Плагины — Script</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Плагины</h1><p>Подключаемые модули для расширения функциональности</p><div class="lang-switch"><a class="active" href="plugins.html">RU</a><a href="en/plugins.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Главная</a> / Плагины</p>
+
+<div class="doc-section">
+<h2>Подключение плагинов</h2>
+<p>Плагины загружаются через глобальную функцию <code>loadPlugin</code>:</p>
+<pre><code><span class="cmt">// Загрузка плагина по имени файла (без расширения .dll/.so)</span>
+loadPlugin(<span class="str">"archive7zip"</span>);
+
+<span class="cmt">// С псевдонимом</span>
+loadPlugin(<span class="str">"archive7zip"</span>, <span class="str">"zip"</span>);</code></pre>
+<p>Возвращает <code>true</code> при успешной загрузке, <code>false</code> — если не найден.</p>
+<p><strong>Примечание:</strong> ключевое слово <code>uses</code> используется только для встроенных модулей (<code>str</code>, <code>math</code>, <code>file</code>, <code>datetime</code> и др.).</p>
+<p><strong>Разработка плагинов:</strong> подробное руководство — <a href="plugin_development.html">Разработка плагинов</a></p>
+</div>
+
+<div class="doc-section">
+<h2>Архивы (7-Zip)</h2>
+<p><strong>Плагин:</strong> <code>archive7zip.dll</code> — работа с архивами 7z, ZIP, TAR, GZIP. <a href="archive7zip.html">Подробная справка →</a></p>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>archive7zip()</code></td><td>Создание объекта (требует 7z.exe)</td></tr>
+<tr><td><code>zip.list(archive)</code></td><td>Список файлов с метаданными</td></tr>
+<tr><td><code>zip.extract(archive, dest)</code></td><td>Извлечение всего архива</td></tr>
+<tr><td><code>zip.extractFile(archive, file, dest)</code></td><td>Извлечение одного файла</td></tr>
+<tr><td><code>zip.create(archive, files, [format])</code></td><td>Создание архива (zip/7z/tar/gzip)</td></tr>
+<tr><td><code>zip.test(archive)</code></td><td>Проверка целостности</td></tr>
+<tr><td><code>zip.info(archive)</code></td><td>Информация об архиве</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Архивы (ZIP, нативно)</h2>
+<p><strong>Плагин:</strong> <code>zip.dll</code> — работа с ZIP-архивами без внешних программ (на базе miniz). <a href="zip.html">Подробная справка →</a></p>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>zip()</code></td><td>Создание объекта</td></tr>
+<tr><td><code>zip.list(archive)</code></td><td>Список файлов с метаданными</td></tr>
+<tr><td><code>zip.extract(archive, dest, [password], [withPaths])</code></td><td>Извлечение всего архива</td></tr>
+<tr><td><code>zip.extractFile(archive, file, dest)</code></td><td>Извлечение одного файла</td></tr>
+<tr><td><code>zip.create(archive, files, [format], [password], [level])</code></td><td>Создание ZIP-архива (файлы или папки)</td></tr>
+<tr><td><code>zip.test(archive)</code></td><td>Проверка целостности</td></tr>
+<tr><td><code>zip.info(archive)</code></td><td>Информация об архиве</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>HTTP</h2>
+<p><strong>Плагин:</strong> <code>http.dll</code> — HTTP/HTTPS клиент и HTTP-сервер. GET, POST, PUT, DELETE, заголовки, аутентификация, загрузка файлов, multipart, прокси, встроенный веб-сервер с callback-моделью. <a href="http.html">Подробная справка →</a></p>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>HttpClient()</code></td><td>Создание клиента</td></tr>
+<tr><td><code>http.get(url)</code></td><td>GET-запрос</td></tr>
+<tr><td><code>http.post(url, [body], [contentType])</code></td><td>POST-запрос</td></tr>
+<tr><td><code>http.put/del/patch/head</code></td><td>PUT, DELETE, PATCH, HEAD запросы</td></tr>
+<tr><td><code>http.request(method, url)</code></td><td>Произвольный HTTP-метод</td></tr>
+<tr><td><code>http.download(url, path)</code></td><td>Скачивание файла</td></tr>
+<tr><td><code>http.upload(url, path, [field])</code></td><td>Multipart загрузка</td></tr>
+<tr><td><code>http.setHeader/clearHeaders</code></td><td>Управление заголовками</td></tr>
+<tr><td><code>http.setBasicAuth/setBearerAuth</code></td><td>Аутентификация</td></tr>
+<tr><td><code>http.status/getResponse/getResponseBytes</code></td><td>Результат запроса</td></tr>
+<tr><td><code>http.urlEncode/urlDecode/getMimeType</code></td><td>Утилиты</td></tr>
+</table>
+<h3>HttpServer</h3>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>HttpServer()</code></td><td>Создание сервера</td></tr>
+<tr><td><code>server.listen(port)</code></td><td>Запуск на порту</td></tr>
+<tr><td><code>server.process([timeout_ms])</code></td><td>Получить запрос (tuple/null)</td></tr>
+<tr><td><code>server.respond(socketId, resp)</code></td><td>Отправить ответ</td></tr>
+<tr><td><code>server.stop()</code></td><td>Остановить сервер</td></tr>
+<tr><td><code>server.islistening/port/lastError</code></td><td>Состояние сервера</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>WebSocket</h2>
+<p><strong>Плагин:</strong> <code>websocket.dll</code> — WebSocket клиент. Двусторонняя связь в реальном времени, текстовые и бинарные сообщения, ping/pong, ws:// и wss://. <a href="websocket.html">Подробная справка →</a></p>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>WebSocket()</code></td><td>Создание объекта</td></tr>
+<tr><td><code>ws.connect(url)</code></td><td>Подключение (ws:// или wss://)</td></tr>
+<tr><td><code>ws.send(text)</code></td><td>Отправка текстового сообщения</td></tr>
+<tr><td><code>ws.sendBinary(data)</code></td><td>Отправка бинарных данных</td></tr>
+<tr><td><code>ws.recv()</code></td><td>Получение текстового сообщения</td></tr>
+<tr><td><code>ws.recvBinary()</code></td><td>Получение бинарного сообщения (ByteArray)</td></tr>
+<tr><td><code>ws.ping()</code></td><td>Отправка ping</td></tr>
+<tr><td><code>ws.close()</code></td><td>Корректное закрытие (close-фрейм)</td></tr>
+<tr><td><code>ws.disconnect()</code></td><td>Отключение без close-фрейма</td></tr>
+<tr><td><code>ws.isconnected()</code></td><td>Проверка подключения</td></tr>
+<tr><td><code>ws.hasMessage() / ws.messageCount()</code></td><td>Очередь сообщений</td></tr>
+<tr><td><code>ws.clearMessages()</code></td><td>Очистка очереди</td></tr>
+<tr><td><code>ws.setTimeout([ms])</code></td><td>Таймаут чтения</td></tr>
+<tr><td><code>ws.lastError()</code></td><td>Последняя ошибка</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>COM-порты</h2>
+<p><strong>Плагин:</strong> <code>comport.dll</code> — работа с COM-портами. <a href="comport.html">Подробная справка →</a></p>
+<table>
+<tr><th>Метод/Свойство</th><th>Описание</th></tr>
+<tr><td><code>ComPort([name])</code></td><td>Создание объекта порта</td></tr>
+<tr><td><code>port</code>, <code>baudrate</code>, <code>bytesize</code>, <code>stopbits</code>, <code>parity</code>, <code>timeout</code></td><td>Свойства (R/W)</td></tr>
+<tr><td><code>open()</code>, <code>close()</code>, <code>isopen()</code></td><td>Управление портом</td></tr>
+<tr><td><code>write(data)</code>, <code>writeline(text)</code></td><td>Запись данных</td></tr>
+<tr><td><code>read()</code>, <code>readline()</code>, <code>available()</code></td><td>Чтение данных</td></tr>
+<tr><td><code>clear()</code>, <code>clearrx()</code>, <code>cleartx()</code></td><td>Очистка буферов</td></tr>
+<tr><td><code>listports()</code></td><td>Список доступных портов</td></tr>
+<tr><td><code>setondata(callback)</code></td><td>Callback при поступлении данных</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Crypto</h2>
+<p><strong>Плагин:</strong> <code>crypto.dll</code> — хеширование, шифрование, подписи, генерация ключей, JWT. <a href="crypto.html">Подробная справка →</a></p>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>md5/sha1/sha256/sha512(data)</code></td><td>Хеш-функции</td></tr>
+<tr><td><code>sha3_256/sha3_512(data)</code></td><td>SHA3 (Keccak)</td></tr>
+<tr><td><code>hmac(key, data, [algo])</code></td><td>HMAC-подпись</td></tr>
+<tr><td><code>hmacVerify(key, data, sig)</code></td><td>Проверка HMAC</td></tr>
+<tr><td><code>pbkdf2(pass, salt, [iter], [len])</code></td><td>Деривация ключа</td></tr>
+<tr><td><code>aesEncrypt(data, key)</code></td><td>AES-GCM шифрование</td></tr>
+<tr><td><code>aesDecrypt(data, key)</code></td><td>AES-GCM дешифрование</td></tr>
+<tr><td><code>rsaGenerate/Encrypt/Decrypt/Sign/Verify</code></td><td>RSA операции</td></tr>
+<tr><td><code>ed25519Generate/Sign/Verify</code></td><td>Ed25519 операции</td></tr>
+<tr><td><code>base64Encode/Decode</code></td><td>Base64 кодирование</td></tr>
+<tr><td><code>hexEncode/Decode</code></td><td>Hex кодирование</td></tr>
+<tr><td><code>randomBytes/randomInt/uuid</code></td><td>Случайные значения</td></tr>
+<tr><td><code>totp/hotp</code></td><td>Одноразовые пароли</td></tr>
+<tr><td><code>jwtCreate/Verify/Decode</code></td><td>JWT (HS/RS/ES/EdDSA)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Excel (XLSX)</h2>
+<p><strong>Плагин:</strong> <code>excel.dll</code> — чтение и запись файлов XLSX (нативная реализация на базе OpenXLSX): ячейки, листы, объединение, форматирование, свойства документа. <a href="excel.html">Подробная справка →</a></p>
+<p style="color:#a06a00;background:#fff8e1;border:1px solid #e0a800;border-radius:6px;padding:6px 10px;"><b>⚠️ Плагин упрощённый, начального уровня.</b> Для обычной работы используйте Qt-версию <code>qt.XlsxDocument()</code> (<a href="xlsx.html">xlsx.html</a>) или <code>xlsxedit.prg</code> (<a href="automation.html">automation.html</a>).</p>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>XlsxDocument()</code></td><td>Создание объекта</td></tr>
+<tr><td><code>doc.create/open(filename)</code></td><td>Создание/открытие XLSX-файла</td></tr>
+<tr><td><code>doc.save() / saveAs(filename)</code></td><td>Сохранение</td></tr>
+<tr><td><code>doc.read/write(row, col[, value])</code></td><td>Чтение/запись ячейки (1-based)</td></tr>
+<tr><td><code>doc.readAll/readRow/readColumn</code></td><td>Чтение диапазонов данных</td></tr>
+<tr><td><code>doc.sheetCount/sheetNames/currentSheetName</code></td><td>Сведения о листах</td></tr>
+<tr><td><code>doc.selectSheet/addSheet/insertSheet</code></td><td>Выбор и добавление листов</td></tr>
+<tr><td><code>doc.renameSheet/copySheet/moveSheet/deleteSheet</code></td><td>Управление листами</td></tr>
+<tr><td><code>doc.mergeCells/unmergeCells</code></td><td>Объединение ячеек</td></tr>
+<tr><td><code>doc.setColumnWidth/setRowHeight</code>, <code>setColumnHidden/setRowHidden</code></td><td>Форматирование</td></tr>
+<tr><td><code>doc.documentProperty/setDocumentProperty</code></td><td>Свойства документа</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>dBASE (DBF)</h2>
+<p><strong>Плагин:</strong> <code>dbf.dll</code> — чтение, запись, создание и управление файлами dBASE (DBF). <a href="dbf.html">Подробная справка →</a></p>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>dbffile()</code></td><td>Создание объекта</td></tr>
+<tr><td><code>open(path, [enc])</code></td><td>Открытие файла (enc: 1251/866)</td></tr>
+<tr><td><code>create(path, fields, [enc])</code></td><td>Создание нового DBF</td></tr>
+<tr><td><code>readAll([asTuple])</code></td><td>Чтение всех записей</td></tr>
+<tr><td><code>row(n)</code></td><td>Чтение записи по номеру</td></tr>
+<tr><td><code>append(...)</code></td><td>Добавление записи</td></tr>
+<tr><td><code>updateRow(n, data)</code></td><td>Обновление записи</td></tr>
+<tr><td><code>deleteRow(n)</code></td><td>Пометка на удаление</td></tr>
+<tr><td><code>pack()</code></td><td>Физическое удаление помеченных</td></tr>
+<tr><td><code>save([path])</code></td><td>Сохранение в файл</td></tr>
+<tr><td><code>locate(field, value)</code></td><td>Поиск по значению</td></tr>
+<tr><td><code>fields()</code></td><td>Метаданные полей</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>IMAP</h2>
+<p><strong>Плагин:</strong> <code>imap.dll</code> — клиент IMAP для чтения, поиска, удаления и управления письмами. <a href="imap.html">Подробная справка →</a></p>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>connect(host, [port], [tls])</code></td><td>Подключение к IMAP-серверу</td></tr>
+<tr><td><code>login(user, pass)</code></td><td>Авторизация</td></tr>
+<tr><td><code>select(folder)</code></td><td>Выбор папки (возвращает кол-во писем)</td></tr>
+<tr><td><code>search([criteria])</code></td><td>Поиск по IMAP-критерию (ALL, UNSEEN, FROM, SUBJECT...)</td></tr>
+<tr><td><code>header(uid)</code></td><td>Заголовки письма (From, To, Subject, Date)</td></tr>
+<tr><td><code>fetch(uid, [part])</code></td><td>Чтение тела/заголовков</td></tr>
+<tr><td><code>attachments(uid)</code></td><td>Список вложений</td></tr>
+<tr><td><code>fetchattachment(uid, part, [path])</code></td><td>Скачивание вложения в файл или ByteArray</td></tr>
+<tr><td><code>delete(uid)</code></td><td>Удаление письма</td></tr>
+<tr><td><code>setflag(uid, flag, [val])</code></td><td>Установка/снятие флагов (\Seen, \Flagged...)</td></tr>
+<tr><td><code>copy(uid, folder)</code></td><td>Копирование в папку</td></tr>
+<tr><td><code>move(uid, folder)</code></td><td>Перемещение в папку</td></tr>
+<tr><td><code>listfolders()</code></td><td>Список папок</td></tr>
+<tr><td><code>disconnect()</code></td><td>Отключение</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>MAX Messenger</h2>
+<p><strong>Плагин:</strong> <code>max.dll</code> — бот-клиент для мессенджера MAX (платформа <code>platform-api2.max.ru</code>): подключение, отправка сообщений, получение через Long Polling. <a href="max.html">Подробная справка →</a></p>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>maxclient()</code></td><td>Создание объекта</td></tr>
+<tr><td><code>mx.connect(token)</code></td><td>Подключение (проверка токена через GET /me)</td></tr>
+<tr><td><code>mx.send(recipientId, text, [mode])</code></td><td>Отправка текстового сообщения: пользователю (<code>user_id</code>) или в чат/канал при <code>mode</code> = <code>"chat"</code>/<code>"channel"</code> (<code>chat_id</code>)</td></tr>
+<tr><td><code>mx.recv()</code></td><td>Получение сообщения (tuple/null), Long Polling при пустой очереди</td></tr>
+<tr><td><code>mx.hasMessage() / messageCount()</code></td><td>Очередь сообщений</td></tr>
+<tr><td><code>mx.setTimeout(sec)</code></td><td>Таймаут Long Polling (1–90 сек)</td></tr>
+<tr><td><code>mx.setVerify([bool]) / setCA(file)</code></td><td>Проверка SSL-сертификата</td></tr>
+<tr><td><code>mx.disconnect() / lastError()</code></td><td>Отключение и ошибки</td></tr>
+<tr><td><code>mx.connected / pollTimeout / botUsername</code></td><td>Свойства состояния</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>INI / CSV</h2>
+<p><strong>Плагин:</strong> <code>inicsv.dll</code> — чтение/запись INI и CSV файлов. <a href="inicsv.html">Подробная справка →</a></p>
+<table>
+<tr><th>Функция</th><th>Описание</th></tr>
+<tr><td><code>iniRead(path)</code></td><td>Чтение INI-файла в кортеж кортежей</td></tr>
+<tr><td><code>iniWrite(path, data, [enc])</code></td><td>Запись INI-файла из кортежа</td></tr>
+<tr><td><code>iniReadValue(path, section, key)</code></td><td>Чтение одного значения</td></tr>
+<tr><td><code>iniWriteValue(path, section, key, value, [enc])</code></td><td>Запись/обновление одного значения</td></tr>
+<tr><td><code>csvRead(path, fields, [enc], [sep])</code></td><td>Чтение CSV в массив кортежей</td></tr>
+<tr><td><code>csvWrite(path, fields, data, [enc], [sep])</code></td><td>Запись CSV из массива кортежей</td></tr>
+<tr><td><code>csvRowCount(path)</code></td><td>Количество строк (без заголовка)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>LDAP / Active Directory</h2>
+<p><strong>Плагин:</strong> <code>ldap.dll</code> — корпоративная среда: авторизация в AD, поиск пользователей и групп в LDAP-каталоге. <a href="ldap.html">Подробная справка →</a></p>
+<table>
+<tr><th>Функция/Метод</th><th>Описание</th></tr>
+<tr><td><code>LDAPAuthenticate(server, port, user, password)</code></td><td>Авторизация пользователя (UPN, DN или DOMAIN\user)</td></tr>
+<tr><td><code>LDAP([server], [port], [secure])</code></td><td>Создание объекта соединения</td></tr>
+<tr><td><code>ld.open / bind / bindAnonymous</code></td><td>Подключение и авторизация</td></tr>
+<tr><td><code>ld.search(base, filter, [attrs], [scope])</code></td><td>Поиск в каталоге (постраничный, RFC 2696)</td></tr>
+<tr><td><code>ld.escapeFilter(value)</code></td><td>Экранирование значения для LDAP-фильтра</td></tr>
+<tr><td><code>ld.errorCode / errorText / isConnected</code></td><td>Ошибки и состояние соединения</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Реестр Windows</h2>
+<p><strong>Плагин:</strong> <code>registry.dll</code> — чтение/запись реестра Windows. <a href="registry.html">Подробная справка →</a></p>
+<table>
+<tr><th>Функция</th><th>Описание</th></tr>
+<tr><td><code>RegistryOpen(root, path, [access])</code></td><td>Открытие ключа реестра</td></tr>
+<tr><td><code>RegistryReadString/Int(root, path, name)</code></td><td>Чтение строки / числа</td></tr>
+<tr><td><code>RegistryWriteString/Int(root, path, name, val)</code></td><td>Запись строки / числа</td></tr>
+<tr><td><code>RegistryEnumKeys/Values(root, path)</code></td><td>Перечисление подключей / значений</td></tr>
+<tr><td><code>RegistryKeyExists/ValueExists</code></td><td>Проверка существования</td></tr>
+<tr><td><code>RegistryDeleteValue/Key</code></td><td>Удаление значения / ключа</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Буфер обмена</h2>
+<p><strong>Плагин:</strong> <code>clipboard.dll</code> — чтение/запись текста и изображений в системный буфер обмена Windows. <a href="clipboard.html">Подробная справка →</a></p>
+<table>
+<tr><th>Функция</th><th>Описание</th></tr>
+<tr><td><code>ClipboardGetText()</code></td><td>Текст из буфера обмена</td></tr>
+<tr><td><code>ClipboardSetText(text)</code></td><td>Поместить текст в буфер</td></tr>
+<tr><td><code>ClipboardHasText()</code></td><td>Проверка наличия текста</td></tr>
+<tr><td><code>ClipboardHasImage()</code></td><td>Проверка наличия изображения</td></tr>
+<tr><td><code>ClipboardGetImage()</code></td><td>Изображение как полный файл BMP (ByteArray)</td></tr>
+<tr><td><code>ClipboardGetImageInfo()</code></td><td>Метаданные {width, height, bpp}</td></tr>
+<tr><td><code>ClipboardSetImage(bmpBytes)</code></td><td>Поместить изображение (BMP-файл или DIB)</td></tr>
+<tr><td><code>ClipboardClear()</code></td><td>Очистить буфер обмена</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Захват экрана</h2>
+<p><strong>Плагин:</strong> <code>screen.dll</code> — скриншоты: весь экран, область, все мониторы. <a href="screen.html">Подробная справка →</a></p>
+<table>
+<tr><th>Функция</th><th>Описание</th></tr>
+<tr><td><code>ScreenCount()</code></td><td>Количество мониторов</td></tr>
+<tr><td><code>ScreenWidth() / ScreenHeight()</code></td><td>Разрешение основного монитора</td></tr>
+<tr><td><code>ScreenVirtualRect()</code></td><td>Границы виртуального рабочего стола {left, top, width, height}</td></tr>
+<tr><td><code>ScreenMonitors()</code></td><td>Список мониторов {left, top, width, height, primary}</td></tr>
+<tr><td><code>ScreenCapture([cursor])</code></td><td>Снимок основного экрана как BMP (ByteArray)</td></tr>
+<tr><td><code>ScreenCaptureRect(x, y, w, h, [cursor])</code></td><td>Снимок области как BMP (ByteArray)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>SMTP</h2>
+<p><strong>Плагин:</strong> <code>smtp.dll</code> — отправка email через SMTP. <a href="smtp.html">Подробная справка →</a></p>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>SmtpClient()</code></td><td>Создание клиента</td></tr>
+<tr><td><code>smtp.connect(host, [port], [useSSL])</code></td><td>Подключение (SSL/STARTTLS)</td></tr>
+<tr><td><code>smtp.login(user, pass)</code></td><td>Авторизация</td></tr>
+<tr><td><code>smtp.send(from, to, subject, body, [isHtml])</code></td><td>Отправка MIME-письма</td></tr>
+<tr><td><code>smtp.attach(filename, data, [type])</code></td><td>Добавление вложения</td></tr>
+<tr><td><code>smtp.disconnect()</code></td><td>Отключение</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>TCP</h2>
+<p><strong>Плагин:</strong> <code>tcp.dll</code> — TCP-клиент и TCP-сервер. <a href="tcp.html">Подробная справка →</a></p>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>TcpClient([name])</code></td><td>Создание TCP-клиента</td></tr>
+<tr><td><code>client.connect(host, port)</code></td><td>Подключение к серверу</td></tr>
+<tr><td><code>client.send(data)</code></td><td>Отправка данных (строка или ByteArray)</td></tr>
+<tr><td><code>client.sendline(text)</code></td><td>Отправка строки с \n</td></tr>
+<tr><td><code>client.recv([maxBytes], [asText])</code></td><td>Получение данных из буфера</td></tr>
+<tr><td><code>client.recvline([timeout])</code></td><td>Получение строки до \n</td></tr>
+<tr><td><code>client.disconnect()</code></td><td>Отключение</td></tr>
+<tr><td><code>TcpServer([name])</code></td><td>Создание TCP-сервера</td></tr>
+<tr><td><code>server.listen(port)</code></td><td>Начать прослушивание</td></tr>
+<tr><td><code>server.stop()</code></td><td>Остановка сервера</td></tr>
+<tr><td><code>server.broadcast(data)</code></td><td>Отправка всем клиентам</td></tr>
+<tr><td><code>server.setonconnect(func)</code></td><td>Обработчик подключения</td></tr>
+<tr><td><code>server.clients()</code></td><td>Массив подключённых клиентов</td></tr>
+<tr><td><code>server.closeall()</code></td><td>Отключение всех клиентов</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>UDP</h2>
+<p><strong>Плагин:</strong> <code>udp.dll</code> — UDP-клиент и UDP-сервер. <a href="udp.html">Подробная справка →</a></p>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>UdpClient()</code></td><td>Создание UDP-клиента</td></tr>
+<tr><td><code>client.open()</code></td><td>Создание сокета</td></tr>
+<tr><td><code>client.bind(port)</code></td><td>Привязка к порту (с auto-recv)</td></tr>
+<tr><td><code>client.send(host, port, data)</code></td><td>Отправка дейтаграммы</td></tr>
+<tr><td><code>client.recv([max], [text])</code></td><td>Получение данных</td></tr>
+<tr><td><code>client.broadcast(port, data)</code></td><td>Broadcast отправка</td></tr>
+<tr><td><code>client.close()</code></td><td>Закрытие сокета</td></tr>
+<tr><td><code>UdpServer()</code></td><td>Создание UDP-сервера</td></tr>
+<tr><td><code>server.bind(port)</code></td><td>Привязка к порту (с auto-recv)</td></tr>
+<tr><td><code>server.receive([text])</code></td><td>Получение дейтаграммы</td></tr>
+<tr><td><code>server.send(ip, port, data)</code></td><td>Отправка по адресу</td></tr>
+<tr><td><code>server.reply(data)</code></td><td>Ответ последнему отправителю</td></tr>
+<tr><td><code>server.broadcast(port, data)</code></td><td>Broadcast отправка</td></tr>
+<tr><td><code>server.peers()</code></td><td>Список известных пиров</td></tr>
+<tr><td><code>server.close()</code></td><td>Закрытие сокета</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>MSSQL (SQL Server)</h2>
+<p><strong>Плагин:</strong> <code>mssql.dll</code>.</p>
+<p style="color:#a06a00;background:#fff8e1;border:1px solid #e0a800;border-radius:6px;padding:6px 10px;"><b>⚠️ Упрощённый плагин, начального уровня.</b> Для полноценной работы с SQL Server используйте Qt-версию — модуль <code>db</code> через драйвер <code>QODBC</code> (<a href="db.html">db.html</a>): параметризованные запросы, транзакции и т.д.</p>
+<pre><code><span class="cmt">// Qt-версия (рекомендуется):</span>
+db.connect(db.QODBC, <span class="str">"DRIVER={SQL Server};SERVER=хост;DATABASE=база;UID=пользователь;PWD=пароль"</span>);
+var q = db.query();
+q.execSQL(<span class="str">"insert into t(name) values (?)"</span>, #["текст"]);
+q.open(<span class="str">"select * from t"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>PostgreSQL</h2>
+<p><strong>Плагин:</strong> <code>postgresql.dll</code>.</p>
+<p style="color:#a06a00;background:#fff8e1;border:1px solid #e0a800;border-radius:6px;padding:6px 10px;"><b>⚠️ Упрощённый плагин, начального уровня.</b> Для полноценной работы с PostgreSQL используйте Qt-версию — модуль <code>db</code> через драйвер <code>QPSQL</code> (<a href="db.html">db.html</a>).</p>
+<pre><code><span class="cmt">// Qt-версия (рекомендуется):</span>
+db.connect(db.QPSQL, <span class="str">"host=хост port=5432 dbname=база user=пользователь"</span>);</code></pre>
+</div>
+
+<div class="doc-section" id="arena">
+<h2>Безопасность арены (ScriptValueArena)</h2>
+<p>ScriptValueArena — это система управления временем жизни для быстрых значений скрипта. Значения, выделенные через <code>MakeTempValue</code>, живут только на текущем уровне арены. При вызове <code>ArenaLevelScope</code> создаётся новый уровень; при выходе из scopes уровень уничтожается вместе со всеми выделенными на нём значениями.</p>
+
+<h3>Правило безопасности</h3>
+<p><strong>Никогда не возвращайте указатели/ссылки на значения, выделенные внутри <code>ArenaLevelScope</code>.</strong></p>
+<p>Если вы создали значение через <code>MakeTempValue</code> внутри scope, вы <strong>обязаны</strong> либо:</p>
+<ul>
+  <li>Скопировать значение (<code>Clone</code>) <strong>до</strong> завершения scope</li>
+  <li>Или перенести значение на кучу через <code>ScriptValue</code> (shared_ptr)</li>
+</ul>
+
+<h3>Пример ошибки</h3>
+<pre><code><span class="cmt">// НЕПРАВИЛЬНО — значение уничтожается при выходе из scope</span>
+QScriptValueHandle HostObjectGet(QScriptContextHandle ctx, QScriptValueHandle obj)
+{
+    ArenaLevelScope scope{ctx->arena};
+    QScriptValueHandle val = MakeTempValue(ctx, ScriptValue(int64_t(42)));
+    return val; <span class="cmt">// val указывает на уничтоженную память!</span>
+}
+
+<span class="cmt">// ПРАВИЛЬНО — копируем значение до завершения scope</span>
+QScriptValueHandle HostObjectGet(QScriptContextHandle ctx, QScriptValueHandle obj)
+{
+    ArenaLevelScope scope{ctx->arena};
+    QScriptValueHandle val = MakeTempValue(ctx, ScriptValue(int64_t(42)));
+    return val->Clone(); <span class="cmt">// возвращаем копию на постоянном хранилище</span>
+}</code></pre>
+
+<h3>Где это критично</h3>
+<p>Эта проблема затрагивает функции обратного вызова плагинов: <code>HostObjectGetProperty</code>, <code>HostObjectCallMethod</code>, <code>HostObjectGetPropertyNames</code>, <code>HostObjectCall</code>. Уровень арены уже управляется вызывающим кодом (<code>PluginFuncWrapper</code>, <code>ExternalObjectWrapper::CallMethod</code>); создавать вложенные <code>ArenaLevelScope</code> в этих функциях <strong>нельзя</strong>.</p>
+
+<h3>Симптомы</h3>
+<p>При нарушении этого правила возникает ошибка <code>FATAL: corrupted variant</code> — память, выделенная на арене, перезаписывается другими значениями после уничтожения уровня, и скриптовый движок пытается прочитать невалидные данные.</p>
+</div>
+
+<footer><a href="index.html">← На главную</a></footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SQLite module — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>SQLite module</h1><p>Native built-in SQLite with no dependency on QtSql or an external SQLite DLL</p><div class="lang-switch"><a href="../sqlite.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="sqlite.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / SQLite</p>
+
+<div class="doc-section">
+<h2>Creation</h2>
+<pre><code><span class="kw">var</span> db = sqlite.open(<span class="str">"data.db"</span>);
+<span class="kw">var</span> memory = sqlite.memory();</code></pre>
+<p>The module uses the SQLite amalgamation built together with the application. <code>qsqlite.dll</code> is not required.</p>
+</div>
+
+<div class="doc-section">
+<h2>Module methods</h2>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>sqlite.open(path)</code></td><td>Create and open a SQLite database</td></tr>
+<tr><td><code>sqlite.memory()</code></td><td>Create an in-memory database</td></tr>
+<tr><td><code>sqlite.version()</code></td><td>Version of the built-in SQLite library</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Database object methods</h2>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>db.exec(sql, params?)</code></td><td>Execute INSERT, UPDATE, DELETE or DDL</td></tr>
+<tr><td><code>db.execute(sql, params?)</code></td><td>Alias of <code>exec</code></td></tr>
+<tr><td><code>db.query(sql, params?)</code></td><td>Execute SELECT and return an array of tuples</td></tr>
+<tr><td><code>db.scalar(sql, params?)</code></td><td>Return the first field of the first row</td></tr>
+<tr><td><code>db.begin()</code>, <code>db.commit()</code>, <code>db.rollback()</code></td><td>Transactions</td></tr>
+<tr><td><code>db.changes()</code></td><td>Number of changed rows</td></tr>
+<tr><td><code>db.last_insert_rowid()</code></td><td>ID of the last inserted row</td></tr>
+<tr><td><code>db.isopen()</code>, <code>db.close()</code></td><td>Database state and closing</td></tr>
+<tr><td><code>db.last_error()</code></td><td>Text of the last error</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Parameters</h2>
+<p>Positional parameters are passed as an array, named parameters as a tuple. For named parameters the key is specified together with the <code>:</code>, <code>@</code> or <code>$</code> prefix.</p>
+<pre><code>db.exec(<span class="str">"insert into people(name, age) values (?, ?)"</span>, #[<span class="str">"Alice"</span>, <span class="num">30</span>]);
+db.exec(<span class="str">"insert into people(name, age) values (:name, :age)"</span>, #{
+    <span class="str">":name"</span>: <span class="str">"Bob"</span>,
+    <span class="str">":age"</span>: <span class="num">41</span>
+});</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Types</h2>
+<table>
+<tr><th>SQLite</th><th>Script</th></tr>
+<tr><td>NULL</td><td><code>null</code></td></tr>
+<tr><td>INTEGER</td><td>integer</td></tr>
+<tr><td>REAL</td><td>floating-point number</td></tr>
+<tr><td>TEXT</td><td>UTF-8 string</td></tr>
+<tr><td>BLOB</td><td>array of numeric bytes</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Example</h2>
+<pre><code><span class="kw">var</span> db = sqlite.open(<span class="str">"people.db"</span>);
+db.exec(<span class="str">"create table if not exists people(id integer primary key, name text, age integer)"</span>);
+db.exec(<span class="str">"insert into people(name, age) values (?, ?)"</span>, #[<span class="str">"Alice"</span>, <span class="num">30</span>]);
+
+<span class="kw">var</span> rows = db.query(<span class="str">"select id, name, age from people order by id"</span>);
+<span class="kw">for</span> (<span class="kw">var</span> row : rows) {
+    print(row.id + <span class="str">": "</span> + row.name + <span class="str">", "</span> + row.age);
+}
+db.close();</code></pre>
+</div>
+</div>
+</body>
+</html>

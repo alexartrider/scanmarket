@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Плагин IMAP — Script</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Плагин IMAP</h1><p>Клиент почтового протокола IMAP — чтение, поиск, удаление и управление письмами</p><div class="lang-switch"><a class="active" href="imap.html">RU</a><a href="en/imap.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Главная</a> / <a href="plugins.html">Плагины</a> / IMAP</p>
+
+<div class="doc-section">
+<h2>Загрузка плагина</h2>
+<pre><code><span class="kw">if</span> (!loadPlugin(<span class="str">"plugins/imap.dll"</span>)) {
+    print(<span class="str">"ОШИБКА: imap.dll не загружен!"</span>);
+    system.exit(<span class="num">1</span>);
+}
+
+<span class="kw">var</span> imap = ImapClient();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Подключение и авторизация</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>connect</code></td><td><code>host, [port], [tls]</code></td><td>int (1/0)</td><td>Подключение к IMAP-серверу. port по умолчанию 143 (993 если tls=true). tls — шифрование SSL/TLS</td></tr>
+<tr><td><code>starttls</code></td><td>—</td><td>int (1/0)</td><td>Переключение на TLS (после подключения без шифрования)</td></tr>
+<tr><td><code>login</code></td><td><code>user, pass</code></td><td>int (1/0)</td><td>Авторизация по логину и паролю</td></tr>
+<tr><td><code>authenticate</code></td><td><code>user, token</code></td><td>int (1/0)</td><td>Авторизация через XOAUTH2 (Gmail, Yandex)</td></tr>
+<tr><td><code>disconnect</code></td><td>—</td><td>—</td><td>Закрытие соединения</td></tr>
+<tr><td><code>ping</code></td><td>—</td><td>int (1/0)</td><td>NOOP-команда — поддержание соединения, проверка активности</td></tr>
+<tr><td><code>getStatus</code></td><td>—</td><td>tuple</td><td>Статус подключения</td></tr>
+</table>
+<h3>Возвращаемое значение getStatus()</h3>
+<table>
+<tr><th>Поле</th><th>Тип</th><th>Описание</th></tr>
+<tr><td><code>connected</code></td><td>int</td><td>1 — подключён, 0 — нет</td></tr>
+<tr><td><code>loggedIn</code></td><td>int</td><td>1 — авторизован, 0 — нет</td></tr>
+<tr><td><code>sslEnabled</code></td><td>int</td><td>1 — SSL активен, 0 — нет</td></tr>
+<tr><td><code>currentFolder</code></td><td>string</td><td>Текущая выбранная папка</td></tr>
+</table>
+<pre><code><span class="kw">var</span> imap = ImapClient();
+
+<span class="cmt">// Подключение к Mail.ru с SSL</span>
+<span class="kw">var</span> ok = imap.connect(<span class="str">"imap.mail.ru"</span>, <span class="num">993</span>, <span class="kw">true</span>);
+print(<span class="str">"Подключение: "</span> + ok);  <span class="cmt">// 1</span>
+
+<span class="cmt">// Авторизация</span>
+ok = imap.login(<span class="str">"user@mail.ru"</span>, <span class="str">"password"</span>);
+print(<span class="str">"Вход: "</span> + ok);  <span class="cmt">// 1</span>
+
+<span class="cmt">// Проверка статуса</span>
+<span class="kw">var</span> st = imap.getStatus();
+print(<span class="str">"Подключён: "</span> + st.connected);     <span class="cmt">// 1</span>
+print(<span class="str">"Авторизован: "</span> + st.loggedIn);      <span class="cmt">// 1</span>
+print(<span class="str">"SSL: "</span> + st.sslEnabled);             <span class="cmt">// 1</span>
+print(<span class="str">"Папка: "</span> + st.currentFolder);        <span class="cmt">// (пусто)</span>
+
+<span class="cmt">// Поддержание соединения</span>
+imap.ping();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Работа с папками</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>listfolders</code></td><td><code>[reference], [pattern]</code></td><td>array</td><td>Список папок. reference — базовая папка, pattern — шаблон поиска (по умолчанию "*")</td></tr>
+<tr><td><code>select</code></td><td><code>folder</code></td><td>int</td><td>Выбор папки. Возвращает количество писем или -1 при ошибке</td></tr>
+</table>
+<pre><code><span class="cmt">// Получить список всех папок</span>
+<span class="kw">var</span> folders = imap.listfolders();
+print(<span class="str">"Папок: "</span> + folders.size());
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i < folders.size(); i++) {
+    print(<span class="str">"  "</span> + folders[i]);
+}
+
+<span class="cmt">// Выбрать INBOX</span>
+<span class="kw">var</span> count = imap.select(<span class="str">"INBOX"</span>);
+print(<span class="str">"Писем в INBOX: "</span> + count);
+
+<span class="cmt">// Проверить выбранную папку</span>
+<span class="kw">var</span> st = imap.getStatus();
+print(<span class="str">"Текущая папка: "</span> + st.currentFolder);  <span class="cmt">// INBOX</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Поиск писем</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>search</code></td><td><code>[criteria]</code></td><td>array of int</td><td>Поиск UID писем по IMAP-критерию. Без аргументов — все письма</td></tr>
+</table>
+<h3>IMAP-критерии поиска</h3>
+<table>
+<tr><th>Критерий</th><th>Описание</th><th>Пример</th></tr>
+<tr><td><code>ALL</code></td><td>Все сообщения</td><td><code>search("ALL")</code></td></tr>
+<tr><td><code>UNSEEN</code></td><td>Непрочитанные</td><td><code>search("UNSEEN")</code></td></tr>
+<tr><td><code>SEEN</code></td><td>Прочитанные</td><td><code>search("SEEN")</code></td></tr>
+<tr><td><code>FROM "string"</code></td><td>От отправителя</td><td><code>search("FROM \"user@example.com\"")</code></td></tr>
+<tr><td><code>TO "string"</code></td><td>Получатель</td><td><code>search("TO \"me@example.com\"")</code></td></tr>
+<tr><td><code>SUBJECT "string"</code></td><td>Тема письма</td><td><code>search("SUBJECT \"test\"")</code></td></tr>
+<tr><td><code>BODY "string"</code></td><td>Текст тела</td><td><code>search("BODY \"important\"")</code></td></tr>
+<tr><td><code>SINCE date</code></td><td>После даты</td><td><code>search("SINCE 01-Jan-2024")</code></td></tr>
+<tr><td><code>BEFORE date</code></td><td>До даты</td><td><code>search("BEFORE 31-Dec-2023")</code></td></tr>
+<tr><td><code>UID min:max</code></td><td>Диапазон UID</td><td><code>search("UID 1:100")</code></td></tr>
+<tr><td><code>Larger n</code></td><td>Больше n байт</td><td><code>search("Larger 1024")</code></td></tr>
+<tr><td><code>NOT критерий</code></td><td>Отрицание</td><td><code>search("NOT SEEN")</code></td></tr>
+<tr><td><code>OR (кр1) (кр2)</code></td><td>Логическое ИЛИ</td><td><code>search("OR (FROM \"a\") (FROM \"b\")")</code></td></tr>
+</table>
+<pre><code><span class="cmt">// Все письма</span>
+<span class="kw">var</span> all = imap.search(<span class="str">"ALL"</span>);
+print(<span class="str">"Всего: "</span> + all.size());
+
+<span class="cmt">// Непрочитанные</span>
+<span class="kw">var</span> unread = imap.search(<span class="str">"UNSEEN"</span>);
+print(<span class="str">"Непрочитанных: "</span> + unread.size());
+
+<span class="cmt">// Последние 10 писем</span>
+<span class="kw">var</span> recent = [];
+<span class="kw">var</span> start = max(<span class="num">0</span>, all.size() - <span class="num">10</span>);
+<span class="kw">for</span> (<span class="kw">var</span> i = start; i < all.size(); i++) {
+    recent.push(all[i]);
+}
+
+<span class="cmt">// Поиск UID и фильтрация по заголовкам в скрипте</span>
+<span class="kw">var</span> uids = imap.search(<span class="str">"ALL"</span>);
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i < uids.size(); i++) {
+    <span class="kw">var</span> h = imap.header(uids[i]);
+    <span class="kw">if</span> (!h.isnull()) {
+        <span class="kw">var</span> subj = h[<span class="str">"Subject"</span>];
+        <span class="kw">if</span> (!subj.isnull() && subj.toString().contains(<span class="str">"Important"</span>)) {
+            print(<span class="str">"Найдено: UID="</span> + uids[i] + <span class="str">"Subject="</span> + subj);
+        }
+    }
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Чтение писем</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>header</code></td><td><code>uid</code></td><td>tuple</td><td>Заголовки письма как кортеж key-value (From, To, Subject, Date, ...)</td></tr>
+<tr><td><code>fetch</code></td><td><code>uid, [part]</code></td><td>string</td><td>Чтение содержимого письма</td></tr>
+<tr><td><code>attachments</code></td><td><code>uid</code></td><td>array of tuple</td><td>Список вложений из BODYSTRUCTURE</td></tr>
+<tr><td><code>fetchattachment</code></td><td><code>uid, partNo, [path_or_bytes]</code></td><td>int / bytearray</td><td>Скачивание вложения в файл (указать путь) или ByteArray (без пути)</td></tr>
+</table>
+<h3>Параметры part для fetch()</h3>
+<table>
+<tr><th>Значение</th><th>Описание</th></tr>
+<tr><td><code>BODY.PEEK[HEADER]</code></td><td>Только заголовки (не помечает как прочитанное)</td></tr>
+<tr><td><code>BODY.PEEK[TEXT]</code></td><td>Только тело (не помечает как прочитанное)</td></tr>
+<tr><td><code>BODY.PEEK[]</code></td><td>Заголовки + тело (не помечает как прочитанное)</td></tr>
+<tr><td><code>BODY[HEADER]</code></td><td>Заголовки (помечает как прочитанное)</td></tr>
+<tr><td><code>BODY[TEXT]</code></td><td>Тело (помечает как прочитанное)</td></tr>
+<tr><td><code>BODY[]</code></td><td>Заголовки + тело (помечает как прочитанное)</td></tr>
+<tr><td><code>BODY[1]</code></td><td>Первая часть (текстовая)</td></tr>
+<tr><td><code>BODY[2]</code></td><td>Вторая часть (обычно вложение)</td></tr>
+</table>
+<h3>Поля возвращаемого значения attachments()</h3>
+<table>
+<tr><th>Поле</th><th>Тип</th><th>Описание</th></tr>
+<tr><td><code>partNo</code></td><td>string</td><td>Номер части (для fetchattachment)</td></tr>
+<tr><td><code>filename</code></td><td>string</td><td>Имя файла</td></tr>
+<tr><td><code>type</code></td><td>string</td><td>MIME-тип (application, text, image...)</td></tr>
+<tr><td><code>subtype</code></td><td>string</td><td>Подтип (pdf, octet-stream, plain...)</td></tr>
+<tr><td><code>size</code></td><td>int</td><td>Размер в байтах</td></tr>
+</table>
+<pre><code><span class="kw">var</span> uid = uids[<span class="num">0</span>];
+
+<span class="cmt">// --- Заголовки ---</span>
+<span class="kw">var</span> h = imap.header(uid);
+print(<span class="str">"От:    "</span> + h[<span class="str">"From"</span>]);
+print(<span class="str">"Кому:  "</span> + h[<span class="str">"To"</span>]);
+print(<span class="str">"Тема:  "</span> + h[<span class="str">"Subject"</span>]);
+print(<span class="str">"Дата:  "</span> + h[<span class="str">"Date"</span>]);
+
+<span class="cmt">// --- Тело письма ---</span>
+<span class="kw">var</span> body = imap.fetch(uid, <span class="str">"BODY.PEEK[TEXT]"</span>);
+print(body);
+
+<span class="cmt">// --- Заголовки + тело (без пометки прочитанного) ---</span>
+<span class="kw">var</span> full = imap.fetch(uid, <span class="str">"BODY.PEEK[]"</span>);
+
+<span class="cmt">// --- Вложения ---</span>
+<span class="kw">var</span> atts = imap.attachments(uid);
+print(<span class="str">"Вложений: "</span> + atts.size());
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i < atts.size(); i++) {
+    print(<span class="str">"  ["</span> + i + <span class="str">"] "</span> + atts[i].filename
+        + <span class="str">" ("</span> + atts[i].type + <span class="str">"/"</span> + atts[i].subtype + <span class="str">") "</span>
+        + atts[i].size + <span class="str">" байт"</span>);
+}
+
+<span class="cmt">// --- Скачать вложение в файл ---</span>
+<span class="kw">if</span> (atts.size() > <span class="num">0</span>) {
+    <span class="kw">var</span> saved = imap.fetchattachment(uid, atts[<span class="num">0</span>].partNo, <span class="str">"C:/temp/att.pdf"</span>);
+    print(<span class="str">"Сохранено: "</span> + saved + <span class="str">" байт"</span>);
+}
+
+<span class="cmt">// --- Скачать вложение в ByteArray ---</span>
+<span class="kw">if</span> (atts.size() > <span class="num">0</span>) {
+    <span class="kw">var</span> data = imap.fetchattachment(uid, atts[<span class="num">0</span>].partNo);
+    print(<span class="str">"Размер: "</span> + data.size() + <span class="str">" байт"</span>);
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Удаление и управление флагами</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>delete</code></td><td><code>uid</code></td><td>int (1/0)</td><td>Удаление письма: помечает \Deleted + EXPUNGE</td></tr>
+<tr><td><code>setflag</code></td><td><code>uid, flag, [value]</code></td><td>int (1/0)</td><td>Установка/снятие флага. value: true (по умолчанию) или false</td></tr>
+<tr><td><code>copy</code></td><td><code>uid, folder</code></td><td>int (1/0)</td><td>Копирование письма в другую папку</td></tr>
+<tr><td><code>move</code></td><td><code>uid, folder</code></td><td>int (1/0)</td><td>Перемещение письма (COPY + STORE \Deleted + EXPUNGE)</td></tr>
+</table>
+<h3>Флаги IMAP</h3>
+<table>
+<tr><th>Флаг</th><th>Описание</th></tr>
+<tr><td><code>\Seen</code></td><td>Прочитано</td></tr>
+<tr><td><code>\Answered</code></td><td>На письмо было отвечено</td></tr>
+<tr><td><code>\Flagged</code></td><td>Помечено флажком (важно)</td></tr>
+<tr><td><code>\Deleted</code></td><td>Помечено на удаление</td></tr>
+<tr><td><code>\Draft</code></td><td>Черновик</td></tr>
+</table>
+<pre><code><span class="cmt">// Удалить письмо (STORE +FLAGS \Deleted + EXPUNGE)</span>
+<span class="kw">var</span> ok = imap.delete(uid);
+print(<span class="str">"Удалено: "</span> + ok);
+
+<span class="cmt">// Пометить как прочитанное</span>
+imap.setflag(uid, <span class="str">"\\Seen"</span>);
+
+<span class="cmt">// Пометить флажком "важно"</span>
+imap.setflag(uid, <span class="str">"\\Flagged"</span>);
+
+<span class="cmt">// Снять флажок</span>
+imap.setflag(uid, <span class="str">"\\Flagged"</span>, <span class="kw">false</span>);
+
+<span class="cmt">// Пометить как черновик</span>
+imap.setflag(uid, <span class="str">"\\Draft"</span>);
+
+<span class="cmt">// Копировать в папку "Backup"</span>
+imap.copy(uid, <span class="str">"Backup"</span>);
+
+<span class="cmt">// Переместить в архив</span>
+imap.move(uid, <span class="str">"Archive/2024"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Пример: получение почты</h2>
+<pre><code><span class="kw">if</span> (!loadPlugin(<span class="str">"plugins/imap.dll"</span>)) {
+    print(<span class="str">"imap.dll не загружен!"</span>);
+    system.exit(<span class="num">1</span>);
+}
+
+<span class="kw">var</span> imap = ImapClient();
+imap.connect(<span class="str">"imap.mail.ru"</span>, <span class="num">993</span>, <span class="kw">true</span>);
+imap.login(<span class="str">"user@mail.ru"</span>, <span class="str">"password"</span>);
+
+<span class="cmt">// Выбрать INBOX</span>
+<span class="kw">var</span> count = imap.select(<span class="str">"INBOX"</span>);
+print(<span class="str">"Писем: "</span> + count);
+
+<span class="cmt">// Найти непрочитанные</span>
+<span class="kw">var</span> uids = imap.search(<span class="str">"UNSEEN"</span>);
+print(<span class="str">"Непрочитанных: "</span> + uids.size());
+
+<span class="cmt">// Прочитать каждое</span>
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i < uids.size(); i++) {
+    <span class="kw">var</span> h = imap.header(uids[i]);
+    <span class="kw">if</span> (!h.isnull()) {
+        print(<span class="str">"--- Письмо "</span> + uids[i] + <span class="str">" ---"</span>);
+        print(<span class="str">"  От: "</span> + h[<span class="str">"From"</span>]);
+        print(<span class="str">"  Тема: "</span> + h[<span class="str">"Subject"</span>]);
+        print(<span class="str">"  Дата: "</span> + h[<span class="str">"Date"</span>]);
+    }
+}
+
+imap.disconnect();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Пример: отправка и удаление</h2>
+<pre><code><span class="kw">if</span> (!loadPlugin(<span class="str">"plugins/smtp.dll"</span>)) { system.exit(<span class="num">1</span>); }
+<span class="kw">if</span> (!loadPlugin(<span class="str">"plugins/imap.dll"</span>)) { system.exit(<span class="num">1</span>); }
+
+<span class="cmt">// Отправка письма</span>
+<span class="kw">var</span> smtp = SmtpClient();
+smtp.connect(<span class="str">"smtp.yandex.com"</span>, <span class="num">465</span>, <span class="kw">true</span>);
+smtp.login(<span class="str">"sender@yandex.ru"</span>, <span class="str">"password"</span>);
+smtp.send(<span class="str">"sender@yandex.ru"</span>, <span class="str">"recipient@mail.ru"</span>,
+    <span class="str">"Тест"</span>, <span class="str">"Привет из QodeScript!"</span>);
+smtp.disconnect();
+
+<span class="cmt">// Чтение и удаление</span>
+<span class="kw">var</span> imap = ImapClient();
+imap.connect(<span class="str">"imap.mail.ru"</span>, <span class="num">993</span>, <span class="kw">true</span>);
+imap.login(<span class="str">"recipient@mail.ru"</span>, <span class="str">"password"</span>);
+imap.select(<span class="str">"INBOX"</span>);
+
+<span class="cmt">// Ищем по заголовкам</span>
+<span class="kw">var</span> all = imap.search(<span class="str">"ALL"</span>);
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i < all.size(); i++) {
+    <span class="kw">var</span> h = imap.header(all[i]);
+    <span class="kw">if</span> (!h.isnull() && h[<span class="str">"Subject"</span>].toString() == <span class="str">"Тест"</span>) {
+        print(<span class="str">"Найдено! Удаляю..."</span>);
+        imap.delete(all[i]);
+        print(<span class="str">"Удалено!"</span>);
+        <span class="kw">break</span>;
+    }
+}
+
+imap.disconnect();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Пример: работа с папками</h2>
+<pre><code><span class="kw">var</span> imap = ImapClient();
+imap.connect(<span class="str">"imap.gmail.com"</span>, <span class="num">993</span>, <span class="kw">true</span>);
+imap.login(<span class="str">"user@gmail.com"</span>, <span class="str">"password"</span>);
+
+<span class="cmt">// Список всех папок</span>
+<span class="kw">var</span> folders = imap.listfolders();
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i < folders.size(); i++) {
+    print(folders[i]);
+}
+
+<span class="cmt">// Копировать письмо в另一个 папку</span>
+imap.select(<span class="str">"INBOX"</span>);
+<span class="kw">var</span> uids = imap.search(<span class="str">"ALL"</span>);
+<span class="kw">if</span> (uids.size() > <span class="num">0</span>) {
+    imap.copy(uids[<span class="num">0</span>], <span class="str">"Important"</span>);
+    print(<span class="str">"Скопировано!"</span>);
+}
+
+<span class="cmt">// Переместить в архив</span>
+imap.move(uids[<span class="num">0</span>], <span class="str">"Archive"</span>);
+print(<span class="str">"Перемещено!"</span>);
+
+imap.disconnect();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Обработка ошибок</h2>
+<pre><code><span class="kw">var</span> imap = ImapClient();
+
+<span class="cmt">// Проверка подключения</span>
+<span class="kw">if</span> (!imap.connect(<span class="str">"imap.mail.ru"</span>, <span class="num">993</span>, <span class="kw">true</span>)) {
+    print(<span class="str">"Не удалось подключиться!"</span>);
+    system.exit(<span class="num">1</span>);
+}
+
+<span class="cmt">// Проверка логина</span>
+<span class="kw">if</span> (!imap.login(<span class="str">"user@mail.ru"</span>, <span class="str">"wrong"</span>)) {
+    print(<span class="str">"Неверный логин/пароль!"</span>);
+    imap.disconnect();
+    system.exit(<span class="num">1</span>);
+}
+
+<span class="cmt">// Проверка select</span>
+<span class="kw">var</span> count = imap.select(<span class="str">"INBOX"</span>);
+<span class="kw">if</span> (count == -<span class="num">1</span>) {
+    print(<span class="str">"Папка не найдена!"</span>);
+}
+
+<span class="cmt">// Проверка fetch</span>
+<span class="kw">var</span> body = imap.fetch(<span class="num">999999</span>);
+<span class="kw">if</span> (body.isnull()) {
+    print(<span class="str">"Письмо не найдено!"</span>);
+}
+
+<span class="cmt">// Проверка getStatus()</span>
+<span class="kw">var</span> st = imap.getStatus();
+<span class="kw">if</span> (!st.connected) {
+    print(<span class="str">"Соединение потеряно!"</span>);
+}
+
+imap.disconnect();</code></pre>
+</div>
+
+<footer><a href="plugins.html">← К списку плагинов</a></footer>
+</div>
+</body>
+</html>

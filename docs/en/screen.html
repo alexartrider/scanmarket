@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Screen plugin — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Screen plugin (screen capture)</h1><p>Screenshots — the whole screen, a region, or individual monitors</p><div class="lang-switch"><a href="../screen.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="screen.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / <a href="plugins.html">Plugins</a> / Screen</p>
+
+<div class="doc-section">
+<h2>Loading the plugin</h2>
+<p>The plugin works only on Windows (Win32 GDI). Capture is performed in an interactive user session.</p>
+<pre><code><span class="kw">var</span> ok = loadPlugin(file.apppath() + <span class="str">"/plugins/screen.dll"</span>);
+<span class="kw">if</span> (!ok) throw <span class="str">"Failed to load the screen plugin"</span>;</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Screen information</h2>
+<table>
+<tr><th>Function</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>ScreenCount()</code></td><td>—</td><td>int</td><td>Number of monitors</td></tr>
+<tr><td><code>ScreenWidth()</code></td><td>—</td><td>int</td><td>Width of the primary monitor, px</td></tr>
+<tr><td><code>ScreenHeight()</code></td><td>—</td><td>int</td><td>Height of the primary monitor, px</td></tr>
+<tr><td><code>ScreenVirtualRect()</code></td><td>—</td><td>Tuple</td><td>Bounds of the virtual desktop, see below</td></tr>
+<tr><td><code>ScreenMonitors()</code></td><td>—</td><td>Array&lt;Tuple&gt;</td><td>List of all monitors, see below</td></tr>
+</table>
+
+<p><code>ScreenVirtualRect()</code> returns the tuple <code>{left, top, width, height}</code> — the region covering all monitors. The origin of the virtual screen is the top-left corner of the primary monitor, so with a monitor to the left/above, the <code>left</code>/<code>top</code> coordinates are negative.</p>
+
+<p><code>ScreenMonitors()</code> returns an array of tuples:</p>
+<table>
+<tr><th>Field</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>left</code>, <code>top</code></td><td>int</td><td>Monitor position in virtual screen coordinates</td></tr>
+<tr><td><code>width</code>, <code>height</code></td><td>int</td><td>Monitor resolution, px</td></tr>
+<tr><td><code>primary</code></td><td>int (0/1)</td><td>1 — primary monitor</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Screen capture</h2>
+<p>The capture result is a <strong>complete BMP file</strong> (32 bits per pixel) as a <code>ByteArray</code>. It can be saved to disk right away via <code>file.writebytes</code>, passed to the clipboard by the <code>clipboard</code> plugin (<code>ClipboardSetImage</code>), or processed with byte functions.</p>
+
+<table>
+<tr><th>Function</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>ScreenCapture([cursor])</code></td><td><code>cursor</code>: 0/1 (default 0)</td><td>ByteArray (BMP) | null</td><td>Snapshot of the entire primary monitor</td></tr>
+<tr><td><code>ScreenCaptureRect(x, y, w, h, [cursor])</code></td><td><code>x, y, w, h</code>, <code>cursor</code>: 0/1</td><td>ByteArray (BMP) | null</td><td>Snapshot of a rectangular region of the virtual screen</td></tr>
+</table>
+
+<p>Notes:</p>
+<ul>
+<li><code>ScreenCaptureRect</code> coordinates are given in the virtual screen coordinate system (see <code>ScreenVirtualRect</code>).</li>
+<li>Parts of the region outside the screens are filled with black.</li>
+<li>With <code>cursor = 1</code>, the system cursor is added to the snapshot (at its actual position).</li>
+</ul>
+</div>
+
+<div class="doc-section">
+<h2>Examples</h2>
+
+<h3>Full-screen screenshot with the cursor</h3>
+<pre><code><span class="kw">var</span> shot = ScreenCapture(<span class="num">1</span>);           <span class="cmt">// with the cursor</span>
+<span class="kw">if</span> (!shot.isnull())
+    file.writebytes(file.apppath() + <span class="str">"/screen.bmp"</span>, shot);</code></pre>
+
+<h3>Region snapshot and copying to the clipboard</h3>
+<pre><code><span class="kw">var</span> img = ScreenCaptureRect(<span class="num">0</span>, <span class="num">0</span>, <span class="num">640</span>, <span class="num">480</span>);
+<span class="kw">if</span> (!img.isnull()) {
+    loadPlugin(file.apppath() + <span class="str">"/plugins/clipboard.dll"</span>);
+    ClipboardSetImage(img);            <span class="cmt">// now it can be pasted into any editor</span>
+}</code></pre>
+
+<h3>Screenshot of all monitors</h3>
+<pre><code><span class="kw">var</span> v = ScreenVirtualRect();
+<span class="kw">var</span> all = ScreenCaptureRect(v.left, v.top, v.width, v.height);  <span class="cmt">// the entire virtual desktop</span>
+file.writebytes(<span class="str">"all_monitors.bmp"</span>, all);
+
+<span class="cmt">// Or one monitor at a time:</span>
+<span class="kw">for</span> (<span class="kw">var</span> m : ScreenMonitors())
+    file.writebytes(<span class="str">"monitor_"</span> + m.left + <span class="str">"_"</span> + m.top + <span class="str">".bmp"</span>,
+                    ScreenCaptureRect(m.left, m.top, m.width, m.height));</code></pre>
+</div>
+
+<footer><a href="plugins.html">← Back to the plugin list</a></footer>
+</div>
+</body>
+</html>

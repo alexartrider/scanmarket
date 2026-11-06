@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QRXLWidget table (rxl) — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>QRXLWidget table (rxl)</h1><p>Mini-Excel form widget: loading from JSON, reading/writing cells from a script, export to XLSX/PDF/PNG</p><div class="lang-switch"><a href="../rxl.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="rxl.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / <a href="qt.html">QT</a> / RXL table</p>
+
+<div class="doc-section">
+<h2>Where to get a table object</h2>
+<table>
+<tr><th>Way</th><th>Example</th></tr>
+<tr><td>Form widget (recommended)</td><td>In the JSON form specify a widget <code>{"class":"QRXLWidget","name":"table1"}</code>, then <code>var grid = form.findWidget("table1");</code></td></tr>
+<tr><td>Standalone window</td><td><code>var w = dialog.newtable(owner, [title]);</code> — an RXLMainWindow window (GUI)</td></tr>
+</table>
+<p>Cell coordinates in the methods are <b>0-based</b> (unlike Excel): row 1 = index 0.</p>
+</div>
+
+<div class="doc-section">
+<h2>Loading data (JSON)</h2>
+<p><code>grid.fromMemory(jsonText, tableName)</code> — looks for the table with the given name in the <code>"rxl"</code> section of the document
+and fills the cells. Cell format: <code>cells[row][column]</code>, each cell is <code>{"t": text, "uc": column_span, "ur": row_span}</code>;
+an empty cell is <code>{}</code>. A merge master has <code>uc/ur &gt; 0</code>, subordinates have negative offsets to the master.</p>
+<pre><code>loadModule(file.normalize(file.join(file.dirname(system.getcommandline().app), "..", "scriptlib", "qtestlib.prg")));
+
+var rxlDoc = json.stringify(#{
+    "form": #{},
+    "rxl": #[
+        #{
+            "name": "Price",
+            "info": #{"maxCol": 2, "maxRow": 3, "viewGrid": 1},
+            "data": #{
+                "cells": #[
+                    #[ #{"t": "Item"}, #{"t": "Price"}, #{"t": "Stock"} ],
+                    #[ #{"t": "Mouse"}, #{"t": "450.5"}, #{"t": "yes"} ],
+                    #[ #{"t": "Keyboard"}, #{"t": "1250"}, #{"t": "no"} ],
+                    #[ #{"t": "Price total", "uc": 2, "ur": 0},
+                       #{"t": "", "uc": -1, "ur": 0}, #{"t": "", "uc": -2, "ur": 0} ]
+                ]
+            }
+        }
+    ]
+});
+grid.fromMemory(rxlDoc, "Price");</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Methods (from a script)</h2>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>grid.fromMemory(jsonText, tableName) / fromFile(path, tableName)</code></td><td>Fill the table from JSON (0/1)</td></tr>
+<tr><td><code>grid.setRow(r) / setCol(c)</code></td><td>Current cell, 0-based</td></tr>
+<tr><td><code>grid.getText() / setText(s)</code></td><td>Read/write the current cell text</td></tr>
+<tr><td><code>grid.getLastRow() / getLastCol()</code></td><td>Last filled row/column</td></tr>
+<tr><td><code>grid.getMaxRow() / getMaxCol()</code></td><td>Maximum limits</td></tr>
+<tr><td><code>grid.tableName() / setTableName(n)</code></td><td>Table name</td></tr>
+<tr><td><code>grid.mergeSelection() / unMergeSelection()</code></td><td>Merge/split the selection (the selection is made via <code>setSelection</code>)</td></tr>
+<tr><td><code>grid.insertRow() / insertCol() / deleteRows() / deleteCols()</code></td><td>Structural operations</td></tr>
+<tr><td><code>grid.exportExcel(path)</code></td><td>Export to XLSX (numbers in text are converted automatically; merges are kept)</td></tr>
+<tr><td><code>grid.exportPDF(path)</code></td><td>Export to vector PDF (A4 pages, headers, page breaks — as in print preview)</td></tr>
+<tr><td><code>grid.exportFile(path)</code></td><td>Raster PNG/JPG/BMP/GIF (with several pages — <code>name_1.png</code>…)</td></tr>
+</table>
+<pre><code>grid.setRow(1); grid.setCol(2);
+print(grid.getText());             <span class="cmt">// "450.5"</span>
+grid.setRow(3); grid.setCol(0);
+grid.setText("4K monitor");
+
+grid.exportExcel(file.join(dir, "price.xlsx"));
+grid.exportPDF(file.join(dir, "price.pdf"));</code></pre>
+<p>The export can be verified by reading it back: the XLSX opens via <code>qt.XlsxDocument()</code> / <code>xlsxedit.open()</code>.</p>
+</div>
+
+<div class="doc-section">
+<h2>Headless operation</h2>
+<p>Everything above works without a GUI session: the <code>offscreen</code> platform plugin is deployed,
+run with <code>QT_QPA_PLATFORM=offscreen</code> (see <a href="qt.html">QT integration</a>) and check the actual platform via <code>qt.platformName()</code>.</p>
+</div>
+
+<footer><a href="index.html">← Home</a></footer>
+</div>
+</body>
+</html>

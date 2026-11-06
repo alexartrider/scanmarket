@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Automation libraries — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Automation libraries</h1><p>qtestlib, cli, funcedit, jsonedit, fileedit, xlsxedit, run_tests — a reliable «read → modify → verify → save → run» loop</p><div class="lang-switch"><a href="../automation.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="automation.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / Automation libraries</p>
+
+<div class="doc-section">
+<h2>Loading</h2>
+<p>The libraries live in <code>qt/scriptlib/</code> and are loaded with <code>loadModule</code> —
+only this way keeps the functions in <code>Script::Modules</code> (unlike <code>execute</code>, which unloads the module right away).
+It is convenient to compute the path from the executable directory (stable for Debug <code>qt/bind</code> and Release <code>qt/bin</code>):</p>
+<pre><code>var scriptlib = file.normalize(file.join(file.dirname(system.getcommandline().app), "..", "scriptlib"));
+loadModule(file.join(scriptlib, "qtestlib.prg"));
+loadModule(file.join(scriptlib, "cli.prg"));
+loadModule(file.join(scriptlib, "funcedit.prg"));
+loadModule(file.join(scriptlib, "jsonedit.prg"));
+loadModule(file.join(scriptlib, "fileedit.prg"));
+loadModule(file.join(scriptlib, "xlsxedit.prg"));</code></pre>
+<p>Tests in <code>qt/sample/</code> load the libraries from the sibling directory:
+<code>file.join(file.dirname(system.getcommandline().args[0]), "..", "scriptlib", "cli.prg")</code>.</p>
+</div>
+
+<div class="doc-section">
+<h2>Safe file editing (fileedit)</h2>
+<p>Instant atomic edits (temp file + replace, like <code>file.writeatom</code>) that are also idempotent;
+<code>opts</code> are the same keys as for <code>writeatom</code>: <code>{"enc","overwrite","backup","verify"}</code>.
+Without <code>opts</code>, the write follows the old rules (UTF-8 without BOM).</p>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>fileedit.replaceAll(path, old, new, [opts])</code></td><td>Replace all occurrences → 1 (found) / 0 (none)</td></tr>
+<tr><td><code>fileedit.replaceFirst(path, old, new, [opts])</code></td><td>Replace only the first occurrence → 1 / 0</td></tr>
+<tr><td><code>fileedit.edit(path, editFn, [opts])</code></td><td><code>editFn(text) → new text</code>, atomically</td></tr>
+<tr><td><code>fileedit.filter(path, lineFn, [opts])</code></td><td>Line by line: <code>lineFn(line) → line</code> or <code>null</code> (remove)</td></tr>
+<tr><td><code>fileedit.prepend(path, text, [opts])</code></td><td>Insert text at the beginning of the file</td></tr>
+<tr><td><code>fileedit.append(path, text, [opts])</code></td><td>Append text to the end (with a newline)</td></tr>
+</table>
+<pre><code>fileedit.replaceAll("app.json", "localhost", "192.168.111.7", #{"backup": 1});
+// "edit a function — in one call, not a series of str.replace":
+fileedit.edit("tool.prg", function(text) {
+    return funcedit.replaceBody(text, "compute", " return a * b; ");
+});</code></pre>
+
+<h3>Planning and applying (plan/apply)</h3>
+<p>The «look first, write later» loop for utilities. <code>plan*</code> reads the file, computes the new version,
+the number of matches and the <code>diff</code> — and <b>writes nothing</b>.
+<code>apply(plan)</code> re-reads the file before writing and compares it with the content at plan time:
+on an external change it throws a conflict exception without writing. The write goes through
+<code>file.writeatom</code> while preserving the source encoding (see below).</p>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>fileedit.planReplaceAll / planReplaceFirst(path, old, new)</code></td><td>Replacement plan (all / first)</td></tr>
+<tr><td><code>fileedit.planEdit(path, editFn)</code></td><td>Plan based on an editor function</td></tr>
+<tr><td><code>fileedit.planFilter(path, lineFn)</code></td><td>Line-filter plan</td></tr>
+<tr><td><code>fileedit.planPrepend / planAppend(path, text)</code></td><td>Insert-at-start / append-to-end plan</td></tr>
+<tr><td><code>fileedit.planContext(path, old, new)</code></td><td>Context replace: only on a <b>single</b> match; at 0 or several — <code>plan.diagnostics</code> and <code>apply</code> refuses</td></tr>
+<tr><td><code>fileedit.apply(plan, [opts])</code></td><td>Apply the plan → 1 (written) / 0 (nothing to change). <code>opts</code>: <code>{"enc","backup","verify","overwrite","expect"}</code>; <code>expect</code> — expected number of changes (checked against <code>plan.count</code>)</td></tr>
+</table>
+<p>The plan is an ordinary value <code>#{"path","kind","orig","next","count","diff","enc","bom","old","new","diagnostics"}</code>,
+independent of any global state. Re-applying the same plan does not silently overwrite the file:
+after the first edit the content is already <code>next</code> ≠ <code>orig</code> → conflict.</p>
+<pre><code>var plan = fileedit.planReplaceAll("cfg.txt", "old", "new");
+if (plan.count != 1) throw "expected exactly one occurrence";
+fileedit.apply(plan, #{"backup": 1});
+// an external edit between plan and apply -> fileedit.apply: file changed since planning</code></pre>
+
+<h3>Preserving the source file encoding</h3>
+<p><code>plan*</code> captures the source file encoding via <code>file.readmeta(path)</code>
+(fields <code>plan.enc</code>/<code>plan.bom</code>), and <code>apply</code> preserves it on write through
+<code>file.writeatom</code>. An explicit <code>opts.enc</code> at <code>apply</code> overrides the encoding.
+Line endings LF/CRLF are <b>not normalized</b> — they are saved as read.</p>
+<p><b>Ambiguous-case policy</b> (documented):</p>
+<ul>
+<li>ASCII/UTF-8 without BOM → written as UTF-8 without BOM (safe: ASCII ⊂ UTF-8);</li>
+<li>BOM encodings are distinguished correctly (UTF-8 BOM, UTF-16 LE/BE);</li>
+<li>UTF-16 BE is not supported by atomic writes → error <b>before</b> replacing the file;</li>
+<li>UTF-16 LE without BOM → the write would always add a BOM, so the edit is forbidden;</li>
+<li>unrecognized encoding (<code>file.ENC_UNKNOWN</code>) → error asking to pass <code>enc</code> explicitly.</li>
+</ul>
+<p>An ordinary <code>file.writeatom</code> without new options keeps working by the old rules
+(UTF-8 without BOM by default). Encoding metadata is also available directly:
+<code>file.readmeta(path)</code> → <code>#{"text","enc","bom"}</code> (see <a href="file.html">file</a>).</p>
+</div>
+
+<div class="doc-section">
+<h2>Utility command line (cli)</h2>
+<p>Schema-driven argument parsing built on <code>system.getcommandline().parsed</code> (ordered
+tokens: flag/value/positional/<code>--</code>). The schema is a tuple with a <code>params</code> array:
+<code>#{"name","short","type","default","required","repeat","help"}</code>.</p>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>cli.parse(schema, [cmdline])</code></td><td>Parse → <code>#{"opts","args","help"}</code>; errors are exceptions. <code>cmdline</code> defaults to <code>system.getcommandline()</code></td></tr>
+<tr><td><code>cli.help(schema)</code></td><td>Help text generated from the same schema</td></tr>
+</table>
+<pre><code>loadModule(file.normalize(file.join(file.dirname(system.getcommandline().app), "..", "scriptlib", "cli.prg")));
+var schema = #{
+    "program": "myutil", "usage": "[options] FILE", "positional": "FILE — input file",
+    "params": #[
+        #{"name": "output", "short": "o", "type": "string", "default": "out.txt", "help": "result file"},
+        #{"name": "verbose", "short": "v", "type": "bool", "help": "verbose output"},
+        #{"name": "count", "type": "int", "help": "how many times"},
+        #{"name": "mode", "type": "string", "required": 1, "help": "mode"}
+    ]
+};
+var r = cli.parse(schema);       // uses getcommandline().parsed
+if (r.help) { print(cli.help(schema)); return 0; }
+print("output=" + r.opts.output + " verbose=" + r.opts.verbose + " count=" + r.opts.count);
+print("files=" + json.stringify(r.args));</code></pre>
+<p><b>Syntax</b>: long <code>--name</code>/<code>--name=value</code>, short <code>-o</code> (a group <code>-abc</code> is boolean),
+a value as a separate argument <code>--output result.txt</code> / <code>-o result.txt</code>; <code>--</code> ends the flags;
+types <code>string/int/float/bool</code> with value validation; required options and default values;
+<code>--help</code>/<code>-h</code> (unless the schema declares its own) give <code>r.help=1</code>.</p>
+<p><b>Repeated-parameter policy</b> (documented, not accidental): by default
+<b>the last value wins</b> (like argparse); a parameter can set
+<code>"repeat": "error"</code> (error on a repeat) or <code>"repeat": "first"</code> (ignore repeats).
+⚠️ Unlike <code>system.getcommandline().flags</code> (there the first value wins because of tuple/emplace).</p>
+<p><b>Limitations</b>: a short flag with a value is only supported as a separate argument (<code>-o value</code>),
+the <code>-o=value</code> form is not supported; a parameter field that collides with a built-in tuple method
+(<code>size/has/get/set/...</code>) is not accessible via <code>opts.name</code> (a language limitation).</p>
+</div>
+
+<div class="doc-section">
+<h2>Editing functions in source code (funcedit)</h2>
+<p>Finds <code>function Name(...) { ... }</code> declarations (including inside classes); <code>"function"</code> inside strings
+and comments is ignored. Changes are made only at the found boundaries. <code>source</code> is the source text.</p>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>funcedit.find(source, name)</code></td><td>Exactly one function → <code>#{"start","bodyStart","bodyClose","end"}</code>, otherwise a clear exception</td></tr>
+<tr><td><code>funcedit.exists(source, name)</code></td><td>Whether a match exists → 0/1</td></tr>
+<tr><td><code>funcedit.isUnique(source, name)</code></td><td>Exactly one match → 0/1</td></tr>
+<tr><td><code>funcedit.getBody(source, name)</code></td><td>Body text (between <code>{</code> and <code>}</code>)</td></tr>
+<tr><td><code>funcedit.replaceBody(source, name, newBody)</code></td><td>New source with the replaced body</td></tr>
+<tr><td><code>funcedit.replace(source, name, newFuncSource)</code></td><td>Replace the whole function</td></tr>
+<tr><td><code>funcedit.insertBefore / insertAfter(source, name, snippet)</code></td><td>Insert a snippet before <code>function</code> / after the closing <code>}</code></td></tr>
+<tr><td><code>funcedit.balanced(source)</code></td><td>Balance of <code>() [] {}</code> accounting for strings/comments → 0/1</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>JSON forms (jsonedit)</h2>
+<p>Works with a JSON string (usually the content of a <code>*.json</code> form). <b>Returns a NEW string</b> — the source is not modified.</p>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>jsonedit.format(jsonText, [indent])</code></td><td>Reformat JSON (4 spaces by default)</td></tr>
+<tr><td><code>jsonedit.getText(jsonText, path, [def])</code></td><td>Value by path (paths like <code>a.b[0].c</code>)</td></tr>
+<tr><td><code>jsonedit.setText(jsonText, path, value, [indent])</code></td><td>JSON string after changing the value by path</td></tr>
+<tr><td><code>jsonedit.validateForm(jsonText)</code></td><td>Validate the RuntimeForm structure → <code>#{"ok","errors"}</code></td></tr>
+<tr><td><code>jsonedit.collectEvents(jsonText)</code></td><td>All form/widget events → array of <code>#{"entity","event","handler"}</code></td></tr>
+<tr><td><code>jsonedit.findWidgetPath(jsonText, name)</code></td><td>Path to a widget (e.g. <code>form.widgets[2]</code>) or <code>null</code></td></tr>
+<tr><td><code>jsonedit.handlerFor(jsonText, entityPath, event)</code></td><td>Name of the event handler</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>XLSX pipeline (xlsxedit)</h2>
+<p>Based on the Qt version <code>qt.XlsxDocument()</code> (not on the weak excel.dll plugin). Indices are 1-based.</p>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>xlsxedit.create(path)</code></td><td>New document → doc (overwrites)</td></tr>
+<tr><td><code>xlsxedit.open(path)</code></td><td>Open → doc; not found — exception</td></tr>
+<tr><td><code>xlsxedit.save(doc, [path])</code></td><td><code>save()</code> or <code>saveAs(path)</code></td></tr>
+<tr><td><code>xlsxedit.writeMatrix(doc, rows, [sr, sc])</code></td><td>Array of arrays → cells (from (1,1) by default)</td></tr>
+<tr><td><code>xlsxedit.readMatrix(doc)</code></td><td>All rows of the current sheet</td></tr>
+<tr><td><code>xlsxedit.appendRow(doc, row)</code></td><td>Append a row after the last one → row number</td></tr>
+<tr><td><code>xlsxedit.findRow(doc, col, value)</code></td><td>First row with the value in the column (or <code>null</code>)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Tests (qtestlib) and the runner (run_tests)</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>qt_group(name)</code></td><td>Group heading</td></tr>
+<tr><td><code>qt_check(desc, actual, expected)</code></td><td>Comparison via <code>==</code></td></tr>
+<tr><td><code>qt_checkJson(desc, actual, expected)</code></td><td>Comparison via <code>json.stringify</code></td></tr>
+<tr><td><code>qt_ok(desc, cond)</code> / <code>qt_fail(desc, [msg])</code></td><td>Boolean check / unconditional FAIL</td></tr>
+<tr><td><code>qt_throws(desc, fn, [pattern])</code></td><td>The function must throw an exception (by substring)</td></tr>
+<tr><td><code>qt_tempdir([prefix])</code></td><td>Unique temporary directory (all file tests work only there)</td></tr>
+<tr><td><code>qt_quoteArg(a)</code> / <code>qt_run(prog, args, [timeout])</code></td><td>Argument quoting / run with captured output</td></tr>
+<tr><td><code>qt_done()</code></td><td>Summary of the whole run → 0/1 (at the end of a test: <code>return qt_done();</code>)</td></tr>
+</table>
+<p>A test is an ordinary script that ends with <code>return rc;</code> (the process exit code is 0/1).
+Running all tests in one call:</p>
+<pre><code>qt\bind\qodeqt.exe qt\sample\run_tests.prg                              <span class="cmt">// all test_*.prg</span>
+qt\bind\qodeqt.exe qt\sample\run_tests.prg test_json*.prg               <span class="cmt">// by pattern</span>
+qt\bind\qodeqt.exe qt\sample\run_tests.prg --timeout=30000 test_fileedit.prg</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Rules for a robust loop (verified empirically)</h2>
+<ul>
+<li><b>Exit code</b>: end the program with <code>return 0;</code> (or <code>return rc;</code>). Without an explicit <code>return</code> the process returns <code>AsInt()</code> of the last expression — randomly.</li>
+<li><b>Output</b>: <code>print</code> goes to the log <code>qt/bin/log/log_DDMMYYYY.log</code>, not to stdout. Check the child run result with a <b>marker file</b> + <code>res.code</code>, not <code>res.stdout</code>.</li>
+<li><b>Shell-less launch</b> (paths with spaces/Unicode are safe): <code>system.execArgv(#[exe, arg1, arg2], #{"cwd","timeout","outfile"})</code>.</li>
+<li><b>Headless</b>: forms and tables are created without GUI — <code>file.setenv("QT_QPA_PLATFORM","offscreen")</code> BEFORE <code>execArgv</code>.</li>
+<li><b>Container mutations inside function parameters are not visible to the caller</b> (COW) — helpers must return a new value.</li>
+</ul>
+</div>
+
+<footer><a href="index.html">← Home</a></footer>
+</div>
+</body>
+</html>

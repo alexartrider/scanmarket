@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SNMP module — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>SNMP module</h1><p>Built-in module for monitoring network devices — SNMP v1/v2c requests, tree walk, reading and writing values</p><div class="lang-switch"><a href="../snmp.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="snmp.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / SNMP</p>
+
+<div class="doc-section">
+<h2>Dependencies</h2>
+<p>Built into the engine. Uses UDP sockets (WSAStartup on Windows). ASN.1/BER encoding is implemented in pure C++ with no external libraries.</p>
+</div>
+
+<div class="doc-section">
+<h2>Creating a session</h2>
+<pre><code><span class="cmt">// snmp — global module object</span>
+<span class="kw">var</span> s = snmp.open();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>snmp module methods</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>snmp.open()</code></td><td>—</td><td>object</td><td>Creates a new SNMP session object</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Session methods</h2>
+
+<h3>Connection</h3>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>open(host, port, community, version?)</code></td><td>string, int, string, string?</td><td>int (1/0)</td><td>Opens a UDP socket to the SNMP agent. <code>version</code>: <code>"v1"</code> or <code>"v2c"</code> (default <code>"v2c"</code>)</td></tr>
+<tr><td><code>close()</code></td><td>—</td><td>null</td><td>Closes the socket</td></tr>
+<tr><td><code>isopen()</code></td><td>—</td><td>int</td><td>1 if the socket is open</td></tr>
+<tr><td><code>timeout(ms)</code></td><td>int?</td><td>int</td><td>Getter/setter for the timeout (milliseconds, default 3000)</td></tr>
+<tr><td><code>last_error()</code></td><td>—</td><td>string</td><td>Last error</td></tr>
+</table>
+
+<h3>GET / GETNEXT / GETBULK / SET</h3>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>get(oid)</code></td><td>string...</td><td>tuple</td><td>GET request (one or more OIDs)</td></tr>
+<tr><td><code>getnext(oid)</code></td><td>string...</td><td>tuple</td><td>GETNEXT request</td></tr>
+<tr><td><code>getbulk(non_reps, max_reps, oid...)</code></td><td>int, int, string...</td><td>tuple</td><td>GETBULK request (v2c only)</td></tr>
+<tr><td><code>set(oid, value, type?)</code></td><td>string, string, string?</td><td>tuple</td><td>SET request. Types: <code>"int"</code>, <code>"octet"</code> (default), <code>"counter"</code>, <code>"gauge"</code>, <code>"timeticks"</code>, <code>"ip"</code>, <code>"null"</code></td></tr>
+</table>
+
+<h3>Tree walk</h3>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>walk(root_oid, max?)</code></td><td>string, int?</td><td>array</td><td>GETNEXT walk starting from root_oid. Returns an array of <code>{oid, type, value}</code></td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Response structure</h2>
+<p>The <code>get</code>, <code>getnext</code>, <code>getbulk</code> and <code>set</code> methods return a tuple:</p>
+<pre><code>#{
+    "version":    1,         <span class="cmt">// 0 = SNMPv1, 1 = SNMPv2c</span>
+    "community":  "public",
+    "request_id": 1,
+    "error_status": 0,       <span class="cmt">// 0 = noError</span>
+    "error_index": 0,
+    "pdu":        "GetResponse",
+    "varbinds": [
+        #{
+            "oid":   "1.3.6.1.2.1.1.1.0",
+            "type":  "STRING",
+            "value": "RouterOS CCR1009-7G-1C-1S+"
+        }
+    ]
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>SNMP value types</h2>
+<table>
+<tr><th>Type</th><th>Description</th></tr>
+<tr><td><code>INTEGER</code></td><td>Integer</td></tr>
+<tr><td><code>STRING</code></td><td>String (OctetString)</td></tr>
+<tr><td><code>COUNTER</code></td><td>Counter (32/64-bit)</td></tr>
+<tr><td><code>GAUGE</code></td><td>Gauge</td></tr>
+<tr><td><code>TIMETICKS</code></td><td>Uptime (in 1/100 s)</td></tr>
+<tr><td><code>IPADDRESS</code></td><td>IP address</td></tr>
+<tr><td><code>OID</code></td><td>OID</td></tr>
+<tr><td><code>COUNTER64</code></td><td>64-bit counter</td></tr>
+<tr><td><code>NULL</code></td><td>Null value</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Examples</h2>
+
+<h3>Basic GET</h3>
+<pre><code><span class="kw">var</span> s = snmp.open();
+s.open(<span class="str">"192.168.1.1"</span>, <span class="num">161</span>, <span class="str">"public"</span>);
+
+<span class="cmt">// SysDescr</span>
+<span class="kw">var</span> r = s.get(<span class="str">"1.3.6.1.2.1.1.1.0"</span>);
+print(r.varbinds[<span class="num">0</span>].value);
+
+<span class="cmt">// SysName</span>
+r = s.get(<span class="str">"1.3.6.1.2.1.1.5.0"</span>);
+print(r.varbinds[<span class="num">0</span>].value);
+
+s.close();</code></pre>
+
+<h3>GET for multiple OIDs</h3>
+<pre><code><span class="kw">var</span> r = s.get(
+    <span class="str">"1.3.6.1.2.1.1.1.0"</span>,   <span class="cmt">// sysDescr</span>
+    <span class="str">"1.3.6.1.2.1.1.3.0"</span>,   <span class="cmt">// sysUpTime</span>
+    <span class="str">"1.3.6.1.2.1.1.5.0"</span>    <span class="cmt">// sysName</span>
+);
+<span class="kw">for</span> (<span class="kw">var</span> vb : r.varbinds) {
+    print(vb.oid + <span class="str">" = "</span> + vb.value);
+}</code></pre>
+
+<h3>Walk over interfaces</h3>
+<pre><code><span class="cmt">// Walk ifTable — interface descriptions</span>
+<span class="kw">var</span> entries = s.walk(<span class="str">"1.3.6.1.2.1.2.2.1.2"</span>);
+<span class="kw">for</span> (<span class="kw">var</span> e : entries) {
+    print(e.oid + <span class="str">" -> "</span> + e.value);
+}</code></pre>
+
+<h3>GETBULK (v2c)</h3>
+<pre><code><span class="cmt">// non_repeaters=0, max_repetitions=10</span>
+<span class="kw">var</span> r = s.getbulk(<span class="num">0</span>, <span class="num">10</span>, <span class="str">"1.3.6.1.2.1.2.2.1.2"</span>);
+<span class="kw">for</span> (<span class="kw">var</span> vb : r.varbinds) {
+    print(vb.oid + <span class="str">" = "</span> + vb.value);
+}</code></pre>
+
+<h3>SET — writing a value</h3>
+<pre><code><span class="cmt">// Setting sysLocation</span>
+s.set(<span class="str">"1.3.6.1.2.1.1.6.0"</span>, <span class="str">"Moscow"</span>, <span class="str">"octet"</span>);</code></pre>
+
+<h3>Full example — MikroTik monitoring</h3>
+<pre><code><span class="kw">var</span> s = snmp.open();
+s.open(<span class="str">"192.168.111.1"</span>, <span class="num">161</span>, <span class="str">"public"</span>);
+s.timeout(<span class="num">3000</span>);
+
+print(<span class="str">"Router: "</span> + s.get(<span class="str">"1.3.6.1.2.1.1.1.0"</span>).varbinds[<span class="num">0</span>].value);
+print(<span class="str">"Name:   "</span> + s.get(<span class="str">"1.3.6.1.2.1.1.5.0"</span>).varbinds[<span class="num">0</span>].value);
+
+<span class="cmt">// Walk interfaces</span>
+<span class="kw">var</span> ifaces = s.walk(<span class="str">"1.3.6.1.2.1.2.2.1.2"</span>);
+print(<span class="str">"Interfaces: "</span> + ifaces.size());
+<span class="kw">for</span> (<span class="kw">var</span> e : ifaces) {
+    print(<span class="str">"  "</span> + e.value);
+}
+
+s.close();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Popular OIDs</h2>
+<table>
+<tr><th>OID</th><th>Description</th></tr>
+<tr><td><code>1.3.6.1.2.1.1.1.0</code></td><td>sysDescr — device description</td></tr>
+<tr><td><code>1.3.6.1.2.1.1.2.0</code></td><td>sysObjectID — device identifier</td></tr>
+<tr><td><code>1.3.6.1.2.1.1.3.0</code></td><td>sysUpTime — uptime</td></tr>
+<tr><td><code>1.3.6.1.2.1.1.4.0</code></td><td>sysContact — contact person</td></tr>
+<tr><td><code>1.3.6.1.2.1.1.5.0</code></td><td>sysName — device name</td></tr>
+<tr><td><code>1.3.6.1.2.1.1.6.0</code></td><td>sysLocation — location</td></tr>
+<tr><td><code>1.3.6.1.2.1.2.1.0</code></td><td>ifNumber — number of interfaces</td></tr>
+<tr><td><code>1.3.6.1.2.1.2.2.1.*</code></td><td>ifTable — interface table</td></tr>
+<tr><td><code>1.3.6.1.2.1.2.2.1.2.*</code></td><td>ifDescr — interface names</td></tr>
+<tr><td><code>1.3.6.1.2.1.2.2.1.10.*</code></td><td>ifInOctets — inbound octets</td></tr>
+<tr><td><code>1.3.6.1.2.1.2.2.1.16.*</code></td><td>ifOutOctets — outbound octets</td></tr>
+</table>
+</div>
+
+</div>
+</body>
+</html>

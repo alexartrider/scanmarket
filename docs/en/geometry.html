@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geometry — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header>
+<h1>Geometric primitives</h1>
+<p>QodePoint, QodeSize, QodeRect — 2D geometry</p>
+<div class="lang-switch"><a href="../geometry.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="geometry.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / Geometry</p>
+
+<div class="doc-section">
+<h2>QodePoint — Point</h2>
+<pre><code>var p = QodePoint(10, 20);</code></pre>
+
+<h3>Properties</h3>
+<table>
+<tr><th>Property</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>x</code></td><td>int</td><td>X coordinate (read/write)</td></tr>
+<tr><td><code>y</code></td><td>int</td><td>Y coordinate (read/write)</td></tr>
+</table>
+
+<h3>Methods</h3>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>add(p|s|x,y) -> QodePoint</code></td><td>Addition with a QodePoint, QodeSize or coordinates</td></tr>
+<tr><td><code>subtract(p|s|x,y) -> QodePoint</code></td><td>Subtraction</td></tr>
+<tr><td><code>scale(factor) -> QodePoint</code></td><td>Scaling relative to (0,0)</td></tr>
+<tr><td><code>offset(s|x,y) -> QodePoint</code></td><td>Offset (alias for add)</td></tr>
+<tr><td><code>setlocation(x,y) -> QodePoint</code></td><td>Setting absolute coordinates</td></tr>
+<tr><td><code>negate() -> QodePoint</code></td><td>Negating the sign of the coordinates</td></tr>
+<tr><td><code>abs() -> QodePoint</code></td><td>Absolute value of the coordinates</td></tr>
+<tr><td><code>min(p|x,y) -> QodePoint</code></td><td>Component-wise minimum</td></tr>
+<tr><td><code>max(p|x,y) -> QodePoint</code></td><td>Component-wise maximum</td></tr>
+<tr><td><code>clamp(min,max) -> QodePoint</code></td><td>Clamping to a range (both arguments are QodePoint)</td></tr>
+<tr><td><code>rotate(angle, center?) -> QodePoint</code></td><td>Rotation around a point (radians). center: QodePoint or (cx,cy)</td></tr>
+<tr><td><code>lerp(target, t) -> QodePoint</code></td><td>Linear interpolation toward target (t: 0..1)</td></tr>
+<tr><td><code>distance(p|x,y) -> float</code></td><td>Distance to a point</td></tr>
+<tr><td><code>length() -> float</code></td><td>Length of the vector from (0,0)</td></tr>
+<tr><td><code>angle(p|x,y) -> float</code></td><td>Angle to a point (atan2)</td></tr>
+<tr><td><code>normalize() -> QodePoint</code></td><td>Vector normalization (length = 1)</td></tr>
+<tr><td><code>ptincircle(center, radius) -> bool</code></td><td>Check for being inside a circle</td></tr>
+<tr><td><code>equals(p) -> bool</code></td><td>Comparison with another point</td></tr>
+<tr><td><code>iszero() -> bool</code></td><td>Check for (0,0)</td></tr>
+<tr><td><code>isempty() -> bool</code></td><td>Alias for iszero()</td></tr>
+<tr><td><code>clone() -> QodePoint</code></td><td>Creating a copy</td></tr>
+<tr><td><code>toarray() -> [x, y]</code></td><td>Conversion to an array</td></tr>
+<tr><td><code>toQodeSize() -> QodeSize</code></td><td>Conversion to QodeSize (abs of the values)</td></tr>
+</table>
+
+<h3>Example</h3>
+<pre><code>var p = QodePoint(10, 20);
+p.add(5, 3).scale(2);          <span class="cmt">// QodePoint[30,46]</span>
+p.distance(QodePoint(0, 0));    <span class="cmt">// ~22.36</span>
+p.rotate(3.14159 / 2, 0, 0);   <span class="cmt">// rotate by 90°</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>QodeSize — Size</h2>
+<pre><code>var s = QodeSize(100, 200);</code></pre>
+
+<h3>Properties</h3>
+<table>
+<tr><th>Property</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>cx</code></td><td>int</td><td>Width (read/write)</td></tr>
+<tr><td><code>cy</code></td><td>int</td><td>Height (read/write)</td></tr>
+</table>
+
+<h3>Methods</h3>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>add(s|cx,cy) -> QodeSize</code></td><td>Addition</td></tr>
+<tr><td><code>subtract(s|cx,cy) -> QodeSize</code></td><td>Subtraction</td></tr>
+<tr><td><code>scale(factor) -> QodeSize</code></td><td>Scaling</td></tr>
+<tr><td><code>swap() -> QodeSize</code></td><td>Swapping cx/cy</td></tr>
+<tr><td><code>fit(target) -> QodeSize</code></td><td>Scaling with aspect ratio preserved to fit into target</td></tr>
+<tr><td><code>expand(s) -> QodeSize</code></td><td>Component-wise max</td></tr>
+<tr><td><code>reduce(s) -> QodeSize</code></td><td>Component-wise min</td></tr>
+<tr><td><code>aspect() -> float</code></td><td>Aspect ratio (cx/cy)</td></tr>
+<tr><td><code>area() -> int</code></td><td>Area</td></tr>
+<tr><td><code>maxside() -> int</code></td><td>Longest side</td></tr>
+<tr><td><code>minside() -> int</code></td><td>Shortest side</td></tr>
+<tr><td><code>equals(s) -> bool</code></td><td>Comparison</td></tr>
+<tr><td><code>iszero() -> bool</code></td><td>Check for (0,0)</td></tr>
+<tr><td><code>clone() -> QodeSize</code></td><td>Copy</td></tr>
+<tr><td><code>toarray() -> [cx, cy]</code></td><td>To an array</td></tr>
+<tr><td><code>toQodePoint() -> QodePoint</code></td><td>To QodePoint</td></tr>
+</table>
+
+<h3>Example</h3>
+<pre><code>var s = QodeSize(100, 200);
+s.fit(QodeSize(50, 50));   <span class="cmt">// QodeSize[25,50] — fitted with aspect ratio kept</span>
+s.aspect();                <span class="cmt">// 0.5</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>QodeRect — Rectangle</h2>
+<pre><code>var r = QodeRect(0, 0, 100, 200);</code></pre>
+
+<h3>Constructors</h3>
+<table>
+<tr><th>Form</th><th>Description</th></tr>
+<tr><td><code>QodeRect(l, t, r, b)</code></td><td>From coordinates</td></tr>
+<tr><td><code>QodeRect(QodePoint, QodeSize)</code></td><td>From a point and a size</td></tr>
+<tr><td><code>QodeRect(QodePoint1, QodePoint2)</code></td><td>From two opposite corners</td></tr>
+<tr><td><code>QodeRect(otherQodeRect)</code></td><td>Copying</td></tr>
+</table>
+
+<h3>Coordinate properties</h3>
+<table>
+<tr><th>Property</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>left, top, right, bottom</code></td><td>int</td><td>Edges (read/write)</td></tr>
+<tr><td><code>width</code></td><td>int</td><td>Width (right-left). Set updates right</td></tr>
+<tr><td><code>height</code></td><td>int</td><td>Height (bottom-top). Set updates bottom</td></tr>
+<tr><td><code>topleft</code></td><td>QodePoint</td><td>Top-left corner (read/write)</td></tr>
+<tr><td><code>bottomright</code></td><td>QodePoint</td><td>Bottom-right corner (read/write)</td></tr>
+<tr><td><code>location</code></td><td>QodePoint</td><td>Alias for topleft. On set, keeps the size</td></tr>
+<tr><td><code>QodeSize</code></td><td>QodeSize</td><td>Size (read/write)</td></tr>
+</table>
+
+<h3>Transformation methods</h3>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>move(p|x,y) -> QodeRect</code></td><td>Moving to an absolute position</td></tr>
+<tr><td><code>offset(p|s|x,y) -> QodeRect</code></td><td>Relative offset</td></tr>
+<tr><td><code>inflate(s|dx,dy|d) -> QodeRect</code></td><td>Expansion (negative = shrinking)</td></tr>
+<tr><td><code>shrink(s|dx,dy|d) -> QodeRect</code></td><td>Shrinking (the inverse of inflate)</td></tr>
+<tr><td><code>scale(sx, sy?) -> QodeRect</code></td><td>Scaling relative to the center. sy defaults to sx</td></tr>
+<tr><td><code>normalize() -> QodeRect</code></td><td>Fixing: left&lt;right, top&lt;bottom</td></tr>
+<tr><td><code>round() -> QodeRect</code></td><td>Rounding of the edges (floor/ceil)</td></tr>
+</table>
+
+<h3>Geometric operations</h3>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>union(r) -> QodeRect</code></td><td>Union with another QodeRect</td></tr>
+<tr><td><code>intersect(r) -> QodeRect</code></td><td>Intersection (empty → all zeros)</td></tr>
+<tr><td><code>fit(target) -> QodeRect</code></td><td>Fitting with aspect ratio preserved, centered in target</td></tr>
+<tr><td><code>split(cols, rows) -> [QodeRect]</code></td><td>Splitting into a grid, returns an array</td></tr>
+</table>
+
+<h3>Queries</h3>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>contains(p|x,y) -> bool</code></td><td>Whether it contains a point</td></tr>
+<tr><td><code>containsQodeRect(r) -> bool</code></td><td>Whether it fully contains another QodeRect</td></tr>
+<tr><td><code>intersects(r) -> bool</code></td><td>Whether it intersects another QodeRect</td></tr>
+<tr><td><code>center() -> QodePoint</code></td><td>Center of the rectangle</td></tr>
+<tr><td><code>aspect() -> float</code></td><td>Aspect ratio</td></tr>
+<tr><td><code>area() -> int</code></td><td>Area (0 if empty)</td></tr>
+<tr><td><code>isempty() -> bool</code></td><td>Empty (width≤0 or height≤0)</td></tr>
+<tr><td><code>iszero() -> bool</code></td><td>All coordinates == 0</td></tr>
+<tr><td><code>equals(r) -> bool</code></td><td>Exact match</td></tr>
+<tr><td><code>clone() -> QodeRect</code></td><td>Copy</td></tr>
+<tr><td><code>setQodeRect(l,t,r,b) -> QodeRect</code></td><td>Setting all coordinates</td></tr>
+</table>
+
+<h3>Examples</h3>
+<pre><code><span class="cmt">// Different constructors</span>
+var r1 = QodeRect(0, 0, 100, 200);
+var r2 = QodeRect(QodePoint(0, 0), QodeSize(100, 200));
+var r3 = QodeRect(QodePoint(0, 0), QodePoint(100, 200));
+
+<span class="cmt">// Manipulations</span>
+r1.inflate(10);                  <span class="cmt">// expand by 10 on all sides</span>
+r1.offset(QodePoint(5, 5));      <span class="cmt">// offset</span>
+r1.move(QodePoint(100, 100));    <span class="cmt">// move to (100,100)</span>
+
+<span class="cmt">// Geometry</span>
+var r4 = QodeRect(0, 0, 50, 50);
+var r5 = QodeRect(25, 25, 75, 75);
+r4.union(r5);                    <span class="cmt">// QodeRect[0,0,75,75]</span>
+r4.intersect(r5);                <span class="cmt">// QodeRect[25,25,50,50]</span>
+r4.contains(QodePoint(30, 30));  <span class="cmt">// true</span>
+
+<span class="cmt">// Splitting into a grid</span>
+var cells = QodeRect(0, 0, 100, 100).split(2, 2);
+<span class="cmt">// → [QodeRect[0,0,50,50], QodeRect[50,0,100,50],
+<span class="cmt">//    QodeRect[0,50,50,100], QodeRect[50,50,100,100]]</span></code></pre>
+</div>
+
+<footer>Script Documentation</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Script — Справочная документация</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header>
+<h1>Script</h1>
+<p>Скриптовый язык на C++23 — справочная документация</p>
+<div class="lang-switch"><a class="active" href="index.html">RU</a><a href="en/index.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+
+<div class="doc-section">
+<h2>Навигация</h2>
+<table>
+<tr><th>Раздел</th><th>Описание</th></tr>
+<tr><td><a href="language.html">Язык</a></td><td>Синтаксис, ключевые слова, операторы, типы данных, управление потоком</td></tr>
+<tr><td><a href="functions.html">Глобальные функции</a></td><td>print, format, type, eval, tojson, dialog и др.</td></tr>
+<tr><td><a href="str.html">Модуль str</a></td><td>Работа со строками</td></tr>
+<tr><td><a href="regex.html">Модуль regex</a></td><td>Регулярные выражения</td></tr>
+<tr><td><a href="math.html">Модуль math</a></td><td>Математические функции и константы</td></tr>
+<tr><td><a href="file.html">Модуль file</a></td><td>Работа с файловой системой</td></tr>
+<tr><td><a href="datetime.html">Модуль datetime</a></td><td>Работа с датой и временем</td></tr>
+<tr><td><a href="bytearray.html">Модуль ByteArray</a></td><td>Работа с массивами байт</td></tr>
+<tr><td><a href="json.html">Модуль json</a></td><td>JSON — парсинг, сериализация, валидация (rapidjson)</td></tr>
+<tr><td><a href="yaml.html">Модуль yaml</a></td><td>YAML — парсинг, сериализация, файлы, валидация (rapidyaml)</td></tr>
+<tr><td><a href="xml.html">Модуль xml</a></td><td>XML — парсинг, создание, модификация документов (pugixml)</td></tr>
+<tr><td><a href="ssh.html">Модуль ssh</a></td><td>SSH — подключения, exec, SCP, SFTP (libssh2)</td></tr>
+<tr><td><a href="snmp.html">Модуль snmp</a></td><td>SNMP — мониторинг сетевого оборудования, GET/GETNEXT/WALK (UDP, ASN.1/BER)</td></tr>
+<tr><td><a href="sqlite.html">Модуль sqlite</a></td><td>Нативный SQLite (⚠️ упрощённый — для полноценной работы используйте <a href="db.html">db</a>)</td></tr>
+<tr><td><a href="log.html">Модуль Log</a></td><td>Логирование и вывод</td></tr>
+<tr><td><a href="system.html">Модуль system</a></td><td>Системные функции, процессы, окружение</td></tr>
+<tr><td><a href="classes.html">Структуры данных</a></td><td>Stack, Queue, PriorityQueue, Dictionary, DictionaryCI, Mutex, LockGuard</td></tr>
+<tr><td><a href="objects.html">Методы объектов</a></td><td>Встроенные методы всех типов: строки, массивы, множества, кортежи, даты</td></tr>
+<tr><td><a href="geometry.html">Геометрия</a></td><td>QodePoint, QodeSize, QodeRect — 2D-примитивы</td></tr>
+<tr><td><a href="colors.html">Цвета</a></td><td>Константы цветов и ANSI-коды</td></tr>
+<tr><td><a href="qt.html">QT интеграция</a></td><td>Виджеты, компоновка, сигналы, утилиты</td></tr>
+<tr><td><a href="dbgrid.html">QDbGridView</a></td><td>Таблица данных из базы данных</td></tr>
+<tr><td><a href="dbgrid_directory.html">QDbDirectoryView</a></td><td>Иерархический проводник с навигацией по папкам</td></tr>
+<tr><td><a href="db.html">База данных</a></td><td>Работа с БД через драйверы Qt (SQLite, PostgreSQL, MySQL)</td></tr>
+<tr><td><a href="dialogs.html">Диалоги</a></td><td>Диалоговые окна и ввод данных</td></tr>
+<tr><td><a href="ole.html">OLE/COM</a></td><td>Доступ к COM-объектам (Windows)</td></tr>
+<tr><td><a href="xlsx.html">Excel (XLSX)</a></td><td>Qt-версия <code>qt.XlsxDocument()</code> (⚠️ плагин excel.dll упрощённый)</td></tr>
+<tr><td><a href="rxl.html">Таблица QRXLWidget (rxl)</a></td><td>Мини-Excel-виджет форм: ячейки из скрипта, экспорт в XLSX/PDF/PNG</td></tr>
+<tr><td><a href="automation.html">Библиотеки автоматизации</a></td><td>qtestlib, cli, funcedit, jsonedit, fileedit (plan/apply), xlsxedit, run_tests — безопасный цикл правки файлов, разбор командной строки и тесты</td></tr>
+<tr><td><a href="plugins.html">Плагины</a></td><td>archive7zip, zip, excel, clipboard, comport, crypto, dbf, ftpclient, imap, ini_csv, ldap, max, registry, screen, smtp, tcp, udp (⚠️ excel/mssql/postgresql — упрощённые, для них есть <a href="db.html">db</a>/<a href="xlsx.html">xlsx</a>)</td></tr>
+<tr><td><a href="plugin_development.html">Разработка плагинов</a></td><td>Полное руководство: C API, C++ Helper, примеры, ошибки</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Быстрый старт</h2>
+<pre><code><span class="cmt">// Привет мир</span>
+print(<span class="str">"Привет, мир!"</span>);
+
+<span class="cmt">// Переменные и арифметика</span>
+<span class="kw">var</span> x = <span class="num">10</span>;
+<span class="kw">var</span> y = <span class="num">3.14</span>;
+print(<span class="str">"x = \(x), y = \(y)"</span>);
+
+<span class="cmt">// Функции</span>
+<span class="kw">function</span> <span class="fn">factorial</span>(n) {
+    <span class="kw">if</span> (n &lt;= <span class="num">1</span>) <span class="kw">return</span> <span class="num">1</span>;
+    <span class="kw">return</span> n * <span class="fn">factorial</span>(n - <span class="num">1</span>);
+}
+
+<span class="cmt">// Классы</span>
+<span class="kw">class</span> Point {
+    <span class="kw">var</span> x;
+    <span class="kw">var</span> y;
+    Point(x, y) { <span class="kw">this</span>.x = x; <span class="kw">this</span>.y = y; }
+    <span class="kw">function</span> <span class="fn">distance</span>(other) {
+        <span class="kw">return</span> math.sqrt((<span class="kw">this</span>.x - other.x)**<span class="num">2</span> + (<span class="kw">this</span>.y - other.y)**<span class="num">2</span>);
+    }
+}
+
+<span class="cmt">// Коллекции</span>
+<span class="kw">var</span> arr = <span class="op">#</span>[<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>];
+<span class="kw">var</span> doubled = arr.mapped(<span class="kw">function</span>(x) { <span class="kw">return</span> x * <span class="num">2</span>; });
+print(doubled); <span class="cmt">// [2, 4, 6, 8, 10]</span>
+
+<span class="cmt">// Модули</span>
+<span class="kw">uses</span> file;
+file.write(<span class="str">"out.txt"</span>, <span class="str">"Данные"</span>);
+</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Запуск скриптов</h2>
+<table>
+<tr><th>Команда</th><th>Описание</th></tr>
+<tr><td><code>./bin/qodeqt.exe script.prg</code></td><td>Запуск скрипта (QT виджеты доступны)</td></tr>
+<tr><td><code>./bin/qode.exe script.prg</code></td><td>Запуск без GUI (только консоль)</td></tr>
+<tr><td><code>./bin/qodedesigner.exe</code></td><td>Запуск mini IDE с отладчиком</td></tr>
+</table>
+<p style="margin-top:10px;font-size:0.9em;color:#666;">Файлы скриптов: <code>*.prg</code>, <code>*.json</code>, или любой UTF-8 текстовый файл.</p>
+</div>
+
+<footer>Script Documentation — Автогенерация из исходного кода</footer>
+</div>
+</body>
+</html>

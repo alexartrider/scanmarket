@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Плагин TCP — Script</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Плагин TCP</h1><p>TCP-клиент и TCP-сервер — неблокирующий ввод/вывод, асинхронный приём, broadcast, обработчики подключений</p><div class="lang-switch"><a class="active" href="tcp.html">RU</a><a href="en/tcp.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Главная</a> / <a href="plugins.html">Плагины</a> / TCP</p>
+
+<div class="doc-section">
+<h2>Загрузка плагина</h2>
+<pre><code>loadPlugin(<span class="str">"tcp"</span>);</code></pre>
+</div>
+
+<!-- ============================== TCP CLIENT ============================== -->
+
+<div class="doc-section">
+<h2>TcpClient — TCP-клиент</h2>
+<p>Создаёт TCP-клиент для подключения к серверу. Данные принимаются фоновым потоком и буферизуются.</p>
+
+<h3>Создание</h3>
+<pre><code><span class="cmt">// Анонимный клиент</span>
+<span class="kw">var</span> client = TcpClient();
+
+<span class="cmt">// Именованный клиент (доступен повторным вызовом по имени)</span>
+<span class="kw">var</span> client = TcpClient(<span class="str">"myClient"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Свойства клиента</h2>
+<table>
+<tr><th>Свойство</th><th>Тип</th><th>Описание</th></tr>
+<tr><td><code>connected</code></td><td>int</td><td>1 если подключён, 0 если нет</td></tr>
+<tr><td><code>name</code></td><td>string</td><td>Имя экземпляра (пустая строка если анонимный)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Методы клиента</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>connect</code></td><td><code>host, port, [family]</code></td><td>int</td><td>Подключение к серверу. family: AF_INET (2) — IPv4, AF_INET6 (23) — IPv6</td></tr>
+<tr><td><code>disconnect</code></td><td>—</td><td>int</td><td>Отключение от сервера</td></tr>
+<tr><td><code>isconnected</code></td><td>—</td><td>int</td><td>Проверка подключения (1/0)</td></tr>
+<tr><td><code>send</code></td><td><code>data</code></td><td>int</td><td>Отправка данных (строка или ByteArray). Возвращает кол-во отправленных байт</td></tr>
+<tr><td><code>sendline</code></td><td><code>text</code></td><td>int</td><td>Отправка строки + автоматическое <code>\n</code></td></tr>
+<tr><td><code>recv</code></td><td><code>[maxBytes], [asText]</code></td><td>string / bytearray / null</td><td>Чтение из буфера. asText=true — строка, иначе ByteArray</td></tr>
+<tr><td><code>recvline</code></td><td><code>[timeoutMs]</code></td><td>string / null</td><td>Чтение строки до <code>\n</code> с тайм-аутом</td></tr>
+<tr><td><code>available</code></td><td>—</td><td>int</td><td>Байт в буфере приёма</td></tr>
+<tr><td><code>clear</code></td><td>—</td><td>int</td><td>Очистка буфера приёма</td></tr>
+<tr><td><code>settimeout</code></td><td><code>ms</code></td><td>int</td><td>Тайм-аут сокета (send + recv)</td></tr>
+<tr><td><code>setnodelay</code></td><td><code>enable</code></td><td>int</td><td>TCP_NODELAY (алгоритм Нэйгла)</td></tr>
+<tr><td><code>getpeername</code></td><td>—</td><td>tuple / null</td><td>Адрес пира: <code>#{"ip": "...", "port": ...}</code></td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>connect(host, port, [family])</h2>
+<p>Подключается к TCP-серверу. Выполняет неблокирующее подключение с тайм-аутом 5 секунд. При успешном подключении запускается фоновый поток приёма данных.</p>
+<table>
+<tr><th>Аргумент</th><th>Тип</th><th>По умолчанию</th><th>Описание</th></tr>
+<tr><td><code>host</code></td><td>string</td><td>—</td><td>Адрес сервера (домен или IP)</td></tr>
+<tr><td><code>port</code></td><td>int</td><td>—</td><td>Номер порта</td></tr>
+<tr><td><code>family</code></td><td>int</td><td>AF_INET (2)</td><td>Семейство протоколов: AF_INET=IPv4, AF_INET6=IPv6</td></tr>
+</table>
+<pre><code><span class="kw">var</span> client = TcpClient();
+client.connect(<span class="str">"127.0.0.1"</span>, <span class="num">9000</span>);
+print(client.connected);  <span class="cmt">// 1</span>
+
+<span class="cmt">// IPv6</span>
+client.connect(<span class="str">"::1"</span>, <span class="num">9000</span>, <span class="num">23</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>send(data)</h2>
+<p>Отправляет данные серверу. Принимает строку или ByteArray.</p>
+<pre><code><span class="cmt">// Отправка строки</span>
+client.send(<span class="str">"Hello!"</span>);
+
+<span class="cmt">// Отправка ByteArray</span>
+<span class="kw">var</span> bytes = ByteArray();
+bytes.append(<span class="num">0x48</span>);  <span class="cmt">// H</span>
+bytes.append(<span class="num">0x49</span>);  <span class="cmt">// I</span>
+client.send(bytes);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>sendline(text)</h2>
+<p>Отправляет строку с автоматическим добавлением <code>\n</code> в конце.</p>
+<pre><code>client.sendline(<span class="str">"Привет серверу"</span>);
+<span class="cmt">// Эквивалентно: client.send("Привет серверу\n")</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>recv([maxBytes], [asText])</h2>
+<p>Читает данные из внутреннего буфера (не блокирует поток). Если данных нет — возвращает <code>null</code>.</p>
+<table>
+<tr><th>Аргумент</th><th>Тип</th><th>По умолчанию</th><th>Описание</th></tr>
+<tr><td><code>maxBytes</code></td><td>int</td><td>1024</td><td>Максимальное количество байт для чтения</td></tr>
+<tr><td><code>asText</code></td><td>bool</td><td>false</td><td>true — вернуть строку, false — ByteArray</td></tr>
+</table>
+<pre><code><span class="cmt">// Чтение как ByteArray</span>
+<span class="kw">var</span> raw = client.recv(<span class="num">1024</span>);
+print(typeName(raw));  <span class="cmt">// "bytearray" или "null"</span>
+
+<span class="cmt">// Чтение как строка</span>
+<span class="kw">var</span> text = client.recv(<span class="num">1024</span>, <span class="kw">true</span>);
+print(text);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>recvline([timeoutMs])</h2>
+<p>Читает одну строку из буфера (до <code>\n</code>). Блокирует поток до появления строки или истечения тайм-аута. Символ <code>\r</code> перед <code>\n</code> автоматически удаляется.</p>
+<table>
+<tr><th>Аргумент</th><th>Тип</th><th>По умолчанию</th><th>Описание</th></tr>
+<tr><td><code>timeoutMs</code></td><td>int</td><td>5000</td><td>Тайм-аут в миллисекундах</td></tr>
+</table>
+<pre><code><span class="cmt">// Чтение с тайм-аутом 3 секунды</span>
+<span class="kw">var</span> line = client.recvline(<span class="num">3000</span>);
+<span class="kw">if</span> (line != <span class="kw">null</span>) {
+    print(line);
+} <span class="kw">else</span> {
+    print(<span class="str">"Тайм-аут!"</span>);
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>getpeername()</h2>
+<p>Возвращает адрес подключённого пира в виде кортежа. Полезно для определения IP-адреса клиента на стороне сервера.</p>
+<pre><code><span class="kw">var</span> peer = client.getpeername();
+<span class="kw">if</span> (peer != <span class="kw">null</span>) {
+    print(peer.ip);    <span class="cmt">// "127.0.0.1"</span>
+    print(peer.port);  <span class="cmt">// 54321</span>
+}</code></pre>
+</div>
+
+<!-- ============================== TCP SERVER ============================== -->
+
+<div class="doc-section">
+<h2>TcpServer — TCP-сервер</h2>
+<p>Создаёт TCP-сервер для прослушивания входящих подключений. Клиенты автоматически принимаются в фоновом потоке.</p>
+
+<h3>Создание</h3>
+<pre><code><span class="cmt">// Анонимный сервер</span>
+<span class="kw">var</span> server = TcpServer();
+
+<span class="cmt">// Именованный сервер</span>
+<span class="kw">var</span> server = TcpServer(<span class="str">"myServer"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Свойства сервера</h2>
+<table>
+<tr><th>Свойство</th><th>Тип</th><th>Описание</th></tr>
+<tr><td><code>listening</code></td><td>int</td><td>1 если слушает, 0 если нет</td></tr>
+<tr><td><code>port</code></td><td>int</td><td>Номер порта</td></tr>
+<tr><td><code>name</code></td><td>string</td><td>Имя экземпляра</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Методы сервера</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>listen</code></td><td><code>port, [bindAddr], [backlog]</code></td><td>int</td><td>Начать прослушивание. Останавливает предыдущее</td></tr>
+<tr><td><code>stop</code></td><td>—</td><td>int</td><td>Остановка сервера и отключение всех клиентов</td></tr>
+<tr><td><code>islistening</code></td><td>—</td><td>int</td><td>Проверка состояния (1/0)</td></tr>
+<tr><td><code>port</code></td><td>—</td><td>int</td><td>Метод: номер порта</td></tr>
+<tr><td><code>clients</code></td><td>—</td><td>array</td><td>Массив подключённых TcpClient</td></tr>
+<tr><td><code>clientcount</code></td><td>—</td><td>int</td><td>Количество подключённых клиентов</td></tr>
+<tr><td><code>broadcast</code></td><td><code>data</code></td><td>int</td><td>Отправка всем клиентам. Возвращает суммарные байты</td></tr>
+<tr><td><code>setonconnect</code></td><td><code>func</code></td><td>int</td><td>Обработчик подключения: func(client)</td></tr>
+<tr><td><code>closeall</code></td><td>—</td><td>int</td><td>Отключение и удаление всех клиентов</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>listen(port, [bindAddr], [backlog])</h2>
+<p>Начинает прослушивание входящих TCP-подключений. Если сервер уже слушает — предыдущее прослушивание и все клиенты автоматически закрываются.</p>
+<table>
+<tr><th>Аргумент</th><th>Тип</th><th>По умолчанию</th><th>Описание</th></tr>
+<tr><td><code>port</code></td><td>int</td><td>—</td><td>Номер порта</td></tr>
+<tr><td><code>bindAddr</code></td><td>string</td><td>"0.0.0.0"</td><td>Адрес привязки (все интерфейсы / конкретный IP)</td></tr>
+<tr><td><code>backlog</code></td><td>int</td><td>10</td><td>Очередь ожидающих подключений</td></tr>
+</table>
+<pre><code><span class="kw">var</span> server = TcpServer();
+server.listen(<span class="num">9000</span>);
+print(server.listening);  <span class="cmt">// 1</span>
+
+<span class="cmt">// Только на localhost</span>
+server.listen(<span class="num">9000</span>, <span class="str">"127.0.0.1"</span>);
+
+<span class="cmt">// С увеличенной очередью</span>
+server.listen(<span class="num">9000</span>, <span class="str">"0.0.0.0"</span>, <span class="num">50</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>setonconnect(callback)</h2>
+<p>Устанавливает обработчик, вызываемый для каждого нового клиента. Аргумент функции — объект TcpClient подключённого клиента.</p>
+<p><strong>Важно:</strong> обработчик вызывается в фоновом потоке accept. Не блокируйте его надолго.</p>
+<pre><code><span class="kw">var</span> server = TcpServer();
+server.listen(<span class="num">9000</span>);
+
+server.setonconnect(function(client) {
+    print(<span class="str">"Новый клиент!"</span>);
+    print(<span class="str">"Адрес: "</span> + client.getpeername().ip);
+
+    <span class="cmt">// Приветствие</span>
+    client.sendline(<span class="str">"Добро пожаловать!"</span>);
+
+    <span class="cmt">// Чтение данных</span>
+    <span class="kw">var</span> line = client.recvline(<span class="num">5000</span>);
+    <span class="kw">if</span> (line != <span class="kw">null</span>) {
+        print(<span class="str">"Ответ: "</span> + line);
+        client.sendline(<span class="str">"Получено: "</span> + line);
+    }
+});</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>broadcast(data)</h2>
+<p>Отправляет данные всем подключённым клиентам одновременно. Возвращает суммарное количество отправленных байт.</p>
+<pre><code><span class="cmt">// Рассылка всем при новом подключении</span>
+server.setonconnect(function(client) {
+    server.broadcast(<span class="str">"Новый пользователь!"</span>);
+});
+
+<span class="cmt">// Рассылка сообщения от клиента всем</span>
+<span class="kw">function</span> relay(sender, msg) {
+    <span class="kw">var</span> clients = server.clients();
+    <span class="kw">for</span> (<span class="kw">var</span> c : clients) {
+        c.sendline(msg);
+    }
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>clients()</h2>
+<p>Возвращает массив всех подключённых клиентов (TcpClient). Автоматически удаляет отключённых.</p>
+<pre><code><span class="kw">var</span> clients = server.clients();
+print(<span class="str">"Подключено: "</span> + clients.size());
+
+<span class="cmt">// Отправка всем вручную</span>
+<span class="kw">for</span> (<span class="kw">var</span> c : clients) {
+    <span class="kw">if</span> (c.connected) {
+        c.sendline(<span class="str">"Ping"</span>);
+    }
+}</code></pre>
+</div>
+
+<!-- ============================== EXAMPLES ============================== -->
+
+<div class="doc-section">
+<h2>Примеры</h2>
+
+<h3>Базовый эхо-сервер</h3>
+<pre><code>loadPlugin(<span class="str">"tcp"</span>);
+
+<span class="kw">var</span> server = TcpServer();
+server.listen(<span class="num">9000</span>);
+print(<span class="str">"Сервер запущен на порту 9000"</span>);
+
+<span class="kw">var</span> client = TcpClient();
+client.connect(<span class="str">"127.0.0.1"</span>, <span class="num">9000</span>);
+
+<span class="kw">var</span> msg = client.recvline(<span class="num">3000</span>);
+print(<span class="str">"От сервера: "</span> + msg);
+
+client.disconnect();
+server.stop();</code></pre>
+
+<h3>Многоклиентный чат</h3>
+<pre><code>loadPlugin(<span class="str">"tcp"</span>);
+
+<span class="kw">var</span> server = TcpServer();
+server.listen(<span class="num">8080</span>);
+
+server.setonconnect(function(client) {
+    <span class="kw">var</span> name = client.recvline(<span class="num">3000</span>);
+    server.broadcast(name + <span class="str">" вошёл в чат"</span>);
+
+    <span class="kw">while</span> (client.connected) {
+        <span class="kw">var</span> line = client.recvline(<span class="num">10000</span>);
+        <span class="kw">if</span> (line == <span class="kw">null</span>) <span class="kw">break</span>;
+        server.broadcast(name + <span class="str">": "</span> + line);
+    }
+
+    server.broadcast(name + <span class="str">" вышел из чата"</span>);
+});
+
+print(<span class="str">"Чат-сервер запущен на порту 8080"</span>);</code></pre>
+
+<h3>HTTP-сервер (минимальный)</h3>
+<pre><code>loadPlugin(<span class="str">"tcp"</span>);
+
+<span class="kw">var</span> server = TcpServer();
+server.listen(<span class="num">8080</span>);
+
+server.setonconnect(function(client) {
+    <span class="kw">var</span> request = client.recvline(<span class="num">2000</span>);
+    <span class="kw">if</span> (request != <span class="kw">null</span>) {
+        <span class="cmt">// Пропуск заголовков</span>
+        <span class="kw">while</span> (<span class="kw">true</span>) {
+            <span class="kw">var</span> header = client.recvline(<span class="num">500</span>);
+            <span class="kw">if</span> (header == <span class="kw">null</span> || header == <span class="str">""</span>) <span class="kw">break</span>;
+        }
+
+        <span class="cmt">// Ответ</span>
+        <span class="kw">var</span> body = <span class="str">"&lt;h1&gt;Привет, мир!&lt;/h1&gt;"</span>;
+        <span class="kw">var</span> response =
+            <span class="str">"HTTP/1.1 200 OK\r\n"</span> +
+            <span class="str">"Content-Type: text/html; charset=utf-8\r\n"</span> +
+            <span class="str">"Content-Length: "</span> + body.size() + <span class="str">"\r\n"</span> +
+            <span class="str">"Connection: close\r\n"</span> +
+            <span class="str">"\r\n"</span> + body;
+        client.send(response);
+    }
+    client.disconnect();
+});
+
+print(<span class="str">"HTTP-сервер: http://127.0.0.1:8080"</span>);</code></pre>
+
+<h3>Именованные экземпляры</h3>
+<pre><code>loadPlugin(<span class="str">"tcp"</span>);
+
+<span class="cmt">// Создание именованного сервера</span>
+<span class="kw">var</span> s = TcpServer(<span class="str">"main"</span>);
+s.listen(<span class="num">8080</span>);
+
+<span class="cmt">// Повторный вызов — вернёт тот же объект</span>
+<span class="kw">var</span> same = TcpServer(<span class="str">"main"</span>);
+print(same.listening);  <span class="cmt">// 1</span>
+
+<span class="cmt">// Именованный клиент</span>
+<span class="kw">var</span> c = TcpClient(<span class="str">"worker"</span>);
+c.connect(<span class="str">"127.0.0.1"</span>, <span class="num">8080</span>);
+
+<span class="cmt">// Повторный вызов — вернёт тот же объект</span>
+<span class="kw">var</span> same_client = TcpClient(<span class="str">"worker"</span>);
+print(same_client.connected);  <span class="cmt">// 1</span></code></pre>
+
+<h3>Работа с ByteArray (бинарный протокол)</h3>
+<pre><code>loadPlugin(<span class="str">"tcp"</span>);
+
+<span class="kw">var</span> server = TcpServer();
+server.listen(<span class="num">7000</span>);
+
+server.setonconnect(function(client) {
+    <span class="cmt">// Чтение бинарных данных</span>
+    <span class="kw">var</span> raw = client.recv(<span class="num">1024</span>);
+    <span class="kw">if</span> (raw != <span class="kw">null</span>) {
+        print(<span class="str">"Получено байт: "</span> + raw.size());
+    }
+});
+
+<span class="kw">var</span> client = TcpClient();
+client.connect(<span class="str">"127.0.0.1"</span>, <span class="num">7000</span>);
+
+<span class="cmt">// Отправка бинарных данных</span>
+<span class="kw">var</span> packet = ByteArray();
+packet.append(<span class="num">0x01</span>);  <span class="cmt">// команда</span>
+packet.append(<span class="num">0x00</span>);  <span class="cmt">// параметр</span>
+packet.append(<span class="num">0xFF</span>);  <span class="cmt">// контрольная сумма</span>
+client.send(packet);
+
+client.disconnect();
+server.stop();</code></pre>
+
+<h3>Простой TCP-клиент</h3>
+<pre><code>loadPlugin(<span class="str">"tcp"</span>);
+
+<span class="kw">var</span> client = TcpClient();
+<span class="kw">if</span> (!client.connect(<span class="str">"192.168.1.100"</span>, <span class="num">5000</span>)) {
+    print(<span class="str">"Не удалось подключиться!"</span>);
+    <span class="kw">return</span>;
+}
+
+client.sendline(<span class="str">"PING"</span>);
+<span class="kw">var</span> response = client.recvline(<span class="num">5000</span>);
+<span class="kw">if</span> (response == <span class="str">"PONG"</span>) {
+    print(<span class="str">"Сервер работает!"</span>);
+}
+
+print(<span class="str">"Пир: "</span> + client.getpeername().ip);
+client.disconnect();</code></pre>
+</div>
+
+<!-- ============================== SERVICES ============================== -->
+
+<div class="doc-section">
+<h2>Сервисы для межплагинного доступа</h2>
+<p>Плагин регистрирует сервисы для управления именованными экземплярами из других плагинов.</p>
+
+<h3>TcpClientService</h3>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Описание</th></tr>
+<tr><td><code>create</code></td><td><code>name</code></td><td>Создание или получение именованного клиента</td></tr>
+<tr><td><code>get</code></td><td><code>name</code></td><td>Получение клиента по имени (null если не найден)</td></tr>
+<tr><td><code>has</code></td><td><code>name</code></td><td>Проверка существования (1/0)</td></tr>
+<tr><td><code>delete</code></td><td><code>name</code></td><td>Удаление из реестра + отключение</td></tr>
+<tr><td><code>connect</code></td><td><code>name, host, port</code></td><td>Подключение клиента по имени</td></tr>
+<tr><td><code>disconnect</code></td><td><code>name</code></td><td>Отключение клиента по имени</td></tr>
+<tr><td><code>send</code></td><td><code>name, data</code></td><td>Отправка данных</td></tr>
+<tr><td><code>recv</code></td><td><code>name, [max], [text]</code></td><td>Получение данных</td></tr>
+<tr><td><code>recvline</code></td><td><code>name, [timeout]</code></td><td>Получение строки</td></tr>
+<tr><td><code>available</code></td><td><code>name</code></td><td>Байт в буфере</td></tr>
+<tr><td><code>clear</code></td><td><code>name</code></td><td>Очистка буфера</td></tr>
+</table>
+
+<h3>TcpServerService</h3>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Описание</th></tr>
+<tr><td><code>create</code></td><td><code>name</code></td><td>Создание или получение именованного сервера</td></tr>
+<tr><td><code>get</code></td><td><code>name</code></td><td>Получение сервера по имени</td></tr>
+<tr><td><code>has</code></td><td><code>name</code></td><td>Проверка существования (1/0)</td></tr>
+<tr><td><code>delete</code></td><td><code>name</code></td><td>Удаление из реестра + остановка</td></tr>
+<tr><td><code>listen</code></td><td><code>name, port</code></td><td>Запуск прослушивания</td></tr>
+<tr><td><code>stop</code></td><td><code>name</code></td><td>Остановка сервера</td></tr>
+<tr><td><code>clientcount</code></td><td><code>name</code></td><td>Количество клиентов</td></tr>
+<tr><td><code>broadcast</code></td><td><code>name, data</code></td><td>Рассылка всем клиентам</td></tr>
+<tr><td><code>closeall</code></td><td><code>name</code></td><td>Отключение всех клиентов</td></tr>
+</table>
+</div>
+
+<!-- ============================== NOTES ============================== -->
+
+<div class="doc-section">
+<h2>Примечания</h2>
+<ul>
+  <li><strong>Неблокирующий ввод/вывод.</strong> Все сокеты работают в неблокирующем режиме. Данные принимаются фоновым потоком и буферизуются.</li>
+  <li><strong>recv() — неблокирующий.</strong> Читает из буфера, возвращает <code>null</code> если данных нет.</li>
+  <li><strong>recvline() — блокирующий.</strong> Ждёт строку до <code>\n</code> с указанным тайм-аутом (по умолчанию 5 сек).</li>
+  <li><strong>Повторный listen()</strong> автоматически закрывает предыдущее прослушивание и всех клиентов.</li>
+  <li><strong>Клиенты сервера</strong> (созданные при подключении) автоматически удаляются при отключении.</li>
+  <li><strong>Именованные экземпляры</strong> возвращаются повторно при вызове <code>TcpClient("name")</code> / <code>TcpServer("name")</code>.</li>
+  <li><strong>Потокобезопасность.</strong> Все методы клиента и сервера потокобезопасны.</li>
+  <li><strong>Очистка.</strong> При завершении скрипта все сокеты и потоки освобождаются автоматически.</li>
+</ul>
+</div>
+
+<footer><a href="plugins.html">← К списку плагинов</a></footer>
+</div>
+</body>
+</html>

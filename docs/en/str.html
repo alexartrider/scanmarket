@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>str module — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>str module</h1><p>String operations — available globally</p><div class="lang-switch"><a href="../str.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="str.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / str</p>
+
+<div class="doc-section">
+<h2>String information</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>str.len(s)</code></td><td>Number of characters</td></tr>
+<tr><td><code>str.empty(s)</code></td><td>true if the string is empty</td></tr>
+<tr><td><code>str.toString(val)</code></td><td>Convert to a string</td></tr>
+<tr><td><code>str.toInt(s)</code></td><td>Convert to an integer</td></tr>
+<tr><td><code>str.toDouble(s)</code></td><td>Convert to a floating-point number</td></tr>
+<tr><td><code>str.ord(s)</code></td><td>Code of the first character</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Searching and checking</h2>
+<p><strong>Note:</strong> the functions <code>str.find</code> and <code>str.contains</code> do not exist. Use <code>str.pos()</code> to find a position and <code>str.count()</code> to count occurrences.</p>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>str.pos(s, sub)</code></td><td>Position of the first occurrence, or -1</td></tr>
+<tr><td><code>str.rpos(s, sub)</code></td><td>Position of the last occurrence, or -1</td></tr>
+<tr><td><code>str.count(s, sub)</code></td><td>Number of substring occurrences</td></tr>
+<tr><td><code>str.startswith(s, prefix)</code></td><td>Whether the string starts with prefix</td></tr>
+<tr><td><code>str.endswith(s, suffix)</code></td><td>Whether the string ends with suffix</td></tr>
+<tr><td><code>str.findany(s, chars)</code></td><td>Position of the first character from the set chars</td></tr>
+<tr><td><code>str.findnot(s, chars)</code></td><td>Position of the first character NOT in the set chars</td></tr>
+</table>
+<pre><code><span class="kw">var</span> s = <span class="str">"Hello World"</span>;
+print(str.pos(s, <span class="str">"World"</span>));     <span class="cmt">// 6</span>
+print(str.count(s, <span class="str">"l"</span>));       <span class="cmt">// 3</span>
+print(str.startswith(s, <span class="str">"He"</span>));  <span class="cmt">// true</span>
+print(str.endswith(s, <span class="str">"ld"</span>));    <span class="cmt">// true</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Extraction</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>str.sub(s, start, [len])</code></td><td>Substring. Negative indexes count from the end</td></tr>
+<tr><td><code>str.first(s, [count])</code></td><td>First count characters (default 1)</td></tr>
+<tr><td><code>str.last(s, [count])</code></td><td>Last count characters (default 1)</td></tr>
+<tr><td><code>str.left(s, count)</code></td><td>count characters from the start</td></tr>
+<tr><td><code>str.right(s, count)</code></td><td>count characters from the end</td></tr>
+<tr><td><code>str.mid(s, start, len)</code></td><td>Substring starting at position start with length len</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Modification</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>str.replace(s, from, to)</code></td><td>Replace ALL occurrences of from with to</td></tr>
+<tr><td><code>str.remove(s, sub)</code></td><td>Remove ALL occurrences of the substring</td></tr>
+<tr><td><code>str.insert(s, pos, sub)</code></td><td>Insert a substring at position pos</td></tr>
+<tr><td><code>str.reverse(s)</code></td><td>Reverse the string</td></tr>
+<tr><td><code>str.quoted(s)</code></td><td>Wrap in quotes, escaping the inner ones</td></tr>
+<tr><td><code>str.repeat(s, count)</code></td><td>Repeat the string count times</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Case</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>str.upper(s)</code></td><td>Uppercase</td></tr>
+<tr><td><code>str.lower(s)</code></td><td>Lowercase</td></tr>
+<tr><td><code>str.swapcase(s)</code></td><td>Swap the case of each character</td></tr>
+<tr><td><code>str.capitalize(s)</code></td><td>First letter uppercase, the rest lowercase</td></tr>
+<tr><td><code>str.title(s)</code></td><td>Uppercase first letter of each word</td></tr>
+<tr><td><code>str.iequals(s1, s2)</code></td><td>Case-insensitive comparison</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Trimming</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>str.trim(s)</code></td><td>Spaces at both ends</td></tr>
+<tr><td><code>str.ltrim(s)</code></td><td>Spaces on the left</td></tr>
+<tr><td><code>str.rtrim(s)</code></td><td>Spaces on the right</td></tr>
+<tr><td><code>str.strip(s, chars)</code></td><td>The specified characters at both ends</td></tr>
+<tr><td><code>str.lstrip(s, chars)</code></td><td>The specified characters on the left</td></tr>
+<tr><td><code>str.rstrip(s, chars)</code></td><td>The specified characters on the right</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Padding and alignment</h2>
+<p><strong>Note:</strong> the third argument <code>pad</code> is a numeric character code (int), not a string:</p>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>str.pad(s, width, charCode)</code></td><td>Pad on the right. charCode is the int code of the character</td></tr>
+<tr><td><code>str.zfill(s, width)</code></td><td>Pad with zeros on the left</td></tr>
+<tr><td><code>str.center(s, width, [fill])</code></td><td>Center</td></tr>
+<tr><td><code>str.ljust(s, width, [fill])</code></td><td>Left-align</td></tr>
+<tr><td><code>str.rjust(s, width, [fill])</code></td><td>Right-align</td></tr>
+</table>
+<pre><code><span class="cmt">// Padding with dots (46 is the code of '.'):</span>
+print(str.pad(<span class="str">"hi"</span>, <span class="num">5</span>, <span class="num">46</span>));   <span class="cmt">// "hi..."</span>
+
+print(str.zfill(<span class="str">"42"</span>, <span class="num">5</span>));      <span class="cmt">// "00042"</span>
+print(str.center(<span class="str">"hi"</span>, <span class="num">6</span>));    <span class="cmt">// "  hi  "</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Conversions</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>str.toString(val)</code></td><td>To a string</td></tr>
+<tr><td><code>str.toInt(s)</code></td><td>To an integer</td></tr>
+<tr><td><code>str.toDouble(s)</code></td><td>To a floating-point number</td></tr>
+<tr><td><code>str.itoa(n)</code></td><td>Integer → string</td></tr>
+<tr><td><code>str.atof(s)</code></td><td>String → floating-point number</td></tr>
+<tr><td><code>str.atoi(s)</code></td><td>String → integer</td></tr>
+<tr><td><code>str.hex(n)</code></td><td>To hex (with the 0x prefix)</td></tr>
+<tr><td><code>str.bin(n)</code></td><td>To binary (with the 0b prefix)</td></tr>
+<tr><td><code>str.oct(n)</code></td><td>To octal (with the 0o prefix)</td></tr>
+<tr><td><code>str.fromCharCode(code)</code></td><td>Unicode code point 0..0x10FFFF → string</td></tr>
+</table>
+<pre><code>print(str.hex(<span class="num">255</span>));    <span class="cmt">// "0xFF"</span>
+print(str.bin(<span class="num">5</span>));     <span class="cmt">// "0b101"</span>
+print(str.oct(<span class="num">8</span>));     <span class="cmt">// "0o10"</span>
+<span class="kw">var</span> emoji = str.fromCharCode(<span class="num">0x1F600</span>);
+print(emoji.codepointat(<span class="num">0</span>)); <span class="cmt">// 128512; independent of console encoding</span></code></pre>
+</div>
+
+<footer><a href="index.html">← Back to home</a></footer>
+</div>
+</body>
+</html>

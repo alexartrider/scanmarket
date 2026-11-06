@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registry Plugin — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Windows Registry Plugin</h1><p>Reading and writing the Windows registry — strings, numbers, binary data, multi-strings</p><div class="lang-switch"><a href="../registry.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="registry.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / <a href="plugins.html">Plugins</a> / Registry</p>
+
+<div class="doc-section">
+<h2>Loading the Plugin</h2>
+<pre><code>loadPlugin("plugins/registry.dll");</code></pre>
+<p>Two ways to use it:</p>
+<ul>
+<li><strong>Object-oriented</strong> — open a key, read/write through methods, close it</li>
+<li><strong>Functional</strong> — single operations in one call</li>
+</ul>
+</div>
+
+<div class="doc-section">
+<h2>Available Registry Roots</h2>
+<table>
+<tr><th>Short form</th><th>Full name</th></tr>
+<tr><td><code>HKLM</code></td><td><code>HKEY_LOCAL_MACHINE</code></td></tr>
+<tr><td><code>HKCU</code></td><td><code>HKEY_CURRENT_USER</code></td></tr>
+<tr><td><code>HKCR</code></td><td><code>HKEY_CLASSES_ROOT</code></td></tr>
+<tr><td><code>HKU</code></td><td><code>HKEY_USERS</code></td></tr>
+<tr><td><code>HKCC</code></td><td><code>HKEY_CURRENT_CONFIG</code></td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Access Modes</h2>
+<table>
+<tr><th>Value</th><th>Description</th></tr>
+<tr><td><code>"read"</code></td><td>Read-only (default)</td></tr>
+<tr><td><code>"write"</code></td><td>Read + write</td></tr>
+<tr><td><code>"all"</code></td><td>Full access</td></tr>
+<tr><td><code>"wow64_32"</code> / <code>"read32"</code></td><td>Read the 32-bit view from a 64-bit OS</td></tr>
+<tr><td><code>"wow64_64"</code> / <code>"read64"</code></td><td>Read the 64-bit view from a 32-bit application</td></tr>
+<tr><td><code>"w32"</code> / <code>"write32"</code></td><td>Write to the 32-bit view</td></tr>
+<tr><td><code>"w64"</code> / <code>"write64"</code></td><td>Write to the 64-bit view</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Registry Value Types</h2>
+<table>
+<tr><th>Windows type</th><th>Type string</th><th>Read</th><th>Written</th></tr>
+<tr><td><code>REG_SZ</code></td><td><code>"string"</code></td><td><code>readString</code></td><td><code>writeString</code></td></tr>
+<tr><td><code>REG_EXPAND_SZ</code></td><td><code>"expand_string"</code></td><td><code>readExpandString</code></td><td><code>writeExpandString</code></td></tr>
+<tr><td><code>REG_DWORD</code></td><td><code>"dword"</code></td><td><code>readInt</code></td><td><code>writeInt</code> (≤ 0xFFFFFFFF)</td></tr>
+<tr><td><code>REG_QWORD</code></td><td><code>"qword"</code></td><td><code>readInt</code></td><td><code>writeInt</code> (> 0xFFFFFFFF)</td></tr>
+<tr><td><code>REG_BINARY</code></td><td><code>"binary"</code></td><td><code>readBinary</code></td><td><code>writeBinary</code></td></tr>
+<tr><td><code>REG_MULTI_SZ</code></td><td><code>"multi_string"</code></td><td><code>readMultiString</code></td><td><code>writeMultiString</code></td></tr>
+<tr><td><code>REG_NONE</code></td><td><code>"none"</code></td><td>—</td><td>—</td></tr>
+<tr><td><code>REG_LINK</code></td><td><code>"link"</code></td><td>—</td><td>—</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Functional Interface</h2>
+<p>For single operations — without opening/closing a key.</p>
+
+<table>
+<tr><th>Function</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>RegistryOpen</code></td><td><code>root, path, [access], [create]</code></td><td>RegistryInstance</td><td>Opens/creates a key. create=1 — create if missing</td></tr>
+<tr><td><code>RegistryReadString</code></td><td><code>root, path, name</code></td><td>string</td><td>Read REG_SZ</td></tr>
+<tr><td><code>RegistryReadInt</code></td><td><code>root, path, name</code></td><td>int</td><td>Read REG_DWORD/QWORD</td></tr>
+<tr><td><code>RegistryWriteString</code></td><td><code>root, path, name, value</code></td><td>int (0/1)</td><td>Write REG_SZ</td></tr>
+<tr><td><code>RegistryWriteInt</code></td><td><code>root, path, name, value</code></td><td>int (0/1)</td><td>Write REG_DWORD</td></tr>
+<tr><td><code>RegistryDeleteValue</code></td><td><code>root, path, name</code></td><td>int (0/1)</td><td>Delete a value</td></tr>
+<tr><td><code>RegistryDeleteKey</code></td><td><code>root, path</code></td><td>int (0/1)</td><td>Delete an empty key</td></tr>
+<tr><td><code>RegistryEnumKeys</code></td><td><code>root, path</code></td><td>Array&lt;string&gt;</td><td>List of subkeys</td></tr>
+<tr><td><code>RegistryEnumValues</code></td><td><code>root, path</code></td><td>Array&lt;Tuple&gt;</td><td>List of values with types</td></tr>
+<tr><td><code>RegistryKeyExists</code></td><td><code>root, path</code></td><td>int (0/1)</td><td>Whether the key exists</td></tr>
+<tr><td><code>RegistryValueExists</code></td><td><code>root, path, name</code></td><td>int (0/1)</td><td>Whether the value exists</td></tr>
+</table>
+
+<pre><code><span class="cmt">// Direct string read</span>
+<span class="kw">var</span> path = RegistryReadString(<span class="str">"HKLM"</span>, <span class="str">"SOFTWARE\\MyApp"</span>, <span class="str">"InstallPath"</span>);
+
+<span class="cmt">// Direct number write</span>
+RegistryWriteInt(<span class="str">"HKCU"</span>, <span class="str">"SOFTWARE\\MyApp"</span>, <span class="str">"Counter"</span>, <span class="num">42</span>);
+
+<span class="cmt">// Existence check</span>
+<span class="kw">if</span> (RegistryKeyExists(<span class="str">"HKLM"</span>, <span class="str">"SOFTWARE\\MyApp"</span>)) {
+    print(<span class="str">"Application is installed"</span>);
+}
+
+<span class="cmt">// Enumerate subkeys</span>
+<span class="kw">var</span> keys = RegistryEnumKeys(<span class="str">"HKLM"</span>, <span class="str">"SOFTWARE\\Microsoft\\Windows\\CurrentVersion"</span>);
+<span class="kw">for</span> (<span class="kw">var</span> k : keys) print(k);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Object Interface</h2>
+<p>Recommended for multiple operations — you open the key once.</p>
+
+<h3>Creation</h3>
+<pre><code><span class="cmt">// Open for reading</span>
+<span class="kw">var</span> reg = RegistryOpen(<span class="str">"HKLM"</span>, <span class="str">"SOFTWARE\\ODBC\\ODBCINST.INI"</span>, <span class="str">"read"</span>);
+
+<span class="cmt">// Open with write permissions</span>
+<span class="kw">var</span> reg = RegistryOpen(<span class="str">"HKCU"</span>, <span class="str">"SOFTWARE\\MyApp"</span>, <span class="str">"all"</span>);
+
+<span class="cmt">// Create the key if it does not exist</span>
+<span class="kw">var</span> reg = RegistryOpen(<span class="str">"HKCU"</span>, <span class="str">"SOFTWARE\\MyApp"</span>, <span class="str">"all"</span>, <span class="num">1</span>);</code></pre>
+
+<h3>Read Methods</h3>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>readString</code></td><td><code>name</code></td><td>string</td><td>REG_SZ / REG_EXPAND_SZ</td></tr>
+<tr><td><code>readExpandString</code></td><td><code>name</code></td><td>string</td><td>REG_EXPAND_SZ with %PATH% etc. expanded</td></tr>
+<tr><td><code>readInt</code></td><td><code>name</code></td><td>int</td><td>REG_DWORD / REG_QWORD</td></tr>
+<tr><td><code>readBinary</code></td><td><code>name</code></td><td>ByteArray</td><td>REG_BINARY</td></tr>
+<tr><td><code>readMultiString</code></td><td><code>name</code></td><td>Array&lt;string&gt;</td><td>REG_MULTI_SZ</td></tr>
+</table>
+
+<h3>Write Methods</h3>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>writeString</code></td><td><code>name, value</code></td><td>int (0/1)</td><td>Write REG_SZ</td></tr>
+<tr><td><code>writeExpandString</code></td><td><code>name, value</code></td><td>int (0/1)</td><td>Write REG_EXPAND_SZ</td></tr>
+<tr><td><code>writeInt</code></td><td><code>name, value</code></td><td>int (0/1)</td><td>Write DWORD/QWORD</td></tr>
+<tr><td><code>writeBinary</code></td><td><code>name, byteArray</code></td><td>int (0/1)</td><td>Write REG_BINARY</td></tr>
+<tr><td><code>writeMultiString</code></td><td><code>name, array</code></td><td>int (0/1)</td><td>Write REG_MULTI_SZ</td></tr>
+</table>
+
+<h3>Navigation and Management</h3>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>open</code></td><td><code>root, path, [access]</code></td><td>int (0/1)</td><td>Open another key</td></tr>
+<tr><td><code>create</code></td><td><code>root, path, [access]</code></td><td>int (0/1)</td><td>Create a key</td></tr>
+<tr><td><code>close</code></td><td>—</td><td>null</td><td>Close the handle</td></tr>
+<tr><td><code>enumKeys</code></td><td>—</td><td>Array&lt;string&gt;</td><td>List of subkeys</td></tr>
+<tr><td><code>enumValues</code></td><td>—</td><td>Array&lt;Tuple&gt;</td><td>List of values</td></tr>
+<tr><td><code>deleteValue</code></td><td><code>name</code></td><td>int (0/1)</td><td>Delete a value</td></tr>
+<tr><td><code>deleteKey</code></td><td><code>subKey</code></td><td>int (0/1)</td><td>Delete an empty subkey</td></tr>
+<tr><td><code>deleteTree</code></td><td><code>subKey</code></td><td>int (0/1)</td><td>Recursively delete a subkey and everything inside it</td></tr>
+<tr><td><code>keyExists</code></td><td>—</td><td>int (0/1)</td><td>The key is open and valid</td></tr>
+<tr><td><code>valueExists</code></td><td><code>name</code></td><td>int (0/1)</td><td>Whether the value exists</td></tr>
+<tr><td><code>getValueType</code></td><td><code>name</code></td><td>string</td><td>Value type</td></tr>
+<tr><td><code>flush</code></td><td>—</td><td>int (0/1)</td><td>Flush the registry cache to disk</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Examples</h2>
+
+<h3>Reading Installed Software</h3>
+<pre><code><span class="kw">var</span> reg = RegistryOpen(<span class="str">"HKLM"</span>, <span class="str">"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall"</span>);
+<span class="kw">if</span> (reg.keyExists()) {
+    <span class="kw">var</span> keys = reg.enumKeys();
+    <span class="kw">for</span> (<span class="kw">var</span> k : keys) {
+        <span class="kw">var</span> sub = RegistryOpen(<span class="str">"HKLM"</span>, <span class="str">"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\"</span> + k);
+        <span class="kw">var</span> name = sub.readString(<span class="str">"DisplayName"</span>);
+        <span class="kw">if</span> (!name.isnull()) print(name);
+        sub.close();
+    }
+    reg.close();
+}</code></pre>
+
+<h3>Saving Application Settings</h3>
+<pre><code><span class="cmt">// Save</span>
+<span class="kw">var</span> reg = RegistryOpen(<span class="str">"HKCU"</span>, <span class="str">"SOFTWARE\\MyApp\\Settings"</span>, <span class="str">"all"</span>, <span class="num">1</span>);
+reg.writeString(<span class="str">"theme"</span>, <span class="str">"dark"</span>);
+reg.writeInt(<span class="str">"width"</span>, <span class="num">1280</span>);
+reg.writeInt(<span class="str">"height"</span>, <span class="num">720</span>);
+reg.writeMultiString(<span class="str">"recent"</span>, #[
+    <span class="str">"file1.txt"</span>,
+    <span class="str">"file2.txt"</span>,
+    <span class="str">"C:\\Documents\\data.csv"</span>
+]);
+reg.close();
+
+<span class="cmt">// Load</span>
+reg = RegistryOpen(<span class="str">"HKCU"</span>, <span class="str">"SOFTWARE\\MyApp\\Settings"</span>);
+<span class="kw">if</span> (reg.keyExists()) {
+    <span class="kw">var</span> theme = reg.readString(<span class="str">"theme"</span>);
+    <span class="kw">var</span> w = reg.readInt(<span class="str">"width"</span>);
+    <span class="kw">var</span> h = reg.readInt(<span class="str">"height"</span>);
+    <span class="kw">var</span> files = reg.readMultiString(<span class="str">"recent"</span>);
+    reg.close();
+}</code></pre>
+
+<h3>Reading PATH with Variable Expansion</h3>
+<pre><code><span class="kw">var</span> reg = RegistryOpen(<span class="str">"HKLM"</span>, <span class="str">"SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment"</span>);
+<span class="kw">var</span> path = reg.readExpandString(<span class="str">"Path"</span>);
+print(path);  <span class="cmt">// "C:\Windows\system32;C:\Windows;..." (variables expanded)</span>
+reg.close();</code></pre>
+
+<h3>Binary Data</h3>
+<pre><code><span class="kw">var</span> reg = RegistryOpen(<span class="str">"HKCU"</span>, <span class="str">"SOFTWARE\\MyApp"</span>, <span class="str">"read"</span>);
+<span class="kw">var</span> data = reg.readBinary(<span class="str">"RawData"</span>);
+print(data.size());  <span class="cmt">// size in bytes</span>
+reg.close();</code></pre>
+
+<h3>Deleting a Key Tree</h3>
+<pre><code><span class="kw">var</span> reg = RegistryOpen(<span class="str">"HKCU"</span>, <span class="str">"SOFTWARE"</span>, <span class="str">"all"</span>);
+reg.deleteTree(<span class="str">"OldApp"</span>);  <span class="cmt">// deletes OldApp and all subkeys recursively</span>
+reg.close();</code></pre>
+
+<h3>Determining the Value Type</h3>
+<pre><code><span class="kw">var</span> reg = RegistryOpen(<span class="str">"HKCU"</span>, <span class="str">"SOFTWARE\\MyApp"</span>);
+<span class="kw">var</span> values = reg.enumValues();
+<span class="kw">for</span> (<span class="kw">var</span> v : values) {
+    print(v.name + <span class="str">" = "</span> + v.typeName);  <span class="cmt">// "theme = string", "width = dword"...</span>
+}
+reg.close();</code></pre>
+</div>
+
+<footer><a href="plugins.html">← Back to the plugin list</a></footer>
+</div>
+</body>
+</html>

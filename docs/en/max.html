@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAX Messenger plugin — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>MAX Messenger plugin</h1><p>Bot client for the MAX messenger — connecting, sending and receiving messages via Long Polling</p><div class="lang-switch"><a href="../max.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="max.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / <a href="plugins.html">Plugins</a> / MAX</p>
+
+<div class="doc-section">
+<h2>Overview</h2>
+<p>The <code>max.dll</code> plugin — an interface to the <strong>official MAX Bot API</strong> (the <code>platform-api2.max.ru</code> platform). It supports fetching bot information, sending text messages and reading incoming messages via Long Polling (<code>GET /updates</code>).</p>
+<p>The bot <strong>Token</strong> is assigned when created on the <a href="https://business.max.ru/self">business.max.ru</a> platform (section "Chat bots" → ⋮ → Settings). The token is passed in the <code>Authorization</code> header — it is not embedded in the URL.</p>
+</div>
+
+<div class="doc-section">
+<h2>Dependencies</h2>
+<p>OpenSSL 3 is required: <code>libssl-3-x64.dll</code>, <code>libcrypto-3-x64.dll</code> (place them next to the binary).</p>
+</div>
+
+<div class="doc-section">
+<h2>Loading the plugin</h2>
+<pre><code>loadPlugin(<span class="str">"plugins/max.dll"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Creating an object</h2>
+<pre><code><span class="kw">var</span> mx = maxclient();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Methods</h2>
+<table>
+<tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>connect</code></td><td><code>token</code></td><td>bool</td><td>Connection: validates the token via <code>GET /me</code> and remembers the bot data</td></tr>
+<tr><td><code>disconnect</code></td><td>—</td><td>bool</td><td>Disconnecting, clearing the queue and the marker</td></tr>
+<tr><td><code>send</code></td><td><code>recipientId</code>, <code>text</code>, <code>[mode]</code></td><td>bool</td><td>Sending a text message. By default the recipient is a user (<code>POST /messages?user_id=</code>); if <code>mode</code> equals <code>"chat"</code> or <code>"channel"</code> — a chat/channel (<code>POST /messages?chat_id=</code>)</td></tr>
+<tr><td><code>recv</code></td><td>—</td><td>tuple|null</td><td>Receiving the next message; performs Long Polling when the queue is empty</td></tr>
+<tr><td><code>hasMessage</code></td><td>—</td><td>bool</td><td>Whether there are messages in the queue</td></tr>
+<tr><td><code>messageCount</code></td><td>—</td><td>int</td><td>Number of messages in the queue</td></tr>
+<tr><td><code>setTimeout</code></td><td><code>[sec]</code></td><td>int</td><td>Long Polling timeout (1–90 seconds). Without arguments — a getter</td></tr>
+<tr><td><code>setVerify</code></td><td><code>[bool]</code></td><td>bool</td><td>SSL certificate verification (disabled by default)</td></tr>
+<tr><td><code>setCA</code></td><td><code>file</code></td><td>bool</td><td>Own CA file for verifying the certificate chain</td></tr>
+<tr><td><code>lastError</code></td><td>—</td><td>string|null</td><td>Last error</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Properties</h2>
+<table>
+<tr><th>Property</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>connected</code></td><td>int</td><td>1 — connected, 0 — not</td></tr>
+<tr><td><code>pollTimeout</code></td><td>int</td><td>Current Long Polling timeout in seconds</td></tr>
+<tr><td><code>botUsername</code></td><td>string</td><td>Bot username (the <code>username</code> or <code>first_name</code> field from <code>/me</code>)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Received message (tuple)</h2>
+<p>The <code>recv()</code> method returns a tuple with the following fields:</p>
+<table>
+<tr><th>Field</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>type</code></td><td>string</td><td>Event type: <code>message_created</code> or <code>message_edited</code></td></tr>
+<tr><td><code>timestamp</code></td><td>int</td><td>Event time (Unix, milliseconds)</td></tr>
+<tr><td><code>message_id</code></td><td>int</td><td>Message identifier (<code>mid</code>)</td></tr>
+<tr><td><code>text</code></td><td>string</td><td>Message text</td></tr>
+<tr><td><code>sender_id</code></td><td>int</td><td>Sender ID</td></tr>
+<tr><td><code>sender_first_name</code></td><td>string</td><td>Sender's first name</td></tr>
+<tr><td><code>sender_last_name</code></td><td>string</td><td>Sender's last name</td></tr>
+<tr><td><code>sender_username</code></td><td>string</td><td>Sender's username</td></tr>
+<tr><td><code>sender_is_bot</code></td><td>int</td><td>1 — the sender is a bot</td></tr>
+<tr><td><code>chat_id</code></td><td>int</td><td>Recipient ID (chat or channel) from <code>recipient.chat_id</code></td></tr>
+<tr><td><code>chat_type</code></td><td>string</td><td>Recipient type from <code>recipient.chat_type</code></td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Connecting</h2>
+<pre><code><span class="kw">var</span> mx = maxclient();
+
+<span class="kw">if</span> (!mx.connect(<span class="str">"TOKEN_FROM_BUSINESS.MAX.RU"</span>)) {
+    print(<span class="str">"Error: \(mx.lastError())"</span>);
+    <span class="kw">return</span>;
+}
+
+print(<span class="str">"Connected as @\(mx.botUsername)"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Sending a message</h2>
+<p>By default <code>send()</code> sends a message <strong>to a user</strong> by their <code>user_id</code> (the ID can be taken from the <code>sender_id</code> field of an incoming message): <code>POST /messages?user_id=</code>.</p>
+<p>The third argument <code>mode</code> sets the recipient type. If it equals <code>"chat"</code> or <code>"channel"</code>, <code>recipientId</code> is interpreted as a <code>chat_id</code> (chat or channel): <code>POST /messages?chat_id=</code>. Any other value (or a missing argument) — sending to a user via <code>user_id</code>.</p>
+<pre><code><span class="kw">var</span> mx = maxclient();
+mx.connect(<span class="str">"TOKEN"</span>);
+
+<span class="cmt">// Send text to a user (user_id)</span>
+<span class="kw">var</span> ok = mx.send(<span class="num">12345678</span>, <span class="str">"Hello!"</span>);
+<span class="kw">if</span> (!ok) print(<span class="str">"Error: \(mx.lastError())"</span>);
+
+<span class="cmt">// Send to a chat/channel by chat_id</span>
+mx.send(<span class="num">987654321</span>, <span class="str">"Hello, chat!"</span>, <span class="str">"chat"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Receiving messages (Long Polling)</h2>
+<p>By default the polling timeout is 30 seconds. MAX limits the use of Long Polling — for production environments a Webhook is recommended.</p>
+<pre><code><span class="kw">var</span> mx = maxclient();
+mx.connect(<span class="str">"TOKEN"</span>);
+mx.setTimeout(<span class="num">30</span>);
+
+<span class="cmt">// Waiting for a message (blocking call until the timeout)</span>
+<span class="kw">var</span> msg = mx.recv();
+<span class="kw">if</span> (!msg.isnull()) {
+    print(<span class="str">"type:    \(msg.type)"</span>);
+    print(<span class="str">"from:    \(msg.sender_first_name) \(msg.sender_last_name) (id:\(msg.sender_id))"</span>);
+    print(<span class="str">"text:    \(msg.text)"</span>);
+}
+
+<span class="cmt">// Polling in a loop with a reply to "ping"</span>
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i &lt; <span class="num">5</span>; i++) {
+    <span class="kw">var</span> m = mx.recv();
+    <span class="kw">if</span> (!m.isnull() &amp;&amp; m.text == <span class="str">"ping"</span>) {
+        mx.send(m.sender_id, <span class="str">"pong"</span>);
+    }
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>SSL certificates</h2>
+<pre><code><span class="cmt">// Certificate chain verification is disabled by default</span>
+print(mx.setVerify());  <span class="cmt">// 0</span>
+
+<span class="cmt">// Enable verification</span>
+mx.setVerify(<span class="num">1</span>);
+
+<span class="cmt">// Own CA file (e.g. the Ministry of Digital Development certificate for max.ru domains)</span>
+mx.setCA(<span class="str">"C:/certs/cacert.pem"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Full example: echo bot</h2>
+<pre><code>loadPlugin(<span class="str">"plugins/max.dll"</span>);
+
+<span class="kw">var</span> mx = maxclient();
+mx.setVerify(<span class="num">1</span>);
+mx.setTimeout(<span class="num">30</span>);
+
+<span class="cmt">// Token from business.max.ru → Chat bots → Settings</span>
+<span class="kw">if</span> (!mx.connect(<span class="str">"TOKEN"</span>)) {
+    print(<span class="str">"Connection error: \(mx.lastError())"</span>);
+    system.exit(<span class="num">1</span>);
+}
+
+print(<span class="str">"Bot @\(mx.botUsername) started. Send it something in MAX."</span>);
+
+<span class="kw">while</span> (mx.connected) {
+    <span class="kw">var</span> msg = mx.recv();
+
+    <span class="kw">if</span> (msg.isnull()) {
+        <span class="kw">continue</span>;  <span class="cmt">// polling timeout — retry</span>
+    }
+
+    print(<span class="str">"\(msg.sender_first_name): \(msg.text)"</span>);
+
+    <span class="kw">if</span> (msg.text == <span class="str">"/stop"</span>) {
+        mx.disconnect();
+        <span class="kw">break</span>;
+    }
+
+    <span class="cmt">// Reply to the sender</span>
+    mx.send(msg.sender_id, <span class="str">"You wrote: \"\(msg.text)\""</span>);
+}</code></pre>
+</div>
+
+</div>
+</body>
+</html>

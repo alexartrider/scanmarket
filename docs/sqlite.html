@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SQLite модуль — Script</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>SQLite модуль</h1><p>Нативный встроенный SQLite без зависимости от QtSql и внешнего SQLite DLL</p><div class="lang-switch"><a class="active" href="sqlite.html">RU</a><a href="en/sqlite.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Главная</a> / SQLite</p>
+
+<div style="border:1px solid #e0a800;background:#fff8e1;padding:8px 12px;border-radius:6px;margin:10px 0;">
+<b>⚠️ Упрощённый модуль (начального уровня):</b> нативный встроенный <code>sqlite</code> — базовый набор (exec/query/scalar…) без развития.
+Для автоматизации и полноценной работы используйте <b>Qt-версию</b> — модуль <code>db</code>: параметризованные запросы, транзакции, read-only, работа с файлом и <code>:memory:</code> (<a href="db.html">Справка модуля db →</a>).
+</div>
+
+<div class="doc-section">
+<h2>Создание</h2>
+<pre><code><span class="kw">var</span> db = sqlite.open(<span class="str">"data.db"</span>);
+<span class="kw">var</span> memory = sqlite.memory();</code></pre>
+<p>Модуль использует SQLite amalgamation, собранную вместе с приложением. Для работы не нужен <code>qsqlite.dll</code>.</p>
+</div>
+
+<div class="doc-section">
+<h2>Методы модуля</h2>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>sqlite.open(path)</code></td><td>Создать и открыть базу SQLite</td></tr>
+<tr><td><code>sqlite.memory()</code></td><td>Создать базу в памяти</td></tr>
+<tr><td><code>sqlite.version()</code></td><td>Версия встроенной библиотеки SQLite</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Методы объекта базы</h2>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>db.exec(sql, params?)</code></td><td>Выполнить INSERT, UPDATE, DELETE или DDL</td></tr>
+<tr><td><code>db.execute(sql, params?)</code></td><td>Алиас <code>exec</code></td></tr>
+<tr><td><code>db.query(sql, params?)</code></td><td>Выполнить SELECT и вернуть массив кортежей</td></tr>
+<tr><td><code>db.scalar(sql, params?)</code></td><td>Вернуть первое поле первой строки</td></tr>
+<tr><td><code>db.begin()</code>, <code>db.commit()</code>, <code>db.rollback()</code></td><td>Транзакции</td></tr>
+<tr><td><code>db.changes()</code></td><td>Количество изменённых строк</td></tr>
+<tr><td><code>db.last_insert_rowid()</code></td><td>ID последней вставленной строки</td></tr>
+<tr><td><code>db.isopen()</code>, <code>db.close()</code></td><td>Состояние и закрытие базы</td></tr>
+<tr><td><code>db.last_error()</code></td><td>Текст последней ошибки</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Параметры</h2>
+<p>Позиционные параметры передаются массивом, именованные параметры — кортежем. Для именованных параметров ключ указывается вместе с префиксом <code>:</code>, <code>@</code> или <code>$</code>.</p>
+<pre><code>db.exec(<span class="str">"insert into people(name, age) values (?, ?)"</span>, #[<span class="str">"Alice"</span>, <span class="num">30</span>]);
+db.exec(<span class="str">"insert into people(name, age) values (:name, :age)"</span>, #{
+    <span class="str">":name"</span>: <span class="str">"Bob"</span>,
+    <span class="str">":age"</span>: <span class="num">41</span>
+});</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Типы</h2>
+<table>
+<tr><th>SQLite</th><th>Script</th></tr>
+<tr><td>NULL</td><td><code>null</code></td></tr>
+<tr><td>INTEGER</td><td>целое число</td></tr>
+<tr><td>REAL</td><td>вещественное число</td></tr>
+<tr><td>TEXT</td><td>строка UTF-8</td></tr>
+<tr><td>BLOB</td><td>массив числовых байтов</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Пример</h2>
+<pre><code><span class="kw">var</span> db = sqlite.open(<span class="str">"people.db"</span>);
+db.exec(<span class="str">"create table if not exists people(id integer primary key, name text, age integer)"</span>);
+db.exec(<span class="str">"insert into people(name, age) values (?, ?)"</span>, #[<span class="str">"Alice"</span>, <span class="num">30</span>]);
+
+<span class="kw">var</span> rows = db.query(<span class="str">"select id, name, age from people order by id"</span>);
+<span class="kw">for</span> (<span class="kw">var</span> row : rows) {
+    print(row.id + <span class="str">": "</span> + row.name + <span class="str">", "</span> + row.age);
+}
+db.close();</code></pre>
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Script Language — Syntax</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header>
+<h1>Script Language Syntax</h1>
+<p>Complete syntax reference for the scripting language</p>
+<div class="lang-switch"><a href="../language.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="language.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / Language</p>
+
+<div class="doc-section">
+<h2>Keywords</h2>
+<table>
+<tr><th>English</th><th>Russian</th><th>Purpose</th></tr>
+<tr><td><code>if</code></td><td><code>если</code></td><td>Conditional statement</td></tr>
+<tr><td><code>else</code></td><td><code>иначе</code></td><td>else branch</td></tr>
+<tr><td><code>for</code></td><td><code>для</code></td><td>for / for-each loop</td></tr>
+<tr><td><code>while</code></td><td><code>пока</code></td><td>while loop</td></tr>
+<tr><td><code>do</code></td><td><code>цикл</code></td><td>do-while loop</td></tr>
+<tr><td><code>return</code></td><td><code>возврат</code></td><td>Return from a function</td></tr>
+<tr><td><code>switch</code></td><td><code>выборпо</code></td><td>switch statement</td></tr>
+<tr><td><code>case</code></td><td><code>выбор</code></td><td>case branch</td></tr>
+<tr><td><code>default</code></td><td><code>умолчание</code></td><td>default branch</td></tr>
+<tr><td><code>break</code></td><td><code>прервать</code></td><td>Exit the loop</td></tr>
+<tr><td><code>continue</code></td><td><code>продолжить</code></td><td>Next iteration</td></tr>
+<tr><td><code>goto</code></td><td><code>перейти</code></td><td>Unconditional jump</td></tr>
+<tr><td><code>function</code></td><td><code>функция</code></td><td>Function declaration</td></tr>
+<tr><td><code>var</code></td><td><code>перем</code></td><td>Variable declaration</td></tr>
+<tr><td><code>export</code></td><td><code>экспорт</code></td><td>Export from a module (postfix: after function or var)</td></tr>
+<tr><td><code>class</code></td><td><code>класс</code></td><td>Class declaration</td></tr>
+<tr><td><code>throw</code></td><td><code>исключение</code></td><td>Throw an exception</td></tr>
+<tr><td><code>try</code></td><td><code>попытка</code></td><td>try block</td></tr>
+<tr><td><code>catch</code></td><td><code>перехват</code></td><td>catch block</td></tr>
+<tr><td><code>finally</code></td><td><code>вконце</code></td><td>finally block</td></tr>
+<tr><td><code>uses</code> / <code>import</code></td><td><code>использовать</code> / <code>импорт</code></td><td>Module import</td></tr>
+<tr><td><code>as</code></td><td><code>как</code></td><td>Alias on import</td></tr>
+<tr><td><code>or</code> / <code>||</code></td><td><code>или</code></td><td>Logical OR</td></tr>
+<tr><td><code>and</code> / <code>&amp;&amp;</code></td><td><code>и</code></td><td>Logical AND</td></tr>
+<tr><td><code>not</code></td><td><code>не</code></td><td>Logical NOT</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Data Types</h2>
+<h3>Scalar Types</h3>
+<table>
+<tr><th>Type</th><th>Example</th><th>Description</th></tr>
+<tr><td>Integer</td><td><code>42</code>, <code>0xFF</code>, <code>0b1010</code>, <code>0o755</code></td><td>int64,supports hex/bin/oct</td></tr>
+<tr><td>Floating point</td><td><code>3.14</code>, <code>1e10</code>, <code>.5</code></td><td>double</td></tr>
+<tr><td>String</td><td><code>"Hello"</code>, <code>"val=\(x)"</code></td><td>UTF-16, interpolation</td></tr>
+<tr><td>Date/time</td><td><code>'2024-01-15'</code>, <code>'14.30.00'</code></td><td>In single quotes</td></tr>
+<tr><td>Boolean</td><td><code>true</code>, <code>false</code></td><td>Boolean type</td></tr>
+<tr><td>Empty</td><td><code>null</code></td><td>Empty value (nil)</td></tr>
+</table>
+
+<h3>Collections</h3>
+<table>
+<tr><th>Type</th><th>Syntax</th><th>Description</th></tr>
+<tr><td>Array</td><td><code>#[1, 2, 3]</code></td><td>Indexable list</td></tr>
+<tr><td>Tuple</td><td><code>#tuple{}</code> or <code>#{"a": 1, "b": 2}</code></td><td>Immutable associative array</td></tr>
+<tr><td>Set</td><td><code>#set{}</code> or <code>#{1, 2, 3}</code></td><td>Unique elements</td></tr>
+<tr><td>Queue</td><td><code>#queue{1, 2}</code></td><td>FIFO queue</td></tr>
+<tr><td>Stack</td><td><code>#stack{1, 2}</code></td><td>LIFO stack</td></tr>
+<tr><td>Priority queue</td><td><code>#priorityqueue{}</code></td><td>With priorities</td></tr>
+<tr><td>Dictionary</td><td><code>#dictionary{}</code></td><td>Associative array</td></tr>
+</table>
+<p><strong>Type detection</strong> for <code>#{...}</code>: if the elements are <code>"key": value</code> pairs, it is a tuple; if they are plain values — a set.</p>
+
+<h3>Identifiers</h3>
+<p>Supported: Latin (<code>a-zA-Z</code>), Cyrillic (<code>А-Яа-яЁё</code>), digits, underscore. Cannot start with a digit.</p>
+</div>
+
+<div class="doc-section">
+<h2>Operators</h2>
+<h3>Precedence (from lowest to highest)</h3>
+<table>
+<tr><th>Precedence</th><th>Operator</th><th>Description</th></tr>
+<tr><td>1</td><td><code>,</code></td><td>Comma</td></tr>
+<tr><td>2</td><td><code>||</code> / <code>or</code> / <code>или</code></td><td>Logical OR</td></tr>
+
+<tr><td>2</td><td><code>&amp;&amp;</code> / <code>and</code> / <code>и</code></td><td>Logical AND</td></tr>
+<tr><td>3</td><td><code>=</code> <code>+=</code> <code>-=</code> <code>*=</code> <code>/=</code> <code>%=</code></td><td>Assignment</td></tr>
+<tr><td>3</td><td><code>&amp;=</code> <code>|=</code> <code>^=</code> <code>&lt;&lt;=</code> <code>&gt;&gt;=</code></td><td>Bitwise assignment</td></tr>
+<tr><td>4</td><td><code>?</code> <code>:</code></td><td>Ternary operator</td></tr>
+<tr><td>5</td><td><code>|</code> <code>^</code> <code>&amp;</code></td><td>Bitwise: OR, XOR, AND</td></tr>
+<tr><td>6</td><td><code>&lt;</code> <code>&gt;</code> <code>&lt;=</code> <code>&gt;=</code> <code>==</code> <code>!=</code></td><td>Comparison</td></tr>
+<tr><td>7</td><td><code>&lt;&lt;</code> <code>&gt;&gt;</code></td><td>Bitwise shifts</td></tr>
+<tr><td>8</td><td><code>+</code> <code>-</code></td><td>Addition / Subtraction</td></tr>
+<tr><td>9</td><td><code>*</code> <code>/</code> <code>%</code></td><td>Multiplication / Division / Remainder</td></tr>
+<tr><td>10</td><td><code>**</code></td><td>Exponentiation (right-associative: <code>2**3**2</code> = <code>2**(3**2)</code> = 512)</td></tr>
+<tr><td>10</td><td><code>!</code> <code>not</code> <code>~</code> <code>++</code> <code>--</code></td><td>Unary: NOT, inversion, increment/decrement</td></tr>
+<tr><td>11</td><td><code>.</code> <code>[]</code> <code>::</code></td><td>Access: property, index, scope</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Strings</h2>
+<h3>Literals</h3>
+<pre><code><span class="str">"Simple string"</span>
+<span class="str">"Interpolation: \(x + 1)"</span>
+<span class="str">"Concatenation: "   "two lines"</span>    <span class="cmt">// result: "Concatenation: two lines"</span>
+<span class="str">"Multi-line\
+string"</span></code></pre>
+<p>Line continuation via <code>\</code> at the end of a line, or concatenation of adjacent literals.</p>
+
+<h3>Escape Sequences</h3>
+<table>
+<tr><th>Sequence</th><th>Value</th></tr>
+<tr><td><code>\n</code></td><td>Newline</td></tr>
+<tr><td><code>\t</code></td><td>Tab</td></tr>
+<tr><td><code>\\</code></td><td>Backslash</td></tr>
+<tr><td><code>\"</code></td><td>Double quote</td></tr>
+<tr><td><code>\xNN</code></td><td>Hex char code (1-2 digits)</td></tr>
+<tr><td><code>\uNNNN</code></td><td>Unicode (4 hex digits)</td></tr>
+<tr><td><code>\UNNNNNNNN</code></td><td>Unicode (8 hex digits)</td></tr>
+<tr><td><code>\0NN</code></td><td>Octal code (1-3 digits)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Variables</h2>
+<pre><code><span class="kw">var</span> x = <span class="num">10</span>;          <span class="cmt">// mutable</span>
+<span class="kw">var</span> name = <span class="str">"Hello"</span>;  <span class="cmt">// string</span>
+<span class="kw">var</span> arr[<span class="num">10</span>];          <span class="cmt">// array of size 10</span>
+<span class="kw">var</span> a = <span class="num">1</span>, b = <span class="num">2</span>;  <span class="cmt">// multiple declarations</span>
+<span class="kw">var</span> x = <span class="num">0</span> <span class="kw">export</span>;    <span class="cmt">// exported variable</span>
+<span class="kw">var</span> y <span class="kw">export</span>;        <span class="cmt">// exported without initialization</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Functions</h2>
+<pre><code><span class="cmt">// Named function</span>
+<span class="kw">function</span> <span class="fn">add</span>(a, b) {
+    <span class="kw">return</span> a + b;
+}
+
+<span class="cmt">// Exported function</span>
+<span class="kw">function</span> <span class="fn">helper</span>() <span class="kw">export</span> { ... }
+
+<span class="cmt">// Lambda</span>
+<span class="kw">var</span> square = <span class="kw">function</span>(x) { <span class="kw">return</span> x * x; };
+
+<span class="cmt">// Default parameters — any expression</span>
+<span class="kw">function</span> <span class="fn">greet</span>(name = <span class="str">"world"</span>) {
+    print(<span class="str">"Hello, \(name)!"</span>);
+}
+
+<span class="cmt">// Function call as default</span>
+<span class="kw">function</span> <span class="fn">getData</span>(path = file.getcwd()) { ... }
+
+<span class="cmt">// Expression</span>
+<span class="kw">function</span> <span class="fn">calc</span>(x = y + <span class="num">1</span>) { ... }
+
+<span class="cmt">// Variable</span>
+<span class="kw">var</span> defaultColor = <span class="str">"red"</span>;
+<span class="kw">function</span> <span class="fn">paint</span>(color = defaultColor) { ... }
+
+<span class="cmt">// Lambda</span>
+<span class="kw">function</span> <span class="fn">apply</span>(fn = <span class="kw">function</span>(x) { <span class="kw">return</span> x * <span class="num">2</span>; }) {
+    <span class="kw">return</span> fn(<span class="num">10</span>);
+}
+
+<span class="cmt">// Collection</span>
+<span class="kw">function</span> <span class="fn">process</span>(items = #[<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>]) { ... }</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Export</h2>
+<p>The <code>export</code> keyword is placed <strong>after</strong> the declaration (not before it).</p>
+<pre><code><span class="kw">function</span> <span class="fn">helper</span>() <span class="kw">export</span> { ... }     <span class="cmt">// function is visible outside the module</span>
+<span class="kw">var</span> x = <span class="num">0</span> <span class="kw">export</span>;                    <span class="cmt">// variable is visible outside the module</span>
+<span class="kw">var</span> y <span class="kw">export</span>;                        <span class="cmt">// exported without initialization</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Control Structures</h2>
+<h3>if / else</h3>
+<pre><code><span class="kw">if</span> (x > <span class="num">0</span>) {
+    print(<span class="str">"Positive"</span>);
+} <span class="kw">else if</span> (x == <span class="num">0</span>) {
+    print(<span class="str">"Zero"</span>);
+} <span class="kw">else</span> {
+    print(<span class="str">"Negative"</span>);
+}</code></pre>
+
+<h3>for / for-each</h3>
+<pre><code><span class="cmt">// Classic for</span>
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i &lt; <span class="num">10</span>; i++) {
+    print(i);
+}
+
+<span class="cmt">// For-each over a collection</span>
+<span class="kw">for</span> (<span class="kw">var</span> item : arr) {
+    print(item);
+}
+
+<span class="cmt">// Destructuring</span>
+<span class="kw">for</span> (<span class="kw">var</span> [key, value] : dict) {
+    print(<span class="str">"\(key) = \(value)"</span>);
+}</code></pre>
+
+<h3>while / do-while</h3>
+<pre><code><span class="kw">while</span> (condition) { ... }
+<span class="kw">do</span> { ... } <span class="kw">while</span> (condition);</code></pre>
+
+<h3>switch</h3>
+<pre><code><span class="kw">switch</span> (x) {
+    <span class="kw">case</span> <span class="num">1</span>: print(<span class="str">"one"</span>);
+    <span class="kw">case</span> <span class="num">2</span>: print(<span class="str">"two"</span>);
+    <span class="kw">default</span>: print(<span class="str">"other"</span>);  <span class="cmt">// or else:</span>
+}</code></pre>
+
+<h3>try-catch-finally</h3>
+<pre><code><span class="kw">try</span> {
+    riskyOperation();
+} <span class="kw">catch</span> (e) {
+    print(<span class="str">"Error: \(e)"</span>);
+} <span class="kw">finally</span> {
+    cleanup();
+}
+
+<span class="cmt">// Multiple catch blocks</span>
+<span class="kw">try</span> { ... }
+<span class="kw">catch</span> (TypeError) { ... }
+<span class="kw">catch</span> (Error) { ... }</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Classes</h2>
+<pre><code><span class="kw">class</span> Person {
+    <span class="kw">var</span> name;
+    <span class="kw">var</span> age;
+
+    <span class="cmt">// Constructor</span>
+    Person(name, age) {
+        <span class="kw">this</span>.name = name;
+        <span class="kw">this</span>.age = age;
+    }
+
+    <span class="cmt">// Method</span>
+    <span class="kw">function</span> <span class="fn">greet</span>() {
+        <span class="kw">return</span> <span class="str">"I am \(</span><span class="kw">this</span>.name<span class="str">), \(</span><span class="kw">this</span>.age<span class="str">) years old"</span>;
+    }
+
+    <span class="cmt">// Destructor</span>
+    ~Person() { }
+}
+
+<span class="cmt">// Inheritance</span>
+<span class="kw">class</span> Student : Person {
+    <span class="kw">var</span> university;
+
+    Student(name, age, university) {
+        <span class="kw">this</span>::Person(name, age);  <span class="cmt">// base constructor call</span>
+        <span class="kw">this</span>.university = university;
+    }
+}
+
+<span class="kw">var</span> s = Student(<span class="str">"Ivan"</span>, <span class="num">20</span>, <span class="str">"MSU"</span>);
+print(s.greet());          <span class="cmt">// I am Ivan, 20 years old</span>
+print(s.university);       <span class="cmt">// MSU</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Modules</h2>
+<pre><code><span class="cmt">// Importing a module</span>
+<span class="kw">uses</span> file;
+<span class="kw">uses</span> math;
+
+<span class="cmt">// With an alias</span>
+<span class="kw">import</span> math <span class="kw">as</span> m;
+
+<span class="cmt">// Calling a module function</span>
+file.write(<span class="str">"test.txt"</span>, <span class="str">"Hello"</span>);
+print(math.pi);
+
+<span class="cmt">// Calling a module function</span>
+math.sqrt(<span class="num">16</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Compile-time Macros</h2>
+<table>
+<tr><th>Macro</th><th>Description</th></tr>
+<tr><td><code>__FILENAME__</code></td><td>Current file name</td></tr>
+<tr><td><code>__LINE__</code></td><td>Current line number</td></tr>
+<tr><td><code>__DATE__</code></td><td>Current date</td></tr>
+<tr><td><code>__TIME__</code></td><td>Current time</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Comments</h2>
+<pre><code><span class="cmt">// Single-line comment</span>
+
+<span class="cmt">/*
+   Multi-line
+   comment
+*/</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Examples from sample/</h2>
+
+<h3>Classes and Inheritance</h3>
+<pre><code><span class="kw">class</span> Animal {
+    Animal(name, sound) {
+        <span class="kw">this</span>.name = name;
+        <span class="kw">this</span>.sound = sound;
+    }
+    <span class="kw">function</span> <span class="fn">speak</span>() {
+        <span class="kw">return</span> <span class="str">"\(</span><span class="kw">this</span>.name<span class="str">) says \(</span><span class="kw">this</span>.sound<span class="str">)!"</span>;
+    }
+}
+
+<span class="kw">class</span> Dog : Animal {
+    Dog(name) : Animal(name, <span class="str">"Woof"</span>) {   <span class="cmt">// base constructor call</span>
+        <span class="kw">this</span>.tricks = <span class="num">0</span>;
+    }
+    <span class="kw">function</span> <span class="fn">fetch</span>() {
+        <span class="kw">this</span>.tricks = <span class="kw">this</span>.tricks + <span class="num">1</span>;
+        <span class="kw">return</span> <span class="str">"\(</span><span class="kw">this</span>.name<span class="str">) fetches the stick! (trick #\(</span><span class="kw">this</span>.tricks<span class="str">))"</span>;
+    }
+}
+
+<span class="kw">var</span> rex = Dog(<span class="str">"Rex"</span>);
+print(rex.speak());       <span class="cmt">// Rex says Woof!</span>
+print(rex.fetch());       <span class="cmt">// Rex fetches the stick! (trick #1)</span></code></pre>
+
+<h3>Collections — Methods</h3>
+
+<h4>Array — Basics</h4>
+<pre><code><span class="kw">var</span> arr = #[<span class="num">3</span>, <span class="num">1</span>, <span class="num">4</span>, <span class="num">1</span>, <span class="num">5</span>];
+arr.size();                   <span class="cmt">// 5 — number of elements</span>
+arr.empty();                  <span class="cmt">// false</span>
+arr.sort();                   <span class="cmt">// sort (mutates)</span>
+arr.reverse();                <span class="cmt">// reverse (mutates)</span>
+arr.clear();                  <span class="cmt">// clear the array</span>
+arr.reserve(<span class="num">100</span>);             <span class="cmt">// reserve memory</span>
+arr.add(<span class="num">6</span>);                   <span class="cmt">// append an element</span>
+arr.push(<span class="num">7</span>, <span class="num">8</span>);               <span class="cmt">// append several elements</span>
+arr.pop();                    <span class="cmt">// remove and return the last element</span>
+arr.insert(<span class="num">0</span>, <span class="num">99</span>);            <span class="cmt">// insert at index</span>
+arr.removeAt(<span class="num">0</span>);              <span class="cmt">// remove at index</span>
+arr.remove(<span class="num">4</span>);                <span class="cmt">// remove all occurrences</span>
+arr.removeAll(<span class="num">1</span>);             <span class="cmt">// remove all occurrences</span>
+arr.swap(<span class="num">0</span>, <span class="num">2</span>);               <span class="cmt">// swap elements</span>
+arr.clone();                  <span class="cmt">// deep copy</span></code></pre>
+
+<h4>Array — Search and Checks</h4>
+<pre><code>arr.contains(<span class="num">4</span>);               <span class="cmt">// true — whether it contains the element</span>
+arr.indexOf(<span class="num">4</span>);                <span class="cmt">// index of first occurrence, -1 if not found</span>
+arr.lastIndexOf(<span class="num">1</span>);            <span class="cmt">// index of last occurrence</span>
+arr.count(<span class="num">1</span>);                  <span class="cmt">// number of occurrences</span>
+arr.min();                     <span class="cmt">// minimum element</span>
+arr.max();                     <span class="cmt">// maximum element</span>
+arr.sum();                     <span class="cmt">// sum of elements</span>
+arr.average();                 <span class="cmt">// average value</span></code></pre>
+
+<h4>Array — Slices</h4>
+<pre><code>arr.sliced(<span class="num">0</span>, <span class="num">3</span>);              <span class="cmt">// new array [0..3)</span>
+arr.mid(<span class="num">1</span>);                    <span class="cmt">// slice from position to end</span>
+arr.mid(<span class="num">1</span>, <span class="num">3</span>);                 <span class="cmt">// slice [pos, pos+count)</span>
+arr.first();                    <span class="cmt">// first element</span>
+arr.last();                     <span class="cmt">// last element</span></code></pre>
+
+<h4>Array — Sorting</h4>
+<pre><code>arr.sort();                    <span class="cmt">// default</span>
+arr.sort(function(a, b) { <span class="kw">return</span> a - b; });  <span class="cmt">// custom sort</span>
+arr.reversed();                <span class="cmt">// new sorted array (does not mutate)</span></code></pre>
+
+<h4>Array — Functional</h4>
+<pre><code><span class="kw">var</span> doubled = map(arr, <span class="kw">function</span>(x) { <span class="kw">return</span> x * <span class="num">2</span>; });
+<span class="kw">var</span> evens = filter(arr, <span class="kw">function</span>(x) { <span class="kw">return</span> x % <span class="num">2</span> == <span class="num">0</span>; });
+<span class="kw">var</span> total = reduce(arr, <span class="kw">function</span>(acc, x) { <span class="kw">return</span> acc + x; }, <span class="num">0</span>);
+arr.forEach(<span class="kw">function</span>(x) { print(x); });   <span class="cmt">// for each</span>
+<span class="kw">var</span> result = arr.map(<span class="kw">function</span>(x) { <span class="kw">return</span> x * <span class="num">2</span>; });
+<span class="kw">var</span> filtered = arr.filter(<span class="kw">function</span>(x) { <span class="kw">return</span> x > <span class="num">2</span>; });
+arr.some(<span class="kw">function</span>(x) { <span class="kw">return</span> x > <span class="num">3</span>; });    <span class="cmt">// whether at least one matches</span>
+arr.every(<span class="kw">function</span>(x) { <span class="kw">return</span> x > <span class="num">0</span>; });  <span class="cmt">// whether all match</span></code></pre>
+
+<h4>Array — Grouping</h4>
+<pre><code><span class="kw">var</span> words = #[<span class="str">"apple"</span>, <span class="str">"banana"</span>, <span class="str">"avocado"</span>, <span class="str">"blueberry"</span>];
+<span class="kw">var</span> groups = words.grouped(<span class="kw">function</span>(w) { <span class="kw">return</span> w.first(); });
+<span class="cmt">// #{"a": #["apple","avocado"], "b": #["banana","blueberry"]}</span>
+
+<span class="kw">var</span> nums = #[<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>, <span class="num">6</span>];
+<span class="kw">var</span> groups2 = nums.grouped(<span class="kw">function</span>(n) { <span class="kw">return</span> n % <span class="num">2</span> == <span class="num">0</span> ? <span class="str">"even"</span> : <span class="str">"odd"</span>; });
+<span class="cmt">// #{"odd": #[1,3,5], "even": #[2,4,6]}</span></code></pre>
+
+<h4>Array — Joining</h4>
+<pre><code>arr.joined(<span class="str">", "</span>);              <span class="cmt">// "3, 1, 4, 1, 5"</span>
+arr.toString();                <span class="cmt">// "[3, 1, 4, 1, 5]"</span></code></pre>
+
+<h4>Array — Static</h4>
+<pre><code>array.resize(arr, <span class="num">10</span>);         <span class="cmt">// change size</span>
+array.swap(arr, <span class="num">0</span>, <span class="num">2</span>);         <span class="cmt">// swap by indices</span></code></pre>
+
+<span class="cmt">// Tuple (associative array)</span>
+<span class="kw">var</span> t = #{<span class="str">"name"</span>: <span class="str">"Ivan"</span>, <span class="str">"age"</span>: <span class="num">30</span>};
+t.keys(); t.values(); t.get(<span class="str">"name"</span>); t.has(<span class="str">"age"</span>);
+t.set(<span class="str">"email"</span>, <span class="str">"test@mail.ru"</span>);
+
+<span class="cmt">// Set</span>
+<span class="kw">var</span> s1 = #set{<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>};
+s1.add(<span class="num">4</span>); s1.remove(<span class="num">1</span>); s1.has(<span class="num">3</span>);
+s1.isSubsetOf(#set{<span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>,<span class="num">4</span>});
+
+<span class="cmt">// Stack / Queue</span>
+<span class="kw">var</span> stk = #stack{};  stk.push(<span class="num">10</span>); stk.pop(); stk.peek();
+<span class="kw">var</span> que = #queue{};  que.push(<span class="num">10</span>); que.pop(); que.front();
+
+<span class="cmt">// Dictionary</span>
+<span class="kw">var</span> dic = #dictionary{};
+dic.set(<span class="str">"name"</span>, <span class="str">"Ivan"</span>);  dic.get(<span class="str">"name"</span>);  dic.has(<span class="str">"name"</span>);  dic.remove(<span class="str">"name"</span>);
+dic.keys();  dic.values();  dic.size();</code></pre>
+
+<h3>String Methods</h3>
+
+<h4>Search</h4>
+<pre><code><span class="str">"Hello World"</span>.contains(<span class="str">"World"</span>)       <span class="cmt">// true</span>
+<span class="str">"Hello World"</span>.pos(<span class="str">"World"</span>)            <span class="cmt">// 6 — substring index, -1 if not found</span>
+<span class="str">"Hello World"</span>.rfind(<span class="str">"l"</span>)              <span class="cmt">// 9 — search from the end</span>
+<span class="str">"Hello World"</span>.rfind(<span class="str">"l"</span>, <span class="num">8</span>)            <span class="cmt">// 3 — rfind from position</span>
+<span class="str">"hello"</span>.find_first_of(<span class="str">"aeiou"</span>)         <span class="cmt">// 1 — first character from the set</span>
+<span class="str">"hello"</span>.find_last_of(<span class="str">"aeiou"</span>)          <span class="cmt">// 4 — last character from the set</span>
+<span class="str">"hello"</span>.find_first_not_of(<span class="str">"h"</span>)        <span class="cmt">// 1 — first character not in the set</span>
+<span class="str">"hello"</span>.find_last_not_of(<span class="str">"o"</span>)         <span class="cmt">// 3 — last character not in the set</span></code></pre>
+
+<h4>Checks</h4>
+<pre><code><span class="str">"Hello World"</span>.startswith(<span class="str">"Hello"</span>)     <span class="cmt">// true</span>
+<span class="str">"Hello World"</span>.endswith(<span class="str">"World"</span>)       <span class="cmt">// true</span>
+<span class="str">"hello"</span>.comparenocase(<span class="str">"HELLO"</span>)         <span class="cmt">// 0 — case-insensitive comparison</span>
+<span class="str">"hello"</span>.comparenocase(<span class="str">"world"</span>)         <span class="cmt">// -1</span></code></pre>
+
+<h4>Case</h4>
+<pre><code><span class="str">"Hello World"</span>.upper()                 <span class="cmt">// "HELLO WORLD"</span>
+<span class="str">"Hello World"</span>.lower()                 <span class="cmt">// "hello world"</span>
+<span class="str">"Hello World"</span>.swapcase()              <span class="cmt">// "hELLO wORLD"</span></code></pre>
+
+<h4>Formatting</h4>
+<pre><code><span class="str">"hi"</span>.center(<span class="num">10</span>)                      <span class="cmt">// "    hi    "</span>
+<span class="str">"hi"</span>.center(<span class="num">10</span>, <span class="str">"*"</span>)                  <span class="cmt">// "****hi****"</span>
+<span class="str">"hi"</span>.ljust(<span class="num">10</span>)                       <span class="cmt">// "hi        "</span>
+<span class="str">"hi"</span>.ljust(<span class="num">10</span>, <span class="str">"*"</span>)                   <span class="cmt">// "hi********"</span>
+<span class="str">"hi"</span>.rjust(<span class="num">10</span>)                       <span class="cmt">// "        hi"</span>
+<span class="str">"hi"</span>.rjust(<span class="num">10</span>, <span class="str">"*"</span>)                   <span class="cmt">// "********hi"</span>
+<span class="str">"42"</span>.zfill(<span class="num">6</span>)                         <span class="cmt">// "000042"</span>
+<span class="str">"hi"</span>.pad(<span class="num">10</span>, <span class="str">"-"</span>)                     <span class="cmt">// "hi--------"</span></code></pre>
+
+<h4>Substring Extraction</h4>
+<pre><code><span class="str">"hello"</span>.sub(<span class="num">0</span>, <span class="num">3</span>)                    <span class="cmt">// "hel" — substring [pos, pos+count)</span>
+<span class="str">"hello"</span>.left(<span class="num">3</span>)                      <span class="cmt">// "hel"</span>
+<span class="str">"hello"</span>.right(<span class="num">3</span>)                     <span class="cmt">// "llo"</span>
+<span class="str">"hello"</span>.mid(<span class="num">1</span>)                       <span class="cmt">// "ello" — from position to end</span>
+<span class="str">"hello"</span>.first(<span class="num">3</span>)                     <span class="cmt">// "hel" — first N characters</span>
+<span class="str">"hello"</span>.first()                      <span class="cmt">// "h" — first character</span>
+<span class="str">"hello"</span>.last(<span class="num">3</span>)                      <span class="cmt">// "llo" — last N characters</span>
+<span class="str">"hello"</span>.last()                       <span class="cmt">// "o" — last character</span>
+<span class="str">"hello world"</span>.chopped(<span class="num">3</span>)             <span class="cmt">// "hello wor" — without the last N characters</span>
+<span class="str">"hello world"</span>.chopped(<span class="num">1</span>)             <span class="cmt">// "hello worl"</span></code></pre>
+
+<h4>Trimming and Normalization</h4>
+<pre><code><span class="str">"  Hello  "</span>.trim()                   <span class="cmt">// "Hello"</span>
+<span class="str">"  Hello  "</span>.trimleft()               <span class="cmt">// "Hello  "</span>
+<span class="str">"  Hello  "</span>.trimright()              <span class="cmt">// "  Hello"</span>
+<span class="str">"  hello   world  "</span>.simplified()     <span class="cmt">// "hello world" — whitespace normalization</span>
+<span class="str">'"hello"'</span>.stripquotes()               <span class="cmt">// "hello" — removes outer quotes</span>
+<span class="str">"hello"</span>.quoted()                     <span class="cmt">// "&amp;quot;hello&amp;quot;" — wraps in quotes</span>
+<span class="str">"dir/sub/"</span>.trimtrailingslashes()     <span class="cmt">// "dir/sub" — removes trailing /</span></code></pre>
+
+<h4>Splitting and Joining</h4>
+<pre><code><span class="str">"a,b,c"</span>.split(<span class="str">","</span>)                    <span class="cmt">// #["a", "b", "c"]</span>
+#[<span class="str">"a"</span>,<span class="str">"b"</span>,<span class="str">"c"</span>].join(<span class="str">"-"</span>)              <span class="cmt">// "a-b-c"</span>
+#[<span class="str">"a"</span>,<span class="str">"b"</span>,<span class="str">"c"</span>].joined(<span class="str">"-"</span>)            <span class="cmt">// "a-b-c"</span></code></pre>
+
+<h4>Regular Expressions</h4>
+<p>Patterns use ECMAScript <code>std::regex</code>. Strings are matched as UTF-8 bytes, not Unicode characters; <code>\w</code>, dot, and character boundaries are not Unicode-aware. String regex methods may throw for an invalid pattern.</p>
+<pre><code><span class="str">"12345"</span>.regexmatch(<span class="str">"\\d+"</span>)            <span class="cmt">// true — the whole string matches</span>
+<span class="str">"hello 123"</span>.regexsearch(<span class="str">"\\d+"</span>)       <span class="cmt">// true — partial match</span>
+<span class="str">"hello 123 world"</span>.regexreplace(<span class="str">"\\d+"</span>, <span class="str">"NUM"</span>)  <span class="cmt">// "hello NUM world"</span>
+<span class="str">"a,b,,c"</span>.regexsplit(<span class="str">","</span>).size()       <span class="cmt">// 4</span>
+<span class="str">"a1 b2 c3"</span>.regexfindall(<span class="str">"\\d"</span>)       <span class="cmt">// #["1","2","3"]</span></code></pre>
+
+<h4>Unicode</h4>
+<p>String-search indices and positions count UTF-16 code units; a non-BMP code point occupies two positions.</p>
+<pre><code><span class="str">"hello"</span>.codepointcount()             <span class="cmt">// 5 — number of codepoints</span>
+<span class="str">"ABC"</span>.codepointat(<span class="num">0</span>)                  <span class="cmt">// 65 — Unicode code of the character</span>
+<span class="str">"hello"</span>.isvalidutf16()               <span class="cmt">// true</span>
+<span class="str">"ABC"</span>.tocodepoints()                  <span class="cmt">// #[65, 66, 67]</span></code></pre>
+
+<h4>Utilities</h4>
+<pre><code><span class="str">"abc 123 def 456"</span>.extractnumbers()   <span class="cmt">// #[123, 456]</span>
+<span class="str">"Hello World"</span>.len()                   <span class="cmt">// 11</span>
+<span class="str">"Hello"</span>.repeat(<span class="num">3</span>)                     <span class="cmt">// "HelloHelloHello"</span>
+<span class="str">"hello"</span>.replace(<span class="str">"l"</span>, <span class="str">"r"</span>)              <span class="cmt">// "herro"</span>
+<span class="str">"a,b,c"</span>.toArray()                    <span class="cmt">// #["a","b","c"]</span>
+<span class="str">"a,b,c"</span>.tobytes()                    <span class="cmt">// ByteArray</span>
+<span class="kw">var</span> n = <span class="str">"123"</span>.tonumber()              <span class="cmt">// 123</span></code></pre>
+
+<h4>Method Chaining</h4>
+<pre><code><span class="str">"  Hello World  "</span>.trim().upper()                          <span class="cmt">// "HELLO WORLD"</span>
+<span class="str">"a,b,c"</span>.split(<span class="str">","</span>).reverse().joined(<span class="str">"-"</span>)                  <span class="cmt">// "c-b-a"</span>
+<span class="str">"hello world"</span>.simplified().upper()                        <span class="cmt">// "HELLO WORLD"</span></code></pre>
+
+<h3>Global Functions</h3>
+<pre><code>type(<span class="num">42</span>);           <span class="cmt">// 0=null, 1=int, 3=string, 4=object, 5=array</span>
+typeName(<span class="num">42</span>);       <span class="cmt">// "int"</span>
+size(#[<span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>]);     <span class="cmt">// 3</span>
+empty(<span class="str">""</span>);          <span class="cmt">// true</span>
+coalesce(<span class="kw">null</span>, <span class="num">42</span>); <span class="cmt">// 42</span>
+min(<span class="num">3</span>, <span class="num">7</span>);          <span class="cmt">// 3</span>
+max(<span class="num">3</span>, <span class="num">7</span>);          <span class="cmt">// 7</span>
+format(<span class="str">"Hello %s!"</span>, <span class="str">"World"</span>);  <span class="cmt">// "Hello World!"</span>
+eval(<span class="str">"print('dynamic')"</span>);      <span class="cmt">// dynamic code</span>
+tojson(#[<span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>]);             <span class="cmt">// JSON string</span>
+fromjson(<span class="str">"[1,2,3]"</span>);          <span class="cmt">// JSON parsing</span></code></pre>
+</div>
+
+<footer><a href="index.html">← Back to Home</a></footer>
+</div>
+</body>
+</html>

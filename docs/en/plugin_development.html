@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plugin Development — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Plugin Development</h1><p>A complete guide to creating plugins for Script</p><div class="lang-switch"><a href="../plugin_development.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="plugin_development.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / Plugin Development</p>
+
+<!-- ============ OVERVIEW ============ -->
+<div class="doc-section">
+<h2>Overview</h2>
+<p>Plugins are loadable modules (DLL/SO) that extend the functionality of the script engine. Each plugin exports a set of functions available from scripts.</p>
+
+<h3>Two API levels</h3>
+<table>
+<tr><th>Level</th><th>Files</th><th>Who it is for</th></tr>
+<tr><td><strong>C API</strong></td><td><code>script_plugin_api.h</code></td><td>Any language (C, C++, Rust, etc.) — low-level interface</td></tr>
+<tr><td><strong>C++ Helper</strong></td><td><code>script_plugin_helper.h</code> + <code>.cpp</code></td><td>C++23 — RAII wrappers, factories, iterators</td></tr>
+</table>
+
+<h3>Plugin lifecycle</h3>
+<ol>
+  <li><code>QodeScriptGetPlugin()</code> — the host loads the DLL and calls this function to obtain the interface</li>
+  <li><code>Initialize(host_api)</code> — passes the host function table; the plugin stores <code>g_api</code></li>
+  <li><code>RegisterFunctions(ctx)</code> — the plugin registers its functions and object factories</li>
+  <li><em>Running...</em> — the script calls the plugin functions</li>
+  <li><code>Shutdown()</code> — the plugin is unloaded and releases its resources</li>
+</ol>
+</div>
+
+<!-- ============ QUICK START ============ -->
+<div class="doc-section">
+<h2>Quick start — minimal plugin</h2>
+<h3>1. Project file (plugin.pro)</h3>
+<pre><code>CONFIG -= qt
+TEMPLATE = lib
+DEFINES += QSCRIPT_PLUGIN_BUILD
+CONFIG += c++23
+
+SCRIPT_ROOT = $$PWD/../../..
+INCLUDEPATH += $$SCRIPT_ROOT/plugins
+
+SOURCES += ../../../plugins/script_plugin_helper.cpp \
+           plugin.cpp
+HEADERS += ../../../plugins/script_plugin_api.h \
+           ../../../plugins/script_plugin_helper.h
+
+CONFIG(debug, debug|release) {
+    DESTDIR = $$QT_ROOT/bind/plugins
+} else {
+    DESTDIR = $$QT_ROOT/bin/plugins
+}</code></pre>
+
+<h3>2. Plugin file (plugin.cpp)</h3>
+<pre><code>#define QSCRIPT_PLUGIN_BUILD
+#include "script_plugin_helper.h"
+
+const QScriptHostAPI* g_api = nullptr;
+
+// Simple function
+QScriptValueHandle SayHello(QScriptContextHandle ctx,
+                            const QScriptArg* args, int arg_count)
+{
+    CHECK_MIN_PARAMS(1, "SayHello");
+    ScriptString name = getString(args[0].value);
+    ScriptString msg = Q("Hello, ") + name + Q("!");
+    return g_api->CreateString(ctx, msg.c_str());
+}
+
+// Initialization
+QSCRIPT_EXPORT int QSCRIPT_API
+QodeScriptInitialize(const QScriptHostAPI* host_api)
+{
+    if (!host_api || host_api->version &lt; 1) return 0;
+    g_api = host_api;
+    return 1;
+}
+
+// Registering functions
+QSCRIPT_EXPORT void QSCRIPT_API
+QodeScriptRegisterFunctions(QScriptContextHandle ctx)
+{
+    g_api->RegisterFunction(ctx, Q("SayHello"), SayHello);
+}
+
+// Shutdown
+QSCRIPT_EXPORT void QSCRIPT_API QodeScriptShutdown(void)
+{
+    g_api = nullptr;
+}
+
+// Export the interface
+extern "C" {
+QSCRIPT_EXPORT const QScriptPluginInterface* QSCRIPT_API
+QodeScriptGetPlugin(void)
+{
+    static QScriptPluginInterface iface = {
+        1, "MyPlugin", "Author", 1,
+        QodeScriptInitialize,
+        QodeScriptRegisterFunctions,
+        QodeScriptShutdown
+    };
+    return &iface;
+}
+
+#ifdef _WIN32
+int _libmain(unsigned long) { return 1; }
+#endif
+}</code></pre>
+
+<h3>3. Usage in a script</h3>
+<pre><code>loadPlugin("myplugin");
+print(SayHello("World"));</code></pre>
+</div>
+
+<!-- ============ C API ============ -->
+<div class="doc-section">
+<h2>C API — script_plugin_api.h</h2>
+<p>A low-level interface available in any language with C calling support.</p>
+
+<h3>Types</h3>
+<table>
+<tr><th>Type</th><th>Description</th></tr>
+<tr><td><code>QScriptValueHandle</code></td><td>Temporary value handle. <strong>Valid only during the call!</strong> Do not store it.</td></tr>
+<tr><td><code>QScriptRefHandle</code></td><td>Persistent reference. Can be stored between calls. Requires <code>CreateRefHandle</code>/<code>DestroyRefHandle</code>.</td></tr>
+<tr><td><code>QScriptContextHandle</code></td><td>Execution context. Passed to every function.</td></tr>
+<tr><td><code>QScriptArg</code></td><td>Wrapper struct for an argument: <code>{ QScriptValueHandle value; }</code></td></tr>
+<tr><td><code>QScriptResult</code></td><td>Result code: <code>QRESULT_OK (0)</code>, negative values are errors.</td></tr>
+</table>
+
+<h3>Value types</h3>
+<table>
+<tr><th>Constant</th><th>Value</th><th>Script type</th></tr>
+<tr><td><code>QVALUE_NULL</code></td><td>0</td><td><code>null</code></td></tr>
+<tr><td><code>QVALUE_INT</code></td><td>1</td><td>Integer</td></tr>
+<tr><td><code>QVALUE_DOUBLE</code></td><td>2</td><td>Floating-point number</td></tr>
+<tr><td><code>QVALUE_STRING</code></td><td>3</td><td>String</td></tr>
+<tr><td><code>QVALUE_DATETIME</code></td><td>4</td><td>Date/time</td></tr>
+<tr><td><code>QVALUE_ARRAY</code></td><td>5</td><td>Array <code>#[...]</code></td></tr>
+<tr><td><code>QVALUE_TUPLE</code></td><td>6</td><td>Tuple <code>#{"k":v}</code></td></tr>
+<tr><td><code>QVALUE_SET</code></td><td>7</td><td>Set <code>#set{...}</code></td></tr>
+<tr><td><code>QVALUE_OBJECT</code></td><td>10</td><td>Object (including plugin objects)</td></tr>
+</table>
+
+<h3>Creating values</h3>
+<table>
+<tr><th>Function</th><th>Creates</th></tr>
+<tr><td><code>CreateNull(ctx)</code></td><td><code>null</code></td></tr>
+<tr><td><code>CreateInt(ctx, val)</code></td><td>Integer</td></tr>
+<tr><td><code>CreateDouble(ctx, val)</code></td><td>Floating-point number</td></tr>
+<tr><td><code>CreateString(ctx, str)</code></td><td>String (UTF-16)</td></tr>
+<tr><td><code>CreateDateTime(ctx, val)</code></td><td>Date (Unix timestamp)</td></tr>
+<tr><td><code>CreateArray(ctx)</code></td><td>Empty array</td></tr>
+<tr><td><code>CreateTuple(ctx)</code></td><td>Empty tuple</td></tr>
+<tr><td><code>CreateSet(ctx)</code></td><td>Empty set</td></tr>
+<tr><td><code>CreateByteArray(ctx, data, len)</code></td><td>Byte array</td></tr>
+<tr><td><code>CreateObject(ctx, instance, vtable)</code></td><td>Plugin object</td></tr>
+</table>
+
+<h3>Extracting data</h3>
+<table>
+<tr><th>Function</th><th>Returns</th><th>Note</th></tr>
+<tr><td><code>GetInt(h, &res)</code></td><td><code>int64_t</code></td><td></td></tr>
+<tr><td><code>GetDouble(h, &res)</code></td><td><code>double</code></td><td></td></tr>
+<tr><td><code>GetString(h, &len, &res)</code></td><td><code>const ScriptChar*</code></td><td>Pointer to an internal buffer! Do not free it. Copy it if you need to keep it.</td></tr>
+<tr><td><code>GetBool(h, &res)</code></td><td><code>int64_t</code></td><td>0 or 1</td></tr>
+<tr><td><code>GetDateTime(h, &res)</code></td><td><code>double</code></td><td>Unix timestamp</td></tr>
+<tr><td><code>GetType(h)</code></td><td><code>QScriptValueType</code></td><td>Value type</td></tr>
+</table>
+
+<h3>Array operations</h3>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>ArrayPush(h, item, &res)</code></td><td>Append to the end</td></tr>
+<tr><td><code>ArrayGet(ctx, h, index, &res)</code></td><td>Get by index</td></tr>
+<tr><td><code>ArraySet(h, index, val, &res)</code></td><td>Set by index</td></tr>
+<tr><td><code>ArrayPop(ctx, h, &res)</code></td><td>Remove and return the last element</td></tr>
+<tr><td><code>ArrayInsert(h, index, val, &res)</code></td><td>Insert at index</td></tr>
+<tr><td><code>ArrayErase(h, index, count, &res)</code></td><td>Remove count elements</td></tr>
+<tr><td><code>ArrayResize(h, new_size, &res)</code></td><td>Resize</td></tr>
+<tr><td><code>ContainerSize(h, &res)</code></td><td>Number of elements</td></tr>
+</table>
+
+<h3>Tuple operations</h3>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>TupleSet(h, key, val, &res)</code></td><td>Set a value by key</td></tr>
+<tr><td><code>TupleGet(ctx, h, key, &res)</code></td><td>Get a value by key</td></tr>
+<tr><td><code>TupleKeys(ctx, h, &res)</code></td><td>Array of all keys</td></tr>
+<tr><td><code>TupleValues(ctx, h, &res)</code></td><td>Array of all values</td></tr>
+<tr><td><code>TupleItems(ctx, h, type, &res)</code></td><td>Array of items for iteration</td></tr>
+<tr><td><code>TupleFirst(ctx, h, &key, &val, &iter, &res)</code></td><td>First item + iterator</td></tr>
+<tr><td><code>TupleNext(ctx, h, iter, &key, &val, &res)</code></td><td>Next item</td></tr>
+<tr><td><code>TupleIteratorDestroy(iter)</code></td><td>Destroy the iterator early</td></tr>
+</table>
+
+<h3>Working with objects</h3>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>ObjectHasProperty(ctx, obj, name, &res)</code></td><td>Check whether a property exists</td></tr>
+<tr><td><code>ObjectGetProperty(ctx, obj, name, &res)</code></td><td>Get a property</td></tr>
+<tr><td><code>ObjectSetProperty(ctx, obj, name, val, &res)</code></td><td>Set a property</td></tr>
+<tr><td><code>ObjectCallMethod(ctx, obj, name, args, argc, &res)</code></td><td>Call a method</td></tr>
+<tr><td><code>ObjectGetPropertyNames(ctx, obj, &res)</code></td><td>Array of property names</td></tr>
+<tr><td><code>ObjectIsCallable(ctx, obj, &res)</code></td><td>Whether it can be called as a function</td></tr>
+<tr><td><code>ObjectCall(ctx, obj, args, argc, &res)</code></td><td>Call an object as a function</td></tr>
+</table>
+
+<h3>Persistent references</h3>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>CreateRefHandle(ctx, value)</code></td><td>Create a persistent reference (copies the value)</td></tr>
+<tr><td><code>DestroyRefHandle(ref)</code></td><td>Destroy the reference</td></tr>
+<tr><td><code>RefToHandle(ctx, ref)</code></td><td>Get a temporary handle from a persistent one</td></tr>
+<tr><td><code>IsCallable(h)</code></td><td>Callable check (CODE, OBJECT with <code>__call__</code>, CLASS)</td></tr>
+</table>
+
+<h3>Context</h3>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>ContextGet(ctx, name)</code></td><td>Look up a variable (locals → globals → parent → modules)</td></tr>
+<tr><td><code>ContextSet(ctx, name, val)</code></td><td>Write a variable</td></tr>
+<tr><td><code>RegisterFunction(ctx, name, func)</code></td><td>Register a global function</td></tr>
+<tr><td><code>UnRegisterFunction(ctx, name)</code></td><td>Remove a function</td></tr>
+</table>
+
+<h3>Function invocation</h3>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>InvokeByName(ctx, name, args, argc, &res)</code></td><td>Call a function by name</td></tr>
+<tr><td><code>InvokeByRef(ctx, func_ref, args, argc, &res)</code></td><td>Call by persistent reference</td></tr>
+</table>
+
+<h3>Exceptions</h3>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>ThrowException(ctx, val)</code></td><td>Throw an exception</td></tr>
+<tr><td><code>HasException(ctx)</code></td><td>Check whether an exception is pending</td></tr>
+<tr><td><code>GetException(ctx)</code></td><td>Get the exception object</td></tr>
+<tr><td><code>ClearException(ctx)</code></td><td>Clear the exception</td></tr>
+</table>
+
+<h3>Services (inter-plugin interaction)</h3>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>RegisterService(ctx, service, method, func, min, max, data, plugin)</code></td><td>Register a service</td></tr>
+<tr><td><code>UnRegisterService(ctx, service, method)</code></td><td>Unregister a service</td></tr>
+<tr><td><code>HasService(name)</code></td><td>Check whether a service exists</td></tr>
+<tr><td><code>CallService(ctx, service, method, args, argc, &res)</code></td><td>Call a service</td></tr>
+<tr><td><code>GetServiceRef(ctx, service, method, &res)</code></td><td>Get a persistent reference to a service method</td></tr>
+<tr><td><code>ListServiceMethods(ctx, service)</code></td><td>List service methods</td></tr>
+</table>
+
+<h3>Memory</h3>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>MemAlloc(size)</code></td><td>Allocate memory</td></tr>
+<tr><td><code>MemFree(ptr)</code></td><td>Free memory</td></tr>
+<tr><td><code>MemReAlloc(ptr, size)</code></td><td>Reallocate</td></tr>
+</table>
+
+<h3>Strings and encodings</h3>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>CompareString(a, b, ignoreCase)</code></td><td>Compare strings (UTF-16)</td></tr>
+<tr><td><code>CompareStringCase(a, b)</code></td><td>Case-sensitive comparison</td></tr>
+<tr><td><code>CompareStringNoCase(a, b)</code></td><td>Case-insensitive comparison</td></tr>
+<tr><td><code>ToUpperChar(ch)</code> / <code>ToLowerChar(ch)</code></td><td>Convert character case</td></tr>
+<tr><td><code>IsUpperChar(ch)</code> / <code>IsDigitChar(ch)</code> / <code>IsAlnumChar(ch)</code></td><td>Check character class</td></tr>
+<tr><td><code>ToUtf16(type, str, len, &out, &out_len)</code></td><td>Encoding → UTF-16</td></tr>
+<tr><td><code>FromUtf16(type, str, len, &out, &out_len)</code></td><td>UTF-16 → encoding</td></tr>
+<tr><td><code>WriteToLog(type, str)</code></td><td>Write to the log</td></tr>
+</table>
+</div>
+
+<!-- ============ C++ HELPER ============ -->
+<div class="doc-section">
+<h2>C++ Helper — script_plugin_helper.h</h2>
+<p>High-level RAII wrappers for comfortable development in C++23.</p>
+
+<h3>Global variable</h3>
+<pre><code>extern const QScriptHostAPI* g_api; // provided by the plugin when loaded</code></pre>
+
+<h3>ScriptValue — RAII wrapper for persistent references</h3>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>ScriptValue(api, ctx, handle)</code></td><td>Creates a persistent ref from a temporary handle</td></tr>
+<tr><td><code>handle(ctx)</code></td><td>Gets a temporary handle to pass to the API</td></tr>
+<tr><td><code>isValid()</code></td><td>Validity check</td></tr>
+<tr><td><code>raw()</code></td><td>Access to <code>QScriptRefHandle</code></td></tr>
+<tr><td><code>reset()</code></td><td>Explicit release</td></tr>
+</table>
+<p><strong>Semantics:</strong> copying creates a new ref, move transfers ownership, the destructor calls <code>DestroyRefHandle</code>.</p>
+
+<h3>ScriptValueEx — extended methods</h3>
+<table>
+<tr><th>Method</th><th>Returns</th></tr>
+<tr><td><code>type(ctx)</code></td><td><code>QScriptValueType</code></td></tr>
+<tr><td><code>toInt(ctx, &res)</code></td><td><code>int64_t</code></td></tr>
+<tr><td><code>toDouble(ctx, &res)</code></td><td><code>double</code></td></tr>
+<tr><td><code>toString(ctx)</code></td><td><code>ScriptString</code></td></tr>
+</table>
+
+<h3>ScriptFactory — creating values</h3>
+<pre><code>ScriptFactory fac(g_api, ctx);
+auto num   = fac.Int(42);
+auto str   = fac.String(Q("Hello"));
+auto arr   = fac.Array();
+auto tup   = fac.Tuple();
+auto dt    = fac.DateTime(timestamp);
+auto d     = fac.Double(3.14);</code></pre>
+
+<h3>ScriptArray — working with arrays</h3>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>push(ctx, value)</code></td><td>Append an element</td></tr>
+<tr><td><code>get(ctx, index)</code></td><td>Get an element</td></tr>
+<tr><td><code>size(ctx)</code></td><td>Number of elements</td></tr>
+<tr><td><code>resize(ctx, n)</code></td><td>Resize</td></tr>
+<tr><td><code>reserve(ctx, n)</code></td><td>Reserve capacity</td></tr>
+</table>
+
+<h3>ScriptObject — working with objects</h3>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>isObject(ctx)</code></td><td>Type check</td></tr>
+<tr><td><code>hasProperty(ctx, name)</code></td><td>Property presence</td></tr>
+<tr><td><code>get(ctx, name)</code></td><td>Get a property</td></tr>
+<tr><td><code>set(ctx, name, value)</code></td><td>Set a property</td></tr>
+<tr><td><code>getPropertyNames(ctx)</code></td><td>Array of property names</td></tr>
+<tr><td><code>call(ctx, name, args, argc)</code></td><td>Call a method</td></tr>
+<tr><td><code>isCallable(ctx)</code></td><td>Callable check</td></tr>
+<tr><td><code>invoke(ctx, args, argc)</code></td><td>Call as a function</td></tr>
+</table>
+<p><strong>Important:</strong> <code>ScriptObject</code> works only with objects (<code>QVALUE_OBJECT</code>). For tuples/arrays use the corresponding API calls.</p>
+
+<h3>ArgsBuilder — argument builder</h3>
+<pre><code>ArgsBuilder ab(ctx);
+ab.add(fac.Int(42));
+ab.add(fac.String(Q("text")));
+g_api->InvokeByName(ctx, Q("target"), ab.data(), ab.size(), &res);</code></pre>
+
+<h3>ScriptRange — iterating over collections</h3>
+<pre><code>// Tuples — (key, value) pairs
+TupleRange range(g_api, ctx, tuple);
+for (auto& [key, value] : range) {
+    ScriptValueEx k(g_api, ctx, key);
+    ScriptValueEx v(g_api, ctx, value);
+}
+
+// Sets — single elements
+SetRange range(g_api, ctx, set);
+for (QScriptValueHandle item : range) {
+    ScriptValueEx val(g_api, ctx, item);
+}</code></pre>
+
+<h3>Logger — logging</h3>
+<pre><code>Logger::Debug("debug message");
+Logger::Error("error message");
+Logger::Print("informational message");</code></pre>
+
+<h3>String conversion</h3>
+<table>
+<tr><th>Function</th><th>Direction</th></tr>
+<tr><td><code>Utf8ToUtf16(str)</code></td><td>UTF-8 → UTF-16 (ScriptString)</td></tr>
+<tr><td><code>Utf16ToUtf8(str)</code></td><td>UTF-16 → UTF-8</td></tr>
+<tr><td><code>Cp1251ToUtf16(str)</code></td><td>CP1251 → UTF-16</td></tr>
+<tr><td><code>Utf16ToCp1251(str)</code></td><td>UTF-16 → CP1251</td></tr>
+<tr><td><code>Cp866ToUtf16(str)</code></td><td>CP866 → UTF-16</td></tr>
+<tr><td><code>Koi8rToUtf16(str)</code></td><td>KOI8-R → UTF-16</td></tr>
+<tr><td><code>getString(handle)</code></td><td>Handle → ScriptString</td></tr>
+<tr><td><code>getStringUtf8(handle)</code></td><td>Handle → std::string (UTF-8)</td></tr>
+<tr><td><code>getLong(handle)</code></td><td>Handle → int64_t</td></tr>
+<tr><td><code>getDouble(handle)</code></td><td>Handle → double</td></tr>
+</table>
+
+<h3>Macros</h3>
+<table>
+<tr><th>Macro</th><th>Description</th></tr>
+<tr><td><code>BIND_PROPERTY(obj, name, getter, setter)</code></td><td>Property (setter is optional)</td></tr>
+<tr><td><code>BIND_METHOD(obj, name, method)</code></td><td>Class method</td></tr>
+<tr><td><code>CHECK_MIN_PARAMS(n, name)</code></td><td>Check the minimum number of arguments</td></tr>
+<tr><td><code>Q("string")</code></td><td>Convert a literal to UTF-16</td></tr>
+</table>
+</div>
+
+<!-- ============ FULL EXAMPLE ============ -->
+<div class="doc-section">
+<h2>Full example — plugin object</h2>
+<pre><code>#define QSCRIPT_PLUGIN_BUILD
+#include "script_plugin_helper.h"
+
+const QScriptHostAPI* g_api = nullptr;
+
+class Counter : public PluginObject
+{
+public:
+    Counter() : count_(0)
+    {
+        // Property count (read-only)
+        BIND_PROPERTY(this, "count",
+            [this](QScriptContextHandle ctx) {
+                return g_api->CreateInt(ctx, count_);
+            }
+        );
+
+        // Method increment
+        BIND_METHOD(this, "increment", &Counter::Increment);
+
+        // Method reset
+        BIND_METHOD(this, "reset", &Counter::Reset);
+    }
+
+    QScriptValueHandle Increment(QScriptContextHandle ctx,
+                                  const QScriptArg* args, int arg_count)
+    {
+        CHECK_MIN_PARAMS(0, "increment");
+        int64_t step = 1;
+        if (arg_count >= 1)
+            step = getLong(args[0].value);
+        count_ += step;
+        return g_api->CreateInt(ctx, count_);
+    }
+
+    QScriptValueHandle Reset(QScriptContextHandle ctx,
+                              const QScriptArg* args, int arg_count)
+    {
+        CHECK_MIN_PARAMS(0, "reset");
+        count_ = 0;
+        return g_api->CreateNull(ctx);
+    }
+
+private:
+    int64_t count_;
+};
+
+// Object factory
+static QScriptValueHandle CreateCounter(QScriptContextHandle ctx,
+                                         const QScriptArg* args, int arg_count)
+{
+    return CreatePluginObject(ctx, new Counter());
+}
+
+// Plugin export
+QSCRIPT_EXPORT int QSCRIPT_API
+QodeScriptInitialize(const QScriptHostAPI* host_api)
+{
+    if (!host_api || host_api->version &lt; 1) return 0;
+    g_api = host_api;
+    return 1;
+}
+
+QSCRIPT_EXPORT void QSCRIPT_API
+QodeScriptRegisterFunctions(QScriptContextHandle ctx)
+{
+    g_api->RegisterFunction(ctx, Q("Counter"), CreateCounter);
+}
+
+QSCRIPT_EXPORT void QSCRIPT_API QodeScriptShutdown(void)
+{
+    g_api = nullptr;
+}
+
+extern "C" {
+QSCRIPT_EXPORT const QScriptPluginInterface* QSCRIPT_API
+QodeScriptGetPlugin(void)
+{
+    static QScriptPluginInterface iface = {
+        1, "Counter Plugin", "Author", 1,
+        QodeScriptInitialize,
+        QodeScriptRegisterFunctions,
+        QodeScriptShutdown
+    };
+    return &iface;
+}
+#ifdef _WIN32
+int _libmain(unsigned long) { return 1; }
+#endif
+}</code></pre>
+
+<h3>Usage in a script</h3>
+<pre><code>loadPlugin("counter");
+
+var c = Counter();
+print(c.count);       // 0
+c.increment();
+print(c.count);       // 1
+c.increment(5);
+print(c.count);       // 6
+c.reset();
+print(c.count);       // 0</code></pre>
+</div>
+
+<!-- ============ ITERATORS ============ -->
+<div class="doc-section">
+<h2>Iterating over collections</h2>
+
+<h3>Direct iteration (low-level)</h3>
+<pre><code>void ProcessTuple(QScriptContextHandle ctx, QScriptValueHandle tuple)
+{
+    QScriptValueHandle key, value;
+    void* iterator = nullptr;
+    QScriptResult res;
+
+    if (g_api->TupleFirst(ctx, tuple, &key, &value, &iterator, &res))
+    {
+        do {
+            // Process key, value
+            ScriptValueEx k(g_api, ctx, key);
+            ScriptValueEx v(g_api, ctx, value);
+            Logger::Debug("Key: " + Utf16ToUtf8(k.toString(ctx)));
+
+        } while (g_api->TupleNext(ctx, tuple, iterator, &key, &value, &res));
+    }
+    // the iterator is destroyed automatically when the end is reached
+    // or early via TupleIteratorDestroy(iter)
+}</code></pre>
+
+<h3>Range-based for (C++ helper)</h3>
+<pre><code>void ProcessTuple(QScriptContextHandle ctx, QScriptValueHandle tuple)
+{
+    for (auto& [key, value] : TupleRange(g_api, ctx, tuple))
+    {
+        ScriptValueEx k(g_api, ctx, key);
+        ScriptValueEx v(g_api, ctx, value);
+        // processing...
+    }
+}</code></pre>
+
+<h3>Keeping values beyond the iteration</h3>
+<pre><code>ScriptValue persistent_key;
+for (auto& [k, v] : TupleRange(g_api, ctx, tuple))
+{
+    persistent_key = ScriptValue(g_api, ctx, k);
+    // persistent_key is valid after the loop
+}</code></pre>
+</div>
+
+<!-- ============ SERVICES ============ -->
+<div class="doc-section">
+<h2>Inter-plugin interaction (services)</h2>
+<p>Plugins can provide methods to be called by other plugins.</p>
+
+<h3>Registering a service</h3>
+<pre><code>static QScriptValueHandle MyServiceFunc(
+    QScriptContextHandle ctx, const QScriptArg* args,
+    int arg_count, void* user_data)
+{
+    // Service implementation
+    return g_api->CreateInt(ctx, 42);
+}
+
+g_api->RegisterService(ctx,
+    Q("MyService"),     // service name
+    Q("Process"),       // method name
+    MyServiceFunc,      // function
+    1,                  // minimum number of arguments
+    -1,                 // maximum (-1 = unlimited)
+    nullptr,            // user_data
+    g_pluginId          // plugin handle
+);</code></pre>
+
+<h3>Calling a service from another plugin</h3>
+<pre><code>QScriptResult res;
+QScriptValueHandle result = g_api->CallService(ctx,
+    Q("MyService"), Q("Process"), args, arg_count, &res);</code></pre>
+</div>
+
+<!-- ============ MISTAKES ============ -->
+<div class="doc-section">
+<h2>Common mistakes and how to avoid them</h2>
+
+<h3>1. Storing QScriptValueHandle</h3>
+<pre><code><span class="cmt">// WRONG:</span>
+QScriptValueHandle saved_handle;
+void Func(QScriptContextHandle ctx, QScriptValueHandle h) {
+    saved_handle = h;  // h will be invalid after returning!
+}
+
+<span class="cmt">// RIGHT:</span>
+ScriptValue saved_ref;
+void Func(QScriptContextHandle ctx, QScriptValueHandle h) {
+    saved_ref = ScriptValue(g_api, ctx, h);  // persistent ref
+}</code></pre>
+
+<h3>2. Memory leaks with iterators</h3>
+<pre><code><span class="cmt">// WRONG — leaks if break before the end:</span>
+while (...) {
+    if (cond) break;  // iterator not destroyed!
+}
+
+<span class="cmt">// RIGHT — use ScriptStlIterator or call Destroy:</span>
+void* iter;
+g_api->TupleFirst(ctx, h, &key, &val, &iter, &res);
+// ... on break:
+g_api->TupleIteratorDestroy(iter);</code></pre>
+
+<h3>3. Wrong context for handle(ctx)</h3>
+<pre><code><span class="cmt">// WRONG:</span>
+QScriptValueHandle h = some_ref_to_handle;
+// ... later, in another context:
+ScriptValueEx val(g_api, other_ctx, h);  // h may be invalid!
+
+<span class="cmt">// RIGHT — always use the same ctx:</span>
+ScriptValueEx val(g_api, ctx, ref.handle(ctx));</code></pre>
+
+<h3>4. ArenaLevelScope — critical error</h3>
+<pre><code><span class="cmt">// WRONG — the value is destroyed when leaving the scope:</span>
+QScriptValueHandle HostGet(QScriptContextHandle ctx, QScriptValueHandle obj)
+{
+    ArenaLevelScope scope{ctx->arena};
+    auto val = MakeTempValue(ctx, ScriptValue(int64_t(42)));
+    return val;  // val points to destroyed memory!
+}
+
+<span class="cmt">// RIGHT — copy before the scope ends:</span>
+QScriptValueHandle HostGet(QScriptContextHandle ctx, QScriptValueHandle obj)
+{
+    ArenaLevelScope scope{ctx->arena};
+    auto val = MakeTempValue(ctx, ScriptValue(int64_t(42)));
+    return val->Clone();
+}</code></pre>
+<p>See <a href="plugins.html#arena">Arena safety</a> for details.</p>
+
+<h3>5. Forgotten argument check</h3>
+<pre><code><span class="cmt">// WRONG:</span>
+QScriptValueHandle MyFunc(QScriptContextHandle ctx,
+                           const QScriptArg* args, int arg_count)
+{
+    ScriptString s = getString(args[0].value);  // crash if arg_count == 0
+}
+
+<span class="cmt">// RIGHT:</span>
+QScriptValueHandle MyFunc(QScriptContextHandle ctx,
+                           const QScriptArg* args, int arg_count)
+{
+    CHECK_MIN_PARAMS(1, "MyFunc");
+    ScriptString s = getString(args[0].value);
+}</code></pre>
+</div>
+
+<!-- ============ BUILDING ============ -->
+<div class="doc-section">
+<h2>Building a plugin</h2>
+<h3>Windows</h3>
+<pre><code>qmake myplugin.pro
+mingw32-make</code></pre>
+<p>Result: <code>plugins/myplugin.dll</code></p>
+
+<h3>Linux</h3>
+<pre><code>qmake myplugin.pro
+make</code></pre>
+<p>Result: <code>plugins/libmyplugin.so</code></p>
+
+<h3>Installation</h3>
+<p>Copy the <code>.dll</code>/<code>.so</code> file into the <code>plugins/</code> folder next to <code>qodeqt.exe</code>.</p>
+</div>
+
+<!-- ============ REFERENCE TABLE ============ -->
+<div class="doc-section">
+<h2>Reference table: API ↔ Helper</h2>
+<table>
+<tr><th>Task</th><th>C API</th><th>C++ Helper</th></tr>
+<tr><td>Value lifetime management</td><td><code>CreateRefHandle</code> / <code>DestroyRefHandle</code></td><td><code>ScriptValue</code> (RAII)</td></tr>
+<tr><td>Creating values</td><td><code>CreateInt</code> / <code>CreateString</code> / ...</td><td><code>ScriptFactory</code></td></tr>
+<tr><td>Extracting data</td><td><code>GetInt</code> / <code>GetString</code> / ...</td><td><code>ScriptValueEx::toInt</code> / <code>toString</code> / ...</td></tr>
+<tr><td>Arrays</td><td><code>ArrayPush</code> / <code>ArrayGet</code> / <code>ArraySize</code></td><td><code>ScriptArray</code></td></tr>
+<tr><td>Objects</td><td><code>ObjectGetProperty</code> / <code>ObjectCallMethod</code></td><td><code>ScriptObject</code></td></tr>
+<tr><td>Tuple iteration</td><td><code>TupleFirst</code> / <code>TupleNext</code></td><td><code>TupleRange</code> + range-for</td></tr>
+<tr><td>Set iteration</td><td><code>SetFirst</code> / <code>SetNext</code></td><td><code>SetRange</code> + range-for</td></tr>
+<tr><td>Object registration</td><td>Manual vtable filling</td><td><code>PluginObject</code> + <code>CreatePluginObject</code></td></tr>
+<tr><td>Argument checking</td><td><code>CheckParamsMin</code></td><td><code>CHECK_MIN_PARAMS</code></td></tr>
+<tr><td>Logging</td><td><code>WriteToLog</code></td><td><code>Logger</code></td></tr>
+<tr><td>Function invocation</td><td><code>InvokeByName</code> / <code>InvokeByRef</code></td><td><code>ScriptObject::call</code> / <code>invoke</code></td></tr>
+</table>
+</div>
+
+<footer><a href="index.html">← Home</a></footer>
+</div>
+</body>
+</html>

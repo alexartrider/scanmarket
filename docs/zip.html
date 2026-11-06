@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Плагин Zip — Script</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Плагин Zip</h1><p>Работа с ZIP-архивами без внешних программ (нативная реализация на базе miniz)</p><div class="lang-switch"><a class="active" href="zip.html">RU</a><a href="en/zip.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Главная</a> / <a href="plugins.html">Плагины</a> / Zip</p>
+
+<div class="doc-section">
+<h2>Особенности</h2>
+<ul>
+<li>Не требует установки 7-Zip и вызова внешних процессов.</li>
+<li>Поддержка UTF-8 имён файлов (в т.ч. кириллица).</li>
+<li>Защита от path traversal при извлечении.</li>
+<li>Пароль (шифрование ZIP) не поддерживается.</li>
+</ul>
+</div>
+
+<div class="doc-section">
+<h2>Загрузка плагина</h2>
+<pre><code>loadPlugin("plugins/zip.dll");</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Создание объекта</h2>
+<pre><code><span class="kw">var</span> z = zip();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Методы</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>list</code></td><td><code>archive</code></td><td>Array&lt;Tuple&gt; | null</td><td>Список файлов с метаданными</td></tr>
+<tr><td><code>extract</code></td><td><code>archive, destPath, [password], [withPaths]</code></td><td>int (0/1)</td><td>Извлечение всего архива</td></tr>
+<tr><td><code>extractFile</code></td><td><code>archive, fileName, destPath, [password]</code></td><td>int (0/1)</td><td>Извлечение одного файла</td></tr>
+<tr><td><code>create</code></td><td><code>archive, files, [format], [password], [level]</code></td><td>int (0/1)</td><td>Создание ZIP-архива</td></tr>
+<tr><td><code>test</code></td><td><code>archive</code></td><td>int (0/1)</td><td>Проверка целостности</td></tr>
+<tr><td><code>info</code></td><td><code>archive</code></td><td>tuple | null</td><td>Информация об архиве</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>list(archive)</h2>
+<p>Возвращает массив кортежей (или <code>null</code>, если архив не открылся).</p>
+<table>
+<tr><th>Поле кортежа</th><th>Тип</th><th>Описание</th></tr>
+<tr><td><code>path</code></td><td>string</td><td>Путь файла внутри архива</td></tr>
+<tr><td><code>size</code></td><td>int</td><td>Размер (несжатый) в байтах</td></tr>
+<tr><td><code>compressed</code></td><td>int</td><td>Сжатый размер в байтах</td></tr>
+<tr><td><code>modified</code></td><td>string</td><td>Дата модификации (YYYY-MM-DD HH:MM:SS)</td></tr>
+<tr><td><code>crc</code></td><td>string</td><td>Контрольная сумма CRC32 (hex)</td></tr>
+<tr><td><code>method</code></td><td>string</td><td>Метод сжатия: <code>store</code>, <code>deflate</code></td></tr>
+<tr><td><code>encrypted</code></td><td>int (0/1)</td><td>Зашифрована ли запись</td></tr>
+<tr><td><code>directory</code></td><td>int (0/1)</td><td>Является ли запись каталогом</td></tr>
+</table>
+<pre><code><span class="kw">var</span> z = zip();
+<span class="kw">var</span> files = z.list("archive.zip");
+<span class="kw">for</span> (<span class="kw">var</span> f : files) {
+    print(f.path + " — " + f.size + " байт, CRC=" + f.crc + ", " + f.method);
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>extract(archive, destPath, [password], [withPaths])</h2>
+<p>Извлекает архив в <code>destPath</code>. <code>withPaths=true</code> (по умолчанию) сохраняет структуру каталогов, <code>false</code> — извлекает все файлы «плоско» в корень. Пароль не поддерживается (архивы с шифрованием не извлекаются).</p>
+<pre><code><span class="kw">var</span> z = zip();
+
+<span class="cmt">// С сохранением путей</span>
+<span class="kw">var</span> ok = z.extract("archive.zip", "C:\\output");
+
+<span class="cmt">// Без структуры каталогов</span>
+z.extract("archive.zip", "C:\\flat", "", <span class="kw">false</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>extractFile(archive, fileName, destPath, [password])</h2>
+<p>Извлекает один файл по имени внутри архива.</p>
+<pre><code><span class="kw">var</span> z = zip();
+<span class="kw">var</span> ok = z.extractFile("archive.zip", "docs/readme.txt", "C:\\output");
+print(ok);  <span class="cmt">// 1</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>create(archive, files, [format], [password], [level])</h2>
+<table>
+<tr><th>Аргумент</th><th>Тип</th><th>По умолчанию</th><th>Описание</th></tr>
+<tr><td><code>archive</code></td><td>string</td><td>—</td><td>Путь к создаваемому архиву</td></tr>
+<tr><td><code>files</code></td><td>Array&lt;string&gt;</td><td>—</td><td>Файлы или папки (папки добавляются рекурсивно)</td></tr>
+<tr><td><code>format</code></td><td>string</td><td>"zip"</td><td>Поддерживается только <code>"zip"</code></td></tr>
+<tr><td><code>password</code></td><td>string</td><td>—</td><td>Шифрование не поддерживается</td></tr>
+<tr><td><code>level</code></td><td>int</td><td>5</td><td>Уровень сжатия 0-9 (0=без сжатия)</td></tr>
+</table>
+<pre><code><span class="kw">var</span> z = zip();
+
+<span class="cmt">// Простой ZIP из файлов</span>
+z.create("backup.zip", #[
+    "C:\\Docs\\file1.txt",
+    "C:\\Docs\\file2.txt"
+]);
+
+<span class="cmt">// Целая папка — рекурсивно</span>
+z.create("data.zip", #["C:\\Data"]);
+
+<span class="cmt">// Без сжатия</span>
+z.create("store.zip", #["file.bin"], "zip", "", 0);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>test(archive)</h2>
+<p>Проверяет целостность архива (распаковка всех записей с проверкой CRC32).</p>
+<pre><code><span class="kw">var</span> z = zip();
+<span class="kw">if</span> (z.test("backup.zip")) {
+    print("Архив целый!");
+} <span class="kw">else</span> {
+    print("Архив повреждён!");
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>info(archive)</h2>
+<p>Возвращает tuple <code>{type, files, size, compressed}</code> или <code>null</code>.</p>
+<pre><code><span class="kw">var</span> z = zip();
+<span class="kw">var</span> info = z.info("archive.zip");
+print(info.type);       <span class="cmt">// "zip"</span>
+print(info.files);      <span class="cmt">// количество записей</span>
+print(info.size);       <span class="cmt">// суммарный несжатый размер</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Пример</h2>
+<pre><code>loadPlugin("plugins/zip.dll");
+
+<span class="kw">var</span> z = zip();
+z.create("backup.zip", #["C:\\Important"]);
+
+<span class="kw">var</span> files = z.list("backup.zip");
+print("Файлов в архиве: " + files.size());
+
+<span class="kw">if</span> (z.test("backup.zip")) {
+    z.extract("backup.zip", "C:\\restore");
+    print("Восстановлено успешно");
+}</code></pre>
+</div>
+
+<footer><a href="plugins.html">← К списку плагинов</a></footer>
+</div>
+</body>
+</html>

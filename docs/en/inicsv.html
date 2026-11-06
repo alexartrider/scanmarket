@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INI/CSV Plugin — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>INI/CSV Plugin</h1><p>Reading and writing INI and CSV files</p><div class="lang-switch"><a href="../inicsv.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="inicsv.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / <a href="plugins.html">Plugins</a> / INI/CSV</p>
+
+<div class="doc-section">
+<h2>Loading the plugin</h2>
+<pre><code>loadPlugin(<span class="str">"plugins/inicsv.dll"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>INI — Reading</h2>
+
+<h3>iniRead(filename)</h3>
+<p>Reads an INI file and returns a tuple of tuples: <code>#{"section": #{"key": value, ...}, ...}</code></p>
+<ul>
+<li>Numbers are automatically converted to <code>int</code> or <code>double</code></li>
+<li>Comments (<code>;</code> and <code>#</code>) are skipped</li>
+<li>Empty sections/values are allowed</li>
+</ul>
+<pre><code><span class="kw">var</span> data = iniRead(<span class="str">"config.ini"</span>);
+print(data.database.host);   <span class="cmt">// "localhost"</span>
+print(data.database.port);   <span class="cmt">// 5432 (int)</span>
+print(data.server.bind);     <span class="str">"0.0.0.0"</span></code></pre>
+
+<h3>iniReadValue(filename, section, key)</h3>
+<p>Reads a single specific value. Returns <code>null</code> if not found.</p>
+<pre><code><span class="kw">var</span> host = iniReadValue(<span class="str">"config.ini"</span>, <span class="str">"database"</span>, <span class="str">"host"</span>);
+print(host);  <span class="cmt">// "localhost"</span>
+
+<span class="kw">var</span> missing = iniReadValue(<span class="str">"config.ini"</span>, <span class="str">"noexist"</span>, <span class="str">"key"</span>);
+print(missing);  <span class="cmt">// null</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>INI — Writing</h2>
+
+<h3>iniWrite(filename, data, [encoding])</h3>
+<p>Writes a tuple of sections to an INI file. Each section is a tuple of values.</p>
+<table>
+<tr><th>Argument</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>filename</code></td><td>string</td><td>—</td><td>File path</td></tr>
+<tr><td><code>data</code></td><td>tuple</td><td>—</td><td><code>#{"section": #{"key": val, ...}, ...}</code></td></tr>
+<tr><td><code>encoding</code></td><td>string</td><td>keep the file's encoding</td><td><code>"utf8"</code>, <code>"utf8bom"</code>, <code>"utf16"</code>, <code>"cp1251"</code>; for a new file the default is <code>"cp1251"</code></td></tr>
+</table>
+<pre><code><span class="kw">var</span> config = #{
+    <span class="str">"database"</span>: #{
+        <span class="str">"host"</span>: <span class="str">"localhost"</span>,
+        <span class="str">"port"</span>: <span class="num">5432</span>,
+        <span class="str">"name"</span>: <span class="str">"mydb"</span>
+    },
+    <span class="str">"server"</span>: #{
+        <span class="str">"bind"</span>: <span class="str">"0.0.0.0"</span>,
+        <span class="str">"timeout"</span>: <span class="num">30</span>
+    }
+};
+iniWrite(<span class="str">"config.ini"</span>, config, <span class="str">"utf8"</span>);</code></pre>
+<p>Result:</p>
+<pre><code>[database]
+host=localhost
+port=5432
+name=mydb
+
+[server]
+bind=0.0.0.0
+timeout=30
+</code></pre>
+
+<h3>iniWriteValue(filename, section, key, value, [encoding])</h3>
+<p>Writes/updates a single value. If the file exists — updates it in place. If not — creates it.</p>
+<table>
+<tr><th>Argument</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>filename</code></td><td>string</td><td>File path</td></tr>
+<tr><td><code>section</code></td><td>string</td><td>Section name</td></tr>
+<tr><td><code>key</code></td><td>string</td><td>Key name</td></tr>
+<tr><td><code>value</code></td><td>any</td><td>Value (string/int/double/bool)</td></tr>
+<tr><td><code>encoding</code></td><td>string</td><td>Encoding; if not specified — the encoding of the existing file is kept, for a new file — cp1251</td></tr>
+</table>
+<pre><code><span class="cmt">// Creates the file from scratch</span>
+iniWriteValue(<span class="str">"settings.ini"</span>, <span class="str">"main"</span>, <span class="str">"debug"</span>, <span class="kw">true</span>, <span class="str">"utf8"</span>);
+iniWriteValue(<span class="str">"settings.ini"</span>, <span class="str">"main"</span>, <span class="str">"port"</span>, <span class="num">8080</span>, <span class="str">"utf8"</span>);
+
+<span class="cmt">// Updates an existing value</span>
+iniWriteValue(<span class="str">"settings.ini"</span>, <span class="str">"main"</span>, <span class="str">"port"</span>, <span class="num">9090</span>, <span class="str">"utf8"</span>);
+
+<span class="cmt">// Adds a new section to an existing file</span>
+iniWriteValue(<span class="str">"settings.ini"</span>, <span class="str">"network"</span>, <span class="str">"timeout"</span>, <span class="num">30</span>, <span class="str">"utf8"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>CSV — Reading</h2>
+
+<h3>csvRead(filename, fields, [encoding], [separator])</h3>
+<p>Reads a CSV file and returns an array of tuples. Each row is a tuple with keys taken from the header.</p>
+<table>
+<tr><th>Argument</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>filename</code></td><td>string</td><td>—</td><td>File path</td></tr>
+<tr><td><code>fields</code></td><td>string/array</td><td>—</td><td>String <code>"a;b;c"</code> or array <code>#[a, b, c]</code></td></tr>
+<tr><td><code>encoding</code></td><td>string</td><td>"cp1251"</td><td>Encoding</td></tr>
+<tr><td><code>separator</code></td><td>string</td><td>";"</td><td>Separator (<code>";"</code>, <code>","</code>, <code>"\t"</code>)</td></tr>
+</table>
+<p><strong>Automatic value parsing:</strong></p>
+<ul>
+<li><code>null</code> → empty strings</li>
+<li><code>int</code> → integers</li>
+<li><code>double</code> → floating-point numbers</li>
+<li><code>true/yes</code> → <code>1</code>, <code>false/no</code> → <code>0</code></li>
+<li>Everything else — a string</li>
+</ul>
+<p><strong>Full RFC-like parsing:</strong></p>
+<ul>
+<li>quoted fields, including multi-line ones (line breaks inside a value);</li>
+<li>separators and quotes inside a field; <code>""</code> is an escaped quote;</li>
+<li>line endings <code>CRLF</code>, <code>LF</code>, <code>CR</code>; BOM at the start of the file;</li>
+<li>empty lines are ignored, empty and trailing fields are preserved;</li>
+<li>whitespace around a field outside quotes is trimmed, inside quotes — preserved;</li>
+<li>keys are taken from the file header; missing expected fields are filled with <code>null</code>.</li>
+</ul>
+<pre><code><span class="cmt">// Field list as a string with separators</span>
+<span class="kw">var</span> rows = csvRead(<span class="str">"data.csv"</span>, <span class="str">"name;age;city"</span>, <span class="str">"utf8"</span>);
+print(rows[0].name);   <span class="cmt">// "Ivan"</span>
+print(rows[0].age);    <span class="cmt">// 30</span>
+
+<span class="cmt">// Array of fields</span>
+<span class="kw">var</span> rows = csvRead(<span class="str">"data.csv"</span>, #[<span class="str">"name"</span>, <span class="str">"age"</span>, <span class="str">"city"</span>], <span class="str">"utf8"</span>);
+
+<span class="cmt">// Comma as separator</span>
+<span class="kw">var</span> rows = csvRead(<span class="str">"data.csv"</span>, #[<span class="str">"x"</span>, <span class="str">"y"</span>], <span class="str">"utf8"</span>, <span class="str">","</span>);
+
+<span class="cmt">// With tab</span>
+<span class="kw">var</span> rows = csvRead(<span class="str">"data.tsv"</span>, <span class="str">"a;b;c"</span>, <span class="str">"utf8"</span>, <span class="str">"\t"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>CSV — Writing</h2>
+
+<h3>csvWrite(filename, fields, data, [encoding], [separator])</h3>
+<p>Writes an array of tuples to a CSV file. Returns <code>1</code> on success, <code>0</code> on error.</p>
+<table>
+<tr><th>Argument</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>filename</code></td><td>string</td><td>File path</td></tr>
+<tr><td><code>fields</code></td><td>string/array</td><td>String <code>"a;b;c"</code> or array <code>#["a","b","c"]</code></td></tr>
+<tr><td><code>data</code></td><td>array</td><td>Array of tuples <code>#[{...}, {...}]</code></td></tr>
+<tr><td><code>encoding</code></td><td>string</td><td><code>"utf8"</code>, <code>"utf8bom"</code>, <code>"utf16"</code>, <code>"cp1251"</code>; not specified — the encoding of the existing file is kept, for a new file — cp1251</td></tr>
+<tr><td><code>separator</code></td><td>string</td><td>Separator (default <code>";"</code>)</td></tr>
+</table>
+<pre><code><span class="kw">var</span> data = #[
+    #<span class="str">{"name": "Ivan"</span>, <span class="str">"age"</span>: <span class="num">30</span>, <span class="str">"city"</span>: <span class="str">"Moscow"</span>},
+    #<span class="str">{"name": "Anna"</span>, <span class="str">"age"</span>: <span class="num">25</span>, <span class="str">"city"</span>: <span class="str">"SPb"</span>}
+];
+
+<span class="cmt">// Semicolon (default)</span>
+csvWrite(<span class="str">"data.csv"</span>, #[<span class="str">"name"</span>, <span class="str">"age"</span>, <span class="str">"city"</span>], data, <span class="str">"utf8"</span>);
+
+<span class="cmt">// Comma</span>
+csvWrite(<span class="str">"data.csv"</span>, #[<span class="str">"name"</span>, <span class="str">"age"</span>, <span class="str">"city"</span>], data, <span class="str">"utf8"</span>, <span class="str">","</span>);
+
+<span class="cmt">// Field list as a string</span>
+csvWrite(<span class="str">"data.csv"</span>, <span class="str">"name;age;city"</span>, data, <span class="str">"utf8"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>CSV — Helpers</h2>
+
+<h3>csvRowCount(filename)</h3>
+<p>Returns the number of data rows (excluding the header).</p>
+<pre><code><span class="kw">var</span> n = csvRowCount(<span class="str">"data.csv"</span>);
+print(<span class="str">"Rows: "</span> + n);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Examples</h2>
+
+<h3>Application configuration</h3>
+<pre><code>loadPlugin(<span class="str">"plugins/inicsv.dll"</span>);
+
+<span class="kw">var</span> configFile = <span class="str">"app.ini"</span>;
+
+<span class="cmt">// Create the config</span>
+<span class="kw">var</span> config = #{
+    <span class="str">"app"</span>: #{
+        <span class="str">"name"</span>: <span class="str">"MyApp"</span>,
+        <span class="str">"version"</span>: <span class="str">"1.0"</span>,
+        <span class="str">"debug"</span>: <span class="kw">true</span>
+    },
+    <span class="str">"database"</span>: #{
+        <span class="str">"host"</span>: <span class="str">"localhost"</span>,
+        <span class="str">"port"</span>: <span class="num">5432</span>
+    }
+};
+iniWrite(configFile, config, <span class="str">"utf8"</span>);
+
+<span class="cmt">// Read it</span>
+<span class="kw">var</span> cfg = iniRead(configFile);
+print(cfg.app.name);       <span class="cmt">// "MyApp"</span>
+print(cfg.database.port);  <span class="cmt">// 5432</span>
+
+<span class="cmt">// Change a single value</span>
+iniWriteValue(configFile, <span class="str">"database"</span>, <span class="str">"port"</span>, <span class="num">3306</span>, <span class="str">"utf8"</span>);</code></pre>
+
+<h3>Processing CSV data</h3>
+<pre><code>loadPlugin(<span class="str">"plugins/inicsv.dll"</span>);
+
+<span class="cmt">// Reading data</span>
+<span class="kw">var</span> users = csvRead(<span class="str">"users.csv"</span>, <span class="str">"name;email;age"</span>, <span class="str">"utf8"</span>);
+print(<span class="str">"Users: "</span> + csvRowCount(<span class="str">"users.csv"</span>));
+
+<span class="kw">for</span> (<span class="kw">var</span> user : users) {
+    print(user.name + <span class="str">" ("</span> + user.email + <span class="str">"), age: "</span> + user.age);
+}
+
+<span class="cmt">// Filtering and writing</span>
+<span class="kw">var</span> adults = [];
+<span class="kw">for</span> (<span class="kw">var</span> u : users) {
+    <span class="kw">if</span> (u.age >= <span class="num">18</span>) adults.push(u);
+}
+csvWrite(<span class="str">"adults.csv"</span>, <span class="str">"name;email;age"</span>, adults, <span class="str">"utf8"</span>);</code></pre>
+
+<h3>CSV with commas</h3>
+<pre><code><span class="cmt">// Reading standard CSV</span>
+<span class="kw">var</span> rows = csvRead(<span class="str">"export.csv"</span>, #[<span class="str">"id"</span>, <span class="str">"name"</span>, <span class="str">"value"</span>], <span class="str">"utf8"</span>, <span class="str">","</span>);
+
+<span class="cmt">// Writing standard CSV</span>
+csvWrite(<span class="str">"output.csv"</span>, #[<span class="str">"id"</span>, <span class="str">"name"</span>, <span class="str">"value"</span>], rows, <span class="str">"utf8"</span>, <span class="str">","</span>);</code></pre>
+
+<h3>Tabular data</h3>
+<pre><code><span class="cmt">// TSV (Tab-Separated Values)</span>
+<span class="kw">var</span> data = csvRead(<span class="str">"data.tsv"</span>, <span class="str">"col1;col2;col3"</span>, <span class="str">"utf8"</span>, <span class="str">"\t"</span>);
+
+<span class="cmt">// Writing with automatic type detection</span>
+<span class="kw">var</span> output = #[
+    #<span class="str">{"id"</span>: <span class="num">1</span>, <span class="str">"name"</span>: <span class="str">"first"</span>, <span class="str">"value"</span>: <span class="num">3.14</span>},
+    #<span class="str">{"id"</span>: <span class="num">2</span>, <span class="str">"name"</span>: <span class="str">"second"</span>, <span class="str">"value"</span>: <span class="num">2.71</span>}
+];
+csvWrite(<span class="str">"result.tsv"</span>, <span class="str">"id;name;value"</span>, output, <span class="str">"utf8"</span>, <span class="str">"\t"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>File formats</h2>
+
+<h3>INI</h3>
+<pre><code><span class="cmt">; comments start with ; or #</span>
+[section_name]
+key1=value1
+key2=42
+key3=3.14
+
+[another_section]
+host=localhost
+port=5432</code></pre>
+
+<h3>CSV</h3>
+<pre><code>name;age;city
+Ivan;30;Moscow
+Anna;25;SPb
+"He said ""hello""";25;NY</code></pre>
+<p>Values containing quotes, separators, leading/trailing whitespace or line breaks are automatically wrapped in double quotes. Double quotes inside values are doubled: <code>"</code> → <code>""</code>. Rows are separated by <code>CRLF</code>.</p>
+</div>
+
+<div class="doc-section">
+<h2>Encodings</h2>
+<table>
+<tr><th>Parameter</th><th>Description</th></tr>
+<tr><td><code>"utf8"</code></td><td>UTF-8 without BOM</td></tr>
+<tr><td><code>"utf8bom"</code></td><td>UTF-8 with BOM</td></tr>
+<tr><td><code>"utf16"</code></td><td>UTF-16 LE</td></tr>
+<tr><td><code>"cp1251"</code></td><td>Windows-1251 (default)</td></tr>
+</table>
+<p>Reading automatically detects the encoding (BOM + heuristic).</p>
+<p>If no encoding is given when writing (or <code>"auto"</code> is passed) and the file already exists — its encoding is kept; for a new file <code>"cp1251"</code> is used. This lets you update UTF-8/UTF-16 files without specifying the encoding on every call.</p>
+</div>
+
+<div class="doc-section">
+<h2>Notes</h2>
+<ul>
+<li><strong>Numbers:</strong> the decimal separator is always a dot (<code>.</code>), regardless of the system locale</li>
+<li><strong>Types:</strong> empty strings → <code>null</code>, integers → <code>int</code>, floats → <code>double</code>, <code>true/yes</code> → <code>1</code>, <code>false/no</code> → <code>0</code></li>
+<li><strong>CSV quotes:</strong> values containing separators, quotes or line breaks are automatically wrapped in <code>"</code></li>
+<li><strong>INI comments:</strong> lines starting with <code>;</code> or <code>#</code> are skipped; a section header may end with a comment: <code>[section] ; note</code>. Comments inside values are not stripped</li>
+</ul>
+</div>
+
+<footer><a href="plugins.html">← Back to the plugin list</a></footer>
+</div>
+</body>
+</html>

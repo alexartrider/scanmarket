@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Colors — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header>
+<h1>colors Module</h1>
+<p>Color constants and ANSI codes</p>
+<div class="lang-switch"><a href="../colors.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="colors.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / Colors</p>
+
+<div class="doc-section">
+<h2>Basic colors</h2>
+<p>Available through the <code>colors</code> object. Values are integers (BGR format for widgets or ANSI codes for the console).</p>
+<table>
+<tr><th>Constant</th><th>Value</th><th>Color</th></tr>
+<tr><td><code>colors.clBlack</code></td><td>0x000000</td><td>Black</td></tr>
+<tr><td><code>colors.clMaroon</code></td><td>0x000080</td><td>Dark red</td></tr>
+<tr><td><code>colors.clGreen</code></td><td>0x008000</td><td>Green</td></tr>
+<tr><td><code>colors.clOlive</code></td><td>0x008080</td><td>Olive</td></tr>
+<tr><td><code>colors.clNavy</code></td><td>0x800000</td><td>Dark blue</td></tr>
+<tr><td><code>colors.clPurple</code></td><td>0x800080</td><td>Purple</td></tr>
+<tr><td><code>colors.clTeal</code></td><td>0x808000</td><td>Teal</td></tr>
+<tr><td><code>colors.clGray</code></td><td>0x808080</td><td>Gray</td></tr>
+<tr><td><code>colors.clSilver</code></td><td>0xC0C0C0</td><td>Silver</td></tr>
+<tr><td><code>colors.clRed</code></td><td>0x0000FF</td><td>Red</td></tr>
+<tr><td><code>colors.clLime</code></td><td>0x00FF00</td><td>Lime</td></tr>
+<tr><td><code>colors.clYellow</code></td><td>0x00FFFF</td><td>Yellow</td></tr>
+<tr><td><code>colors.clBlue</code></td><td>0xFF0000</td><td>Blue</td></tr>
+<tr><td><code>colors.clFuchsia</code></td><td>0xFF00FF</td><td>Fuchsia</td></tr>
+<tr><td><code>colors.clAqua</code></td><td>0xFFFF00</td><td>Cyan</td></tr>
+<tr><td><code>colors.clWhite</code></td><td>0xFFFFFF</td><td>White</td></tr>
+</table>
+
+<h2>Additional standard colors</h2>
+<table>
+<tr><th>Constant</th><th>Value</th></tr>
+<tr><td><code>colors.clLtGray</code></td><td>0xC0C0C0</td></tr>
+<tr><td><code>colors.clMedGray</code></td><td>0xA0A0A0</td></tr>
+<tr><td><code>colors.clMoneyGreen</code></td><td>0xC0DCC0</td></tr>
+<tr><td><code>colors.clSkyBlue</code></td><td>0xF0F8FF</td></tr>
+<tr><td><code>colors.clCream</code></td><td>0xFFFDD0</td></tr>
+<tr><td><code>colors.clOliveDrab</code></td><td>0x238E6B</td></tr>
+<tr><td><code>colors.clKhaki</code></td><td>0x8CE6F0</td></tr>
+<tr><td><code>colors.clOrange</code></td><td>0x00A5FF</td></tr>
+<tr><td><code>colors.clPink</code></td><td>0xCBC0FF</td></tr>
+<tr><td><code>colors.clBrown</code></td><td>0x2A2AA5</td></tr>
+<tr><td><code>colors.clViolet</code></td><td>0xEE82EE</td></tr>
+<tr><td><code>colors.clGold</code></td><td>0x00D7FF</td></tr>
+<tr><td><code>colors.clTan</code></td><td>0x8CB4D2</td></tr>
+<tr><td><code>colors.clBeige</code></td><td>0xDCF5F5</td></tr>
+<tr><td><code>colors.clCoral</code></td><td>0x507FFF</td></tr>
+<tr><td><code>colors.clSalmon</code></td><td>0x7280FA</td></tr>
+<tr><td><code>colors.clChocolate</code></td><td>0x1E69D2</td></tr>
+<tr><td><code>colors.clOrchid</code></td><td>0xD670DA</td></tr>
+<tr><td><code>colors.clPlum</code></td><td>0xDDA0DD</td></tr>
+<tr><td><code>colors.clTomato</code></td><td>0x4763FF</td></tr>
+<tr><td><code>colors.clLightBlue</code></td><td>0xE0FFFF</td></tr>
+<tr><td><code>colors.clLightGreen</code></td><td>0x90EE90</td></tr>
+<tr><td><code>colors.clDarkRed</code></td><td>0x00008B</td></tr>
+<tr><td><code>colors.clDarkBlue</code></td><td>0x8B0000</td></tr>
+<tr><td><code>colors.clDarkGreen</code></td><td>0x006400</td></tr>
+<tr><td><code>colors.clDarkGray</code></td><td>0xA9A9A9</td></tr>
+<tr><td><code>colors.clLightGray</code></td><td>0xD3D3D3</td></tr>
+<tr><td><code>colors.clDarkCyan</code></td><td>0x8B8B00</td></tr>
+<tr><td><code>colors.clDarkMagenta</code></td><td>0x8B008B</td></tr>
+</table>
+
+<h2>Console ANSI codes</h2>
+<p>For colored output in the console (<code>print</code>).</p>
+<table>
+<tr><th>Constant</th><th>Description</th></tr>
+<tr><td><code>colors.ansiReset</code></td><td>Reset formatting</td></tr>
+<tr><td><code>colors.ansiBold</code></td><td>Bold text</td></tr>
+<tr><td><code>colors.ansiUnderline</code></td><td>Underline</td></tr>
+<tr><td><code>colors.ansiBlack</code> ... <code>colors.ansiWhite</code></td><td>Basic text colors</td></tr>
+<tr><td><code>colors.ansiBrightBlack</code> ... <code>colors.ansiBrightWhite</code></td><td>Bright text colors</td></tr>
+<tr><td><code>colors.ansiGrayBg</code></td><td>Gray background</td></tr>
+<tr><td><code>colors.ansiGrayFg</code></td><td>Gray text</td></tr>
+</table>
+
+<h3>Example</h3>
+<pre><code>print(colors.ansiRed + "Error!" + colors.ansiReset);
+print(colors.ansiBold + colors.ansiGreen + "OK" + colors.ansiReset);</code></pre>
+</div>
+
+<footer>Script Documentation</footer>
+</div>
+</body>
+</html>

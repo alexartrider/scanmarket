@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QT Integration — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header>
+<h1>qt module — QT integration</h1>
+<p>Creating widgets, managing layout, connecting signals, dialogs</p>
+<div class="lang-switch"><a href="../qt.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="qt.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / QT</p>
+
+<div class="doc-section">
+<h2>Creating objects</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>qt.create(className, [parent])</code></td><td>Creates a widget by class name ("Q" prefix is optional). If parent is not passed — the script owns the object</td></tr>
+<tr><td><code>dialog.newform(owner, [title])</code></td><td>Creates RuntimeForm (main window)</td></tr>
+<tr><td><code>dialog.newtable(owner, [title])</code></td><td>Creates RXLMainWindow (window with a table)</td></tr>
+</table>
+<pre><code><span class="kw">var</span> btn = qt.create(<span class="str">"QPushButton"</span>, form);
+<span class="kw">var</span> timer = qt.create(<span class="str">"QTimer"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Application control</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>qt.run()</code></td><td>Starts the event loop (QApplication::exec)</td></tr>
+<tr><td><code>qt.processEvents()</code></td><td>Processes pending events</td></tr>
+<tr><td><code>qt.app()</code></td><td>Application object (QApplication)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Utilities</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>qt.classes()</code></td><td>Array of registered Qt class names</td></tr>
+<tr><td><code>qt.clipboardText()</code></td><td>Text from the clipboard</td></tr>
+<tr><td><code>qt.setClipboardText(text)</code></td><td>Put text into the clipboard</td></tr>
+<tr><td><code>qt.cursorPos()</code></td><td>Cursor position [x, y]</td></tr>
+<tr><td><code>qt.setCursorPos(x, y)</code></td><td>Set cursor position</td></tr>
+<tr><td><code>qt.primaryScreen()</code></td><td>Primary screen</td></tr>
+<tr><td><code>qt.screens()</code></td><td>Array of screens</td></tr>
+<tr><td><code>qt.openUrl(url)</code></td><td>Open a URL with a system application</td></tr>
+<tr><td><code>qt.homePath()</code></td><td>Home directory</td></tr>
+<tr><td><code>qt.tempPath()</code></td><td>Temporary files directory</td></tr>
+<tr><td><code>qt.currentPath()</code></td><td>Current working directory</td></tr>
+<tr><td><code>qt.sleep(ms)</code></td><td>Pause for ms milliseconds</td></tr>
+<tr><td><code>qt.uuid()</code></td><td>Generate a UUID</td></tr>
+<tr><td><code>qt.random([max])</code></td><td>Random number 0..max-1 (default 100)</td></tr>
+<tr><td><code>qt.currentDateTime()</code></td><td>Current date/time</td></tr>
+<tr><td><code>qt.hash(data, algorithm)</code></td><td>Cryptographic hash</td></tr>
+<tr><td><code>qt.supportedImageFormats()</code></td><td>Supported image formats</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Layout system</h2>
+<p>Custom layout system, similar to VCL (Delphi).</p>
+
+<h3>Widget properties</h3>
+<table>
+<tr><th>Property</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>widget.align</code></td><td>string</td><td>Alignment: "alNone", "alTop", "alBottom", "alLeft", "alRight", "alClient"</td></tr>
+<tr><td><code>widget.anchors</code></td><td>string</td><td>Anchoring: "akLeft|akTop|akRight|akBottom"</td></tr>
+<tr><td><code>widget.alignMargins</code></td><td>[l,t,r,b]</td><td>Margins for align</td></tr>
+<tr><td><code>widget.anchorMargins</code></td><td>[l,t,r,b]</td><td>Margins for anchors</td></tr>
+</table>
+
+<h3>Update methods</h3>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>widget.beginUpdate()</code></td><td>Disables layout recalculation</td></tr>
+<tr><td><code>widget.endUpdate()</code></td><td>Enables recalculation and updates geometry</td></tr>
+<tr><td><code>widget.enableLayoutManager()</code></td><td>Automatic recalculation on size/visibility change</td></tr>
+</table>
+
+<h3>Example</h3>
+<pre><code><span class="kw">var</span> form = qt.create(<span class="str">"QWidget"</span>);
+form.enableLayoutManager();
+
+<span class="kw">var</span> btn = qt.create(<span class="str">"QPushButton"</span>, form);
+btn.text = <span class="str">"Button"</span>;
+btn.align = <span class="str">"alTop"</span>;
+btn.alignMargins = [10, 10, 10, 0];
+
+<span class="kw">var</span> memo = qt.create(<span class="str">"QPlainTextEdit"</span>, form);
+memo.align = <span class="str">"alClient"</span>;</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Event (QT signal) handling</h2>
+
+<h3>1. Designer (JSON)</h3>
+<p>In the form's JSON file, events are specified using the original Qt signal names. The key is the signal name, the value is the name of the handler function in the script.</p>
+<pre><code>{
+    "events": {
+        "clicked": "qPushButton1_clicked",
+        "formCloseQuery": "Form1_formCloseQuery"
+    }
+}</code></pre>
+<pre><code><span class="kw">function</span> <span class="fn">qPushButton1_clicked</span>(Sender, checked) {
+    form.close();
+}
+
+<span class="kw">function</span> <span class="fn">Form1_formCloseQuery</span>(Sender) {
+    <span class="kw">return</span> form.qCheckBox1.checked;
+}</code></pre>
+
+<h3>2. Script (dynamic connection)</h3>
+<p>To dynamically connect/disconnect handlers, use a property named after the original signal. The function name can be anything, including anonymous functions (lambdas).</p>
+<pre><code>widget.signalName = handlerFunction;</code></pre>
+
+<h3>Examples</h3>
+<pre><code><span class="cmt">// Named function</span>
+<span class="kw">function</span> <span class="fn">handleClick</span>(sender, checked) {
+    print(<span class="str">"Button pressed!"</span>);
+}
+btn.clicked = handleClick;
+
+<span class="cmt">// Anonymous function (lambda)</span>
+btn.clicked = <span class="kw">function</span>(sender, checked) {
+    print(<span class="str">"Click!"</span>);
+};
+
+<span class="cmt">// Lambda without arguments</span>
+timer.timeout = <span class="kw">function</span>() {
+    print(<span class="str">"Timer fired"</span>);
+};
+
+<span class="cmt">// Removing the handler</span>
+btn.clicked = <span class="kw">null</span>;
+
+<span class="cmt">// Dynamically switching the handler</span>
+form.formCloseQuery = form.qCheckBox2.checked
+    ? Form1_formCloseQuery
+    : <span class="kw">function</span>(Sender) { print(<span class="str">"lambda"</span>); };</code></pre>
+
+<p>The first argument passed to the function is always <code>sender</code> (the object that emitted the signal). This is followed by the Qt signal arguments (bool, int, QString, etc.), which are automatically converted to script types.</p>
+</div>
+
+<div class="doc-section">
+<h2>JSON form lifecycle</h2>
+<p>Loading a <code>RuntimeForm</code> synchronously runs these phases:</p>
+<ol>
+<li>Form widgets are created and their properties are applied.</li>
+<li>The top-level code of the form's Script module is evaluated (<code>EvalModule</code>).</li>
+<li>Form and widget events are connected.</li>
+<li><code>QDbGridView</code> tables with <code>autoOpen: true</code> are opened.</li>
+<li>The <code>formCreate</code> (OnCreate) handler is called.</li>
+</ol>
+<p>This order is preserved for compatibility. A database connection needed by automatically opened tables must be completed in the top-level form code, before the autoOpen phase; connecting in OnCreate is too late. Declare named event handlers in the form code so they exist when the event-connection phase runs. In OnCreate, autoOpen tables are already open. No separate hooks or managed deferred activation are added: they would introduce new semantics and are unnecessary when the existing explicit phases are followed.</p>
+<pre><code><span class="cmt">// Top-level code runs before autoOpen</span>
+db.connect(db.QSQLITE, <span class="str">"app.sqlite"</span>);
+
+<span class="kw">function</span> <span class="fn">formCreate</span>(Sender) {
+    <span class="cmt">// SQL grids with autoOpen have been opened by this point</span>
+    print(form.products.currentRowIndex());
+}
+
+<span class="kw">function</span> <span class="fn">products_currentRowChanged</span>(Sender, rowIndex) {
+    <span class="cmt">// rowIndex is a zero-based row index</span>
+}</code></pre>
+<p>See <a href="dbgrid.html">QDbGridView</a> for SQL-grid and <code>currentRow()</code> details.</p>
+</div>
+
+<div class="doc-section">
+<h2>Common widget methods</h2>
+<h3>Geometry and visibility</h3>
+<table>
+<tr><th>Method/property</th><th>Description</th></tr>
+<tr><td><code>widget.show()</code></td><td>Show the widget</td></tr>
+<tr><td><code>widget.hide()</code></td><td>Hide</td></tr>
+<tr><td><code>widget.close()</code></td><td>Close</td></tr>
+<tr><td><code>widget.move(x, y)</code></td><td>Move</td></tr>
+<tr><td><code>widget.resize(w, h)</code></td><td>Resize</td></tr>
+<tr><td><code>widget.geometry</code></td><td>[x, y, w, h] (read/write)</td></tr>
+<tr><td><code>widget.visible</code></td><td>bool (read/write)</td></tr>
+<tr><td><code>widget.windowTitle</code></td><td>Window title (read/write)</td></tr>
+</table>
+
+<h3>Window state</h3>
+<table>
+<tr><th>Property</th><th>Description</th></tr>
+<tr><td><code>widget.isFullScreen</code></td><td>Full screen (bool)</td></tr>
+<tr><td><code>widget.isMaximized</code></td><td>Maximized (bool)</td></tr>
+<tr><td><code>widget.isMinimized</code></td><td>Minimized (bool)</td></tr>
+<tr><td><code>widget.isActiveWindow</code></td><td>Active window (bool)</td></tr>
+<tr><td><code>widget.raise()</code></td><td>Raise to the front</td></tr>
+<tr><td><code>widget.lower()</code></td><td>Lower</td></tr>
+<tr><td><code>widget.activateWindow()</code></td><td>Activate</td></tr>
+<tr><td><code>widget.setFocus()</code></td><td>Set focus</td></tr>
+<tr><td><code>widget.clearFocus()</code></td><td>Clear focus</td></tr>
+<tr><td><code>widget.hasFocus</code></td><td>Whether it has focus (bool)</td></tr>
+</table>
+
+<h3>Hierarchy</h3>
+<table>
+<tr><th>Property</th><th>Description</th></tr>
+<tr><td><code>widget.parentWidget</code></td><td>Parent widget</td></tr>
+<tr><td><code>widget.window</code></td><td>Top-level window</td></tr>
+<tr><td><code>widget.children</code></td><td>Array of child QObjects</td></tr>
+<tr><td><code>widget.findChild(name)</code></td><td>Find a child by objectName</td></tr>
+</table>
+
+<h3>Coordinate conversion</h3>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>widget.mapToGlobal(x, y)</code></td><td>To screen coordinates → [x, y]</td></tr>
+<tr><td><code>widget.mapFromGlobal(x, y)</code></td><td>From screen coordinates → [x, y]</td></tr>
+</table>
+
+<h3>Attributes and flags</h3>
+<table>
+<tr><th>Method/property</th><th>Description</th></tr>
+<tr><td><code>widget.windowFlags</code></td><td>Window flags (int, read/write)</td></tr>
+<tr><td><code>widget.setAttribute(attr, on)</code></td><td>Set an attribute</td></tr>
+<tr><td><code>widget.testAttribute(attr)</code></td><td>Test an attribute</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Widget-specific methods</h2>
+
+<h3>QMainWindow</h3>
+<table>
+<tr><th>Method/property</th><th>Description</th></tr>
+<tr><td><code>mw.setCentralWidget(w)</code></td><td>Central widget</td></tr>
+<tr><td><code>mw.menuBar</code></td><td>Menu bar (read)</td></tr>
+<tr><td><code>mw.statusBar</code></td><td>Status bar (read)</td></tr>
+<tr><td><code>mw.addToolBar(title)</code></td><td>Create and add a toolbar</td></tr>
+<tr><td><code>mw.addDockWidget(area, dock)</code></td><td>Add a dock widget</td></tr>
+</table>
+
+<h3>QMenu / QMenuBar / QToolBar</h3>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>menu.addMenu(title)</code></td><td>Add a submenu</td></tr>
+<tr><td><code>menu.addAction(text)</code></td><td>Action</td></tr>
+<tr><td><code>menu.addSeparator()</code></td><td>Separator</td></tr>
+<tr><td><code>menu.clear()</code></td><td>Clear</td></tr>
+<tr><td><code>toolbar.addWidget(w)</code></td><td>Add a widget to the toolbar</td></tr>
+</table>
+
+<h3>QStatusBar</h3>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>sb.showMessage(text, [timeout])</code></td><td>Show a message (timeout=0 — always visible)</td></tr>
+<tr><td><code>sb.clearMessage()</code></td><td>Clear</td></tr>
+<tr><td><code>sb.addWidget(w, [stretch])</code></td><td>Add a widget</td></tr>
+<tr><td><code>sb.addPermanentWidget(w, [stretch])</code></td><td>Add a permanent widget</td></tr>
+</table>
+
+<h3>QComboBox / QListWidget</h3>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>combo.addItem(text, [userData])</code></td><td>Add an item</td></tr>
+<tr><td><code>combo.removeItem(index)</code></td><td>Remove an item</td></tr>
+<tr><td><code>combo.itemText(index)</code></td><td>Item text</td></tr>
+<tr><td><code>combo.setItemText(index, text)</code></td><td>Change the text</td></tr>
+<tr><td><code>combo.findText(text)</code></td><td>Search by text (index)</td></tr>
+<tr><td><code>combo.count</code></td><td>Count (read)</td></tr>
+<tr><td><code>list.currentItemText</code></td><td>Current item text (read)</td></tr>
+<tr><td><code>list.takeItem(index)</code></td><td>Take and remove</td></tr>
+</table>
+
+<h3>QTabWidget</h3>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>tw.addTab(w, title)</code></td><td>Add a tab</td></tr>
+<tr><td><code>tw.removeTab(index)</code></td><td>Remove a tab</td></tr>
+<tr><td><code>tw.tabText(index)</code></td><td>Tab text</td></tr>
+<tr><td><code>tw.setTabText(index, text)</code></td><td>Change the text</td></tr>
+<tr><td><code>tw.count</code></td><td>Count (read)</td></tr>
+<tr><td><code>tw.currentWidget</code></td><td>Current widget (read)</td></tr>
+<tr><td><code>tw.widget(index)</code></td><td>Widget by index</td></tr>
+</table>
+
+<h3>QTableWidget</h3>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>table.setItem(row, col, text)</code></td><td>Set a cell</td></tr>
+<tr><td><code>table.itemText(row, col)</code></td><td>Cell text</td></tr>
+<tr><td><code>table.setRowCount(n)</code></td><td>Number of rows</td></tr>
+<tr><td><code>table.setColumnCount(n)</code></td><td>Number of columns</td></tr>
+<tr><td><code>table.rowCount</code></td><td>Rows (read)</td></tr>
+<tr><td><code>table.columnCount</code></td><td>Columns (read)</td></tr>
+<tr><td><code>table.clearContents()</code></td><td>Clear contents</td></tr>
+</table>
+
+<h3>QTextEdit / QPlainTextEdit</h3>
+<table>
+<tr><th>Property</th><th>Description</th></tr>
+<tr><td><code>edit.plainText</code></td><td>Plain text (read/write)</td></tr>
+</table>
+
+<h3>QTimer</h3>
+<table>
+<tr><th>Property</th><th>Description</th></tr>
+<tr><td><code>timer.isActive</code></td><td>Whether active (read)</td></tr>
+<tr><td><code>timer.remainingTime</code></td><td>Remaining time (read)</td></tr>
+</table>
+
+<h3>QLabel</h3>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>label.setPixmapFromFile(path)</code></td><td>Load an image</td></tr>
+<tr><td><code>label.setMovieFromFile(path)</code></td><td>Load a GIF/animation</td></tr>
+</table>
+
+<h3>QAbstractButton (QPushButton, QCheckBox, etc.)</h3>
+<table>
+<tr><th>Method/property</th><th>Description</th></tr>
+<tr><td><code>button.text</code></td><td>Button text (read/write)</td></tr>
+<tr><td><code>button.setIconFromFile(path)</code></td><td>Icon from a file</td></tr>
+<tr><td><code>button.shortcut</code></td><td>Shortcut key (read/write)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Application example</h2>
+<pre><code><span class="kw">var</span> app = qt.app();
+<span class="kw">var</span> mainWindow = qt.create(<span class="str">"QMainWindow"</span>);
+mainWindow.windowTitle = <span class="str">"My application"</span>;
+mainWindow.resize(800, 600);
+mainWindow.enableLayoutManager();
+
+<span class="kw">var</span> central = qt.create(<span class="str">"QWidget"</span>, mainWindow);
+mainWindow.setCentralWidget(central);
+
+<span class="kw">var</span> btn = qt.create(<span class="str">"QPushButton"</span>, central);
+btn.text = <span class="str">"Click me"</span>;
+btn.align = <span class="str">"alTop"</span>;
+
+<span class="kw">var</span> textEdit = qt.create(<span class="str">"QPlainTextEdit"</span>, central);
+textEdit.align = <span class="str">"alClient"</span>;
+
+<span class="kw">function</span> <span class="fn">onBtnClicked</span>(sender) {
+    dialog.showmessage(<span class="str">"You clicked the button!"</span>);
+}
+btn.clicked = onBtnClicked;
+
+<span class="kw">var</span> menuBar = mainWindow.menuBar;
+<span class="kw">var</span> fileMenu = menuBar.addMenu(<span class="str">"File"</span>);
+fileMenu.addAction(<span class="str">"Exit"</span>).triggered = <span class="kw">function</span>(sender) {
+    app.quit();
+};
+
+mainWindow.show();
+qt.run();</code></pre>
+</div>
+
+<footer>Script Documentation</footer>
+</div>
+</body>
+</html>

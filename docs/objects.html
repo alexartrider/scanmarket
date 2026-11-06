@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Методы объектов — Script</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Методы объектов</h1><p>Встроенные методы всех типов данных ScriptValue</p><div class="lang-switch"><a class="active" href="objects.html">RU</a><a href="en/objects.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Главная</a> / Методы объектов</p>
+
+<div class="doc-section">
+<h2>Общие методы (доступны любому типу)</h2>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>v.size()</code></td><td>Размер (длина строки, кол-во элементов) — метод, требует скобки</td></tr>
+<tr><td><code>v.empty()</code></td><td>true если пустое</td></tr>
+<tr><td><code>v.isnull()</code> / <code>v.isbool()</code> / <code>v.isint()</code> / <code>v.isdouble()</code> / <code>v.isnumber()</code></td><td>Проверка типа</td></tr>
+<tr><td><code>v.isstring()</code> / <code>v.isdatetime()</code> / <code>v.isarray()</code></td><td>Проверка типа</td></tr>
+<tr><td><code>v.istuple()</code> / <code>v.isset()</code> / <code>v.isobject()</code></td><td>Проверка типа</td></tr>
+<tr><td><code>v.iscontainer()</code> / <code>v.iscode()</code> / <code>v.isclass()</code></td><td>Проверка типа</td></tr>
+<tr><td><code>v.clone()</code></td><td>Глубокая копия</td></tr>
+<tr><td><code>v.type()</code></td><td>Числовой код типа (0..11)</td></tr>
+<tr><td><code>v.typename()</code></td><td>Имя типа: "INT", "STRING", "ARRAY" и т.д.</td></tr>
+<tr><td><code>v.json()</code> / <code>v.json(true)</code></td><td>Сериализация в JSON</td></tr>
+<tr><td><code>v.pretty()</code></td><td>Красивый вывод с отступами</td></tr>
+<tr><td><code>v.hash()</code></td><td>Хеш-значение</td></tr>
+<tr><td><code>v.asarray()</code></td><td>Преобразование в массив</td></tr>
+<tr><td><code>v.asbytearray()</code></td><td>Преобразование в массив байт</td></tr>
+<tr><td><code>v.astuple()</code></td><td>Преобразование в кортеж</td></tr>
+<tr><td><code>v.asset()</code></td><td>Преобразование в множество</td></tr>
+<tr><td><code>v.concat(other)</code></td><td>Объединение (изменяет исходное значение)</td></tr>
+<tr><td><code>v.difference(other)</code></td><td>Разность множеств (изменяет исходное значение)</td></tr>
+<tr><td><code>v.intersection(other)</code></td><td>Пересечение (изменяет исходное значение)</td></tr>
+<tr><td><code>v.subtract(other)</code></td><td>Вычитание (изменяет исходное значение)</td></tr>
+<tr><td><code>v.forEach(func)</code></td><td>Вызов функции для каждого элемента</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Методы даты/времени</h2>
+<pre><code><span class="kw">var</span> d = datetime.now();
+print(d.year());         <span class="cmt">// 2026</span>
+print(d.month());        <span class="cmt">// 6</span>
+print(d.day());          <span class="cmt">// 28</span>
+print(d.hour());         <span class="cmt">// 14</span>
+d.addday(<span class="num">5</span>);             <span class="cmt">// мутирует</span></code></pre>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>dt.year()</code></td><td>Год</td></tr>
+<tr><td><code>dt.month()</code></td><td>Месяц (1-12)</td></tr>
+<tr><td><code>dt.day()</code></td><td>День (1-31)</td></tr>
+<tr><td><code>dt.hour()</code></td><td>Час (0-23)</td></tr>
+<tr><td><code>dt.minute()</code></td><td>Минута (0-59)</td></tr>
+<tr><td><code>dt.second()</code></td><td>Секунда (0-59)</td></tr>
+<tr><td><code>dt.millisecond()</code></td><td>Миллисекунда (0-999)</td></tr>
+<tr><td><code>dt.weekday()</code></td><td>День недели (1-7, 1=Пн)</td></tr>
+<tr><td><code>dt.addday(n)</code></td><td>+n дней</td></tr>
+<tr><td><code>dt.addmonth(n)</code></td><td>+n месяцев</td></tr>
+<tr><td><code>dt.addyear(n)</code></td><td>+n лет</td></tr>
+<tr><td><code>dt.addhour(n)</code></td><td>+n часов</td></tr>
+<tr><td><code>dt.addminute(n)</code></td><td>+n минут</td></tr>
+<tr><td><code>dt.addsecond(n)</code></td><td>+n секунд</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Методы строк</h2>
+<pre><code><span class="kw">var</span> s = <span class="str">"  Hello World  "</span>;
+print(s.trim().upper());         <span class="cmt">// "HELLO WORLD"</span>
+print(<span class="str">"a,b,c"</span>.split(<span class="str">","</span>));     <span class="cmt">// ["a", "b", "c"]</span>
+print(<span class="str">"42"</span>.zfill(<span class="num">5</span>));            <span class="cmt">// "00042"</span>
+print(<span class="str">"test"</span>.pad(<span class="num">10</span>, <span class="str">"-"</span>, <span class="num">1</span>));    <span class="cmt">// "------test"</span></code></pre>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>s.clear()</code></td><td>Очистка строки (мутирует)</td></tr>
+<tr><td><code>s.upper()</code> / <code>s.lower()</code></td><td>Регистр</td></tr>
+<tr><td><code>s.trim()</code> / <code>s.ltrim()</code> / <code>s.rtrim()</code></td><td>Обрезка пробелов</td></tr>
+<tr><td><code>s.pos(needle)</code></td><td>Индекс первого вхождения (-1)</td></tr>
+<tr><td><code>s.contains(needle)</code></td><td>true если найдена (аргумент должен быть строкой, иначе false)</td></tr>
+<tr><td><code>s.split(sep)</code></td><td>Разбиение на массив</td></tr>
+<tr><td><code>s.splitlines()</code></td><td>Разбиение по переносам</td></tr>
+<tr><td><code>s.replace(from, to)</code></td><td>Замена ВСЕХ вхождений</td></tr>
+<tr><td><code>s.repeat(n)</code></td><td>Повтор n раз</td></tr>
+<tr><td><code>s.pad(width, char, side)</code></td><td>side: 0=справа, 1=слева, 2=центр</td></tr>
+<tr><td><code>s.zfill(width)</code></td><td>Дополнение нулями слева</td></tr>
+<tr><td><code>s.reverse()</code></td><td>Разворот</td></tr>
+<tr><td><code>s.sub(start, len)</code></td><td>Подстрока</td></tr>
+<tr><td><code>s.capitalize()</code></td><td>Первая буква заглавная, остальные — строчные</td></tr>
+<tr><td><code>s.title()</code></td><td>Заглавная первая буква каждого слова</td></tr>
+<tr><td><code>s.count(needle)</code></td><td>Количество вхождений подстроки</td></tr>
+<tr><td><code>s.isalnum()</code></td><td>true если строка состоит из букв/цифр</td></tr>
+<tr><td><code>s.isalpha()</code></td><td>true если строка состоит из букв</td></tr>
+<tr><td><code>s.isdigit()</code></td><td>true если строка состоит из цифр</td></tr>
+<tr><td><code>s.islower()</code></td><td>true если все буквы нижнего регистра</td></tr>
+<tr><td><code>s.isupper()</code></td><td>true если все буквы верхнего регистра</td></tr>
+<tr><td><code>s.isspace()</code></td><td>true если строка содержит только пробелы</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Методы массивов</h2>
+<pre><code><span class="kw">var</span> a = [<span class="num">3</span>, <span class="num">1</span>, <span class="num">4</span>, <span class="num">1</span>, <span class="num">5</span>];
+print(a.sum());           <span class="cmt">// 14.0</span>
+print(a.first());         <span class="cmt">// 3</span>
+a.shuffle();
+print(a.joined(<span class="str">"-"</span>));       <span class="cmt">// "4-1-5-3-1"</span>
+
+<span class="kw">var</span> nested = [<span class="num">1</span>, [<span class="num">2</span>, <span class="num">3</span>], [<span class="num">4</span>, [<span class="num">5</span>]]];
+print(nested.flattened());  <span class="cmt">// [1, 2, 3, 4, 5]</span>
+
+print(a.mapped(<span class="kw">function</span>(x) { <span class="kw">return</span> x * <span class="num">2</span>; }));  <span class="cmt">// новый массив</span>
+print(a.filtered(<span class="kw">function</span>(x) { <span class="kw">return</span> x &gt; <span class="num">2</span>; })); <span class="cmt">// новый массив</span></code></pre>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>arr.clear()</code></td><td>Очистка</td></tr>
+<tr><td><code>arr.add(v1, v2, ...)</code></td><td>Добавление в конец</td></tr>
+<tr><td><code>arr.push(v1, v2, ...)</code></td><td>Алиас add</td></tr>
+<tr><td><code>arr.pop()</code></td><td>Удаление и возврат последнего</td></tr>
+<tr><td><code>arr.sort()</code> / <code>arr.sort(func)</code></td><td>Сортировка (по умолчанию или с функцией)</td></tr>
+<tr><td><code>arr.contains(val)</code></td><td>true если найден</td></tr>
+<tr><td><code>arr.reverse()</code></td><td>Разворот (мутирует)</td></tr>
+<tr><td><code>arr.unique()</code></td><td>Удаление дубликатов (после сортировки!)</td></tr>
+<tr><td><code>arr.sum()</code></td><td>Сумма элементов</td></tr>
+<tr><td><code>arr.first()</code> / <code>arr.last()</code></td><td>Первый / последний</td></tr>
+<tr><td><code>arr.min()</code> / <code>arr.max()</code></td><td>Минимум / максимум</td></tr>
+<tr><td><code>arr.find(func)</code></td><td>Первый подходящий элемент</td></tr>
+<tr><td><code>arr.indexOf(val)</code></td><td>Индекс первого вхождения (-1)</td></tr>
+<tr><td><code>arr.every(func)</code></td><td>true если ВСЕ удовлетворяют</td></tr>
+<tr><td><code>arr.some(func)</code></td><td>true если ХОТЯ БЫ ОДИН</td></tr>
+<tr><td><code>arr.includes(val)</code></td><td>true если присутствует</td></tr>
+<tr><td><code>arr.remove(val)</code></td><td>Удаление ВСЕХ вхождений</td></tr>
+<tr><td><code>arr.reduce(func, init)</code></td><td>Свёртка</td></tr>
+<tr><td><code>arr.count(val)</code></td><td>Количество вхождений</td></tr>
+<tr><td><code>arr.shuffle()</code></td><td>Перемешивание</td></tr>
+<tr><td><code>arr.setto(val)</code></td><td>Заполнение всех элементов</td></tr>
+<tr><td><code>arr.sliced(start, end)</code></td><td>Часть массива [start, end)</td></tr>
+<tr><td><code>arr.joined(sep)</code></td><td>Объединение в строку</td></tr>
+<tr><td><code>arr.flattened()</code></td><td>Новый плоский массив</td></tr>
+<tr><td><code>arr.flatten()</code></td><td>Раскрытие на месте</td></tr>
+<tr><td><code>arr.mapped(func)</code></td><td>Новый массив с преобразованиями</td></tr>
+<tr><td><code>arr.filtered(func)</code></td><td>Новый массив с фильтрацией</td></tr>
+<tr><td><code>arr.tuple()</code></td><td>Преобразование в кортеж</td></tr>
+<tr><td><code>arr.set()</code></td><td>Преобразование в множество</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Методы множеств (Set)</h2>
+<pre><code><span class="cmt">// Явное создание</span>
+<span class="kw">var</span> s1 = <span class="op">#</span>set{<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>};
+<span class="kw">var</span> s2 = <span class="op">#</span>set{<span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>};
+
+<span class="cmt">// Автоопределение (простые значения → множество)</span>
+<span class="kw">var</span> s3 = <span class="op">#</span>{<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>};
+
+<span class="cmt">// difference/intersection изменяют исходное множество</span>
+<span class="cmt">// чтобы не портить s1 — предварительно clone():</span>
+print(s1.clone().difference(s2));        <span class="cmt">// {1} — s1 не изменился</span>
+print(s1.clone().intersection(s2));      <span class="cmt">// {2, 3}</span>
+print(s1);                              <span class="cmt">// {1, 2, 3}</span></code></pre>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>set.clear()</code></td><td>Очистка</td></tr>
+<tr><td><code>set.contains(val)</code> / <code>set.has(val)</code></td><td>true если элемент есть</td></tr>
+<tr><td><code>set.add(val)</code></td><td>Добавление</td></tr>
+<tr><td><code>set.remove(val)</code></td><td>Удаление</td></tr>
+<tr><td><code>set.isSubsetOf(other)</code></td><td>true если подмножество</td></tr>
+<tr><td><code>set.isSupersetOf(other)</code></td><td>true если надмножество</td></tr>
+<tr><td><code>set.symmetricDifference(other)</code></td><td>Только в одном из двух (изменяет исходное значение)</td></tr>
+<tr><td><code>set.equals(other)</code></td><td>Равенство множеств</td></tr>
+<tr><td><code>set.every(func)</code> / <code>set.some(func)</code></td><td>Проверка условия</td></tr>
+<tr><td><code>set.reduce(func, init)</code></td><td>Свёртка</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Методы кортежей (Tuple)</h2>
+<pre><code><span class="cmt">// Автоопределение (пары key:value → кортеж)</span>
+<span class="kw">var</span> t1 = <span class="op">#</span>{<span class="str">"name"</span>: <span class="str">"Иван"</span>, <span class="str">"age"</span>: <span class="num">30</span>};
+
+<span class="cmt">// Явное создание</span>
+<span class="kw">var</span> t2 = <span class="op">#</span>tuple{<span class="str">"name"</span>: <span class="str">"Иван"</span>, <span class="str">"age"</span>: <span class="num">30</span>};
+
+print(t1.keys());        <span class="cmt">// ["name", "age"]</span>
+print(t1.get(<span class="str">"name"</span>));   <span class="cmt">// "Иван"</span>
+t1.set(<span class="str">"city"</span>, <span class="str">"Москва"</span>);</code></pre>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>t.clear()</code></td><td>Очистка</td></tr>
+<tr><td><code>t.contains(key)</code></td><td>true если ключ присутствует (то же, что has)</td></tr>
+<tr><td><code>t.keys()</code></td><td>Массив ключей</td></tr>
+<tr><td><code>t.values()</code></td><td>Массив значений</td></tr>
+<tr><td><code>t.has(key)</code></td><td>true если ключ есть</td></tr>
+<tr><td><code>t.get(key)</code></td><td>Значение по ключу (строковые ключи сравниваются без учёта регистра; null если нет)</td></tr>
+<tr><td><code>t.set(key, val)</code></td><td>Установка ключ=значение</td></tr>
+<tr><td><code>t.remove(key)</code></td><td>Удаление по ключу</td></tr>
+<tr><td><code>t.merge(other)</code></td><td>Объединение (изменяет исходное значение)</td></tr>
+<tr><td><code>t.every(func)</code> / <code>t.some(func)</code></td><td>Проверка условия</td></tr>
+<tr><td><code>t.reduce(func, init)</code></td><td>Свёртка: func(acc, key, value)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Методы объектов</h2>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>obj.getpropertys()</code></td><td>Возвращает кортеж {имя: значение}</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Важные нюансы</h2>
+<ol>
+<li><code>concat</code>, <code>difference</code>, <code>intersection</code>, <code>subtract</code>, <code>merge</code> <strong>изменяют исходное значение</strong> (мутируют) и возвращают его же. Для неразрушающего результата сначала вызовите <code>clone()</code>.</li>
+<li>Методы DateTime работают через авто-приведение типов: строка <code>"2026-06-28"</code> или число <code>1687900000</code> будут автоматически преобразованы в дату.</li>
+<li><code>sort()</code> без аргументов: числа по значению, строки лексикографически. С функцией: <code>sort(function(a, b) { return a &lt; b })</code></li>
+<li><code>unique()</code> сначала сортирует, затем удаляет дубликаты. Порядок может измениться.</li>
+<li><code>forEach</code>: для массивов — <code>func(element)</code>, для кортежей — <code>func(key, value)</code>.</li>
+</ol>
+</div>
+
+<footer><a href="index.html">← На главную</a></footer>
+</div>
+</body>
+</html>

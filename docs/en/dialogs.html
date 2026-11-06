@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dialogs — Script</title>
+<link rel="stylesheet" href="../style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='ru'||(!l&&ru)){location.replace('../'+p+q)}})();</script>
+</head>
+<body>
+<header>
+<h1>dialog namespace</h1>
+<p>Dialog boxes and data input</p>
+<div class="lang-switch"><a href="../dialogs.html" onclick="try{localStorage.setItem('qodeDocsLang','ru')}catch(e){}">RU</a><a class="active" href="dialogs.html">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Home</a> / Dialogs</p>
+
+<div class="doc-section">
+<h2>Dialog functions</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>dialog.showmessage(text, [parent])</code></td><td>Message box with text and an OK button</td></tr>
+<tr><td><code>dialog.yesno(text, [parent])</code></td><td>Yes/No question. Returns "yes" or "no"</td></tr>
+<tr><td><code>dialog.yesnocancel(text, [parent])</code></td><td>Yes/No/Cancel question. Returns "yes", "no" or "cancel"</td></tr>
+<tr><td><code>dialog.inputbox(title, label, default)</code></td><td>Single-line input. Returns the entered text</td></tr>
+<tr><td><code>dialog.inputquery(title, labels, defaults)</code></td><td>Multi-line input (arrays or a tuple)</td></tr>
+</table>
+
+<h3>Examples</h3>
+<pre><code>dialog.showmessage("Hello!");
+
+<span class="kw">var</span> answer = dialog.yesno("Delete the file?");
+<span class="kw">if</span> (answer == <span class="str">"yes"</span>) { ... }
+
+<span class="kw">var</span> name = dialog.inputbox("Enter a name", "Name:", "Ivan");
+<span class="kw">var</span> vals = dialog.inputquery("Data", #{"Name": "", "Age": "25"});
+<span class="kw">if</span> (vals) print(vals.Name);</code></pre>
+
+<h2>System dialogs</h2>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>dialog.openFile(parent, caption, dir, filter)</code></td><td>File open dialog</td></tr>
+<tr><td><code>dialog.saveFile(parent, caption, dir, filter)</code></td><td>File save dialog</td></tr>
+<tr><td><code>dialog.selectDirectory(parent, caption, dir)</code></td><td>Directory selection dialog</td></tr>
+<tr><td><code>dialog.selectColor(parent, initialColor)</code></td><td>Color selection dialog</td></tr>
+</table>
+
+<h3>filter format</h3>
+<pre><code><span class="cmt">// Example filter for openFile:</span>
+<span class="str">"Images (*.png *.jpg);;All files (*.*)"</span></code></pre>
+</div>
+
+<footer>Script Documentation</footer>
+</div>
+</body>
+</html>

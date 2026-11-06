@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Плагин HTTP — Script</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Плагин HTTP</h1><p>HTTP/HTTPS клиент и HTTP-сервер — запросы, загрузка файлов, аутентификация, заголовки, multipart, встроенный веб-сервер</p><div class="lang-switch"><a class="active" href="http.html">RU</a><a href="en/http.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Главная</a> / <a href="plugins.html">Плагины</a> / HTTP</p>
+
+<div class="doc-section">
+<h2>Зависимости</h2>
+<p>Требуются OpenSSL 3: <code>libssl-3-x64.dll</code>, <code>libcrypto-3-x64.dll</code> (размещаются рядом с бинарником).</p>
+</div>
+
+<div class="doc-section">
+<h2>Загрузка плагина</h2>
+<pre><code>loadPlugin(<span class="str">"plugins/http.dll"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Создание объекта</h2>
+<pre><code><span class="kw">var</span> http = HttpClient();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Методы</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>get</code></td><td><code>url</code></td><td>bool</td><td>GET-запрос</td></tr>
+<tr><td><code>post</code></td><td><code>url, [body], [contentType]</code></td><td>bool</td><td>POST-запрос</td></tr>
+<tr><td><code>put</code></td><td><code>url, [body], [contentType]</code></td><td>bool</td><td>PUT-запрос</td></tr>
+<tr><td><code>del</code></td><td><code>url</code></td><td>bool</td><td>DELETE-запрос</td></tr>
+<tr><td><code>patch</code></td><td><code>url, [body], [contentType]</code></td><td>bool</td><td>PATCH-запрос</td></tr>
+<tr><td><code>head</code></td><td><code>url</code></td><td>bool</td><td>HEAD-запрос</td></tr>
+<tr><td><code>request</code></td><td><code>method, url, [body], [contentType]</code></td><td>bool</td><td>Произвольный HTTP-метод</td></tr>
+<tr><td><code>download</code></td><td><code>url, filePath</code></td><td>bool</td><td>Скачивание файла на диск</td></tr>
+<tr><td><code>upload</code></td><td><code>url, filePath, [fieldName]</code></td><td>bool</td><td>Multipart/form-data загрузка</td></tr>
+<tr><td><code>setHeader</code></td><td><code>name, value</code></td><td>bool</td><td>Установка заголовка запроса</td></tr>
+<tr><td><code>clearHeaders</code></td><td>—</td><td>bool</td><td>Очистка заголовков и аутентификации</td></tr>
+<tr><td><code>setBasicAuth</code></td><td><code>user, pass</code></td><td>bool</td><td>HTTP Basic Auth</td></tr>
+<tr><td><code>setBearerAuth</code></td><td><code>token</code></td><td>bool</td><td>Bearer Auth (Authorization: Bearer ...)</td></tr>
+<tr><td><code>setTimeout</code></td><td><code>[ms]</code></td><td>int</td><td>Таймаут (мсек). Без аргументов — геттер</td></tr>
+<tr><td><code>setUserAgent</code></td><td><code>ua</code></td><td>bool</td><td>Пользовательский User-Agent</td></tr>
+<tr><td><code>setProxy</code></td><td><code>host, port</code></td><td>bool</td><td>HTTP-прокси</td></tr>
+<tr><td><code>setVerifySsl</code></td><td><code>verify</code></td><td>bool</td><td>Проверка SSL-сертификатов</td></tr>
+<tr><td><code>setFollowRedirects</code></td><td><code>follow</code></td><td>bool</td><td>Следовать редиректам (по умолчанию true)</td></tr>
+<tr><td><code>status</code></td><td>—</td><td>int</td><td>HTTP-статус последнего ответа</td></tr>
+<tr><td><code>statusText</code></td><td>—</td><td>string</td><td>Текст статуса (OK, Not Found...)</td></tr>
+<tr><td><code>getResponse</code></td><td>—</td><td>string</td><td>Тело ответа как строка</td></tr>
+<tr><td><code>getResponseBytes</code></td><td>—</td><td>ByteArray</td><td>Тело ответа как массив байт</td></tr>
+<tr><td><code>getHeader</code></td><td><code>name</code></td><td>string</td><td>Заголовок ответа</td></tr>
+<tr><td><code>getResponseHeaders</code></td><td>—</td><td>tuple</td><td>Все заголовки ответа</td></tr>
+<tr><td><code>urlEncode</code></td><td><code>str</code></td><td>string</td><td>URL-кодирование строки</td></tr>
+<tr><td><code>urlDecode</code></td><td><code>str</code></td><td>string</td><td>URL-декодирование строки</td></tr>
+<tr><td><code>getMimeType</code></td><td><code>filename</code></td><td>string</td><td>MIME-тип по расширению файла</td></tr>
+<tr><td><code>connect</code></td><td><code>host, port, [ssl]</code></td><td>bool</td><td>Ручное подключение к серверу</td></tr>
+<tr><td><code>disconnect</code></td><td>—</td><td>bool</td><td>Отключение</td></tr>
+<tr><td><code>isconnected</code></td><td>—</td><td>bool</td><td>Проверка соединения</td></tr>
+<tr><td><code>lastError</code></td><td>—</td><td>string</td><td>Последняя ошибка</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>get(url)</h2>
+<p>Выполняет GET-запрос. Возвращает <code>true</code> если получен ответ (любой статус).</p>
+<table>
+<tr><th>Аргумент</th><th>Тип</th><th>Описание</th></tr>
+<tr><td><code>url</code></td><td>string</td><td>Полный URL (http://... или https://...)</td></tr>
+</table>
+<pre><code><span class="kw">var</span> http = HttpClient();
+<span class="kw">if</span> (http.get(<span class="str">"https://httpbin.org/get"</span>)) {
+    print(http.status());        <span class="cmt">// 200</span>
+    print(http.statusText());    <span class="cmt">// OK</span>
+    print(http.getResponse());   <span class="cmt">// тело ответа</span>
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>post(url, [body], [contentType])</h2>
+<p>POST-запрос с телом. По умолчанию Content-Type: <code>application/x-www-form-urlencoded</code>.</p>
+<table>
+<tr><th>Аргумент</th><th>Тип</th><th>По умолчанию</th><th>Описание</th></tr>
+<tr><td><code>url</code></td><td>string</td><td>—</td><td>Полный URL</td></tr>
+<tr><td><code>body</code></td><td>string</td><td>""</td><td>Тело запроса</td></tr>
+<tr><td><code>contentType</code></td><td>string</td><td>"application/x-www-form-urlencoded"</td><td>Content-Type</td></tr>
+</table>
+<pre><code><span class="cmt">// Form data</span>
+http.post(<span class="str">"https://httpbin.org/post"</span>, <span class="str">"name=Ivan&age=30"</span>);
+
+<span class="cmt">// JSON</span>
+http.post(<span class="str">"https://httpbin.org/post"</span>,
+    <span class="str">"{\"key\":\"value\"}"</span>, <span class="str">"application/json"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>put(url, [body], [contentType])</h2>
+<p>PUT-запрос. Аналогичен <code>post()</code>.</p>
+<pre><code>http.put(<span class="str">"https://httpbin.org/put"</span>, <span class="str">"updated data"</span>, <span class="str">"text/plain"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>del(url)</h2>
+<p>DELETE-запрос.</p>
+<pre><code>http.del(<span class="str">"https://httpbin.org/delete"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>patch(url, [body], [contentType])</h2>
+<p>PATCH-запрос. Аналогичен <code>post()</code>.</p>
+<pre><code>http.patch(<span class="str">"https://httpbin.org/patch"</span>, <span class="str">"partial update"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>head(url)</h2>
+<p>HEAD-запрос — возвращает только заголовки без тела.</p>
+<pre><code>http.head(<span class="str">"https://httpbin.org/get"</span>);
+print(http.getHeader(<span class="str">"Content-Type"</span>));  <span class="cmt">// application/json</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>request(method, url, [body], [contentType])</h2>
+<p>Произвольный HTTP-метод (OPTIONS, TRACE, CONNECT и др.).</p>
+<pre><code>http.request(<span class="str">"OPTIONS"</span>, <span class="str">"https://httpbin.org/get"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>download(url, filePath)</h2>
+<p>Скачивание файла на диск. Поддерживает HTTP и HTTPS с автоматическим редиректом.</p>
+<table>
+<tr><th>Аргумент</th><th>Тип</th><th>Описание</th></tr>
+<tr><td><code>url</code></td><td>string</td><td>URL файла</td></tr>
+<tr><td><code>filePath</code></td><td>string</td><td>Путь для сохранения</td></tr>
+</table>
+<pre><code><span class="kw">if</span> (http.download(<span class="str">"https://example.com/file.zip"</span>, <span class="str">"download/file.zip"</span>)) {
+    print(<span class="str">"Размер: "</span> + file.size(<span class="str">"download/file.zip"</span>));
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>upload(url, filePath, [fieldName])</h2>
+<p>Multipart/form-data загрузка файла (аналог &lt;input type="file"&gt;).</p>
+<table>
+<tr><th>Аргумент</th><th>Тип</th><th>По умолчанию</th><th>Описание</th></tr>
+<tr><td><code>url</code></td><td>string</td><td>—</td><td>URL для загрузки</td></tr>
+<tr><td><code>filePath</code></td><td>string</td><td>—</td><td>Локальный путь к файлу</td></tr>
+<tr><td><code>fieldName</code></td><td>string</td><td>"file"</td><td>Имя поля в форме</td></tr>
+</table>
+<pre><code>http.upload(<span class="str">"https://httpbin.org/post"</span>, <span class="str">"photo.jpg"</span>);
+http.upload(<span class="str">"https://httpbin.org/post"</span>, <span class="str">"data.csv"</span>, <span class="str">"attachment"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Заголовки и аутентификация</h2>
+<pre><code><span class="cmt">// Пользовательские заголовки</span>
+http.setHeader(<span class="str">"X-Custom"</span>, <span class="str">"value"</span>);
+http.setHeader(<span class="str">"Accept"</span>, <span class="str">"application/json"</span>);
+http.get(<span class="str">"https://httpbin.org/headers"</span>);
+http.clearHeaders();  <span class="cmt">// + сбрасывает basic/bearer auth</span>
+
+<span class="cmt">// Basic Auth</span>
+http.setBasicAuth(<span class="str">"admin"</span>, <span class="str">"secret"</span>);
+http.get(<span class="str">"https://httpbin.org/basic-auth/admin/secret"</span>);
+http.clearHeaders();
+
+<span class="cmt">// Bearer Token</span>
+http.setBearerAuth(<span class="str">"eyJhbGciOiJIUzI1NiJ9..."</span>);
+http.get(<span class="str">"https://api.example.com/me"</span>);
+http.clearHeaders();
+
+<span class="cmt">// Custom User-Agent</span>
+http.setUserAgent(<span class="str">"MyApp/2.0"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Таймаут и соединение</h2>
+<pre><code><span class="cmt">// Таймаут (по умолчанию 30000 мсек)</span>
+http.setTimeout(<span class="num">5000</span>);   <span class="cmt">// установить</span>
+print(http.setTimeout()); <span class="cmt">// прочитать текущий</span>
+
+<span class="cmt">// Ручное управление соединением</span>
+http.connect(<span class="str">"api.example.com"</span>, <span class="num">443</span>, <span class="kw">true</span>);
+print(http.isconnected());  <span class="cmt">// true</span>
+http.disconnect();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Редиректы</h2>
+<p>По умолчанию плагин автоматически следует HTTP-редиректам (301, 302, 303, 307, 308) до 10 раз.</p>
+<pre><code><span class="cmt">// Отключить редиректы</span>
+http.setFollowRedirects(<span class="kw">false</span>);
+http.get(<span class="str">"https://httpbin.org/redirect/3"</span>);
+print(http.status());  <span class="cmt">// 302</span>
+
+<span class="cmt">// Включить обратно</span>
+http.setFollowRedirects(<span class="kw">true</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Ответ и заголовки</h2>
+<pre><code>http.get(<span class="str">"https://httpbin.org/get"</span>);
+
+<span class="cmt">// Статус</span>
+print(http.status());       <span class="cmt">// 200</span>
+print(http.statusText());   <span class="cmt">// OK</span>
+
+<span class="cmt">// Тело ответа</span>
+<span class="kw">var</span> text = http.getResponse();     <span class="cmt">// строка</span>
+<span class="kw">var</span> data = http.getResponseBytes(); <span class="cmt">// ByteArray</span>
+
+<span class="cmt">// Заголовки ответа</span>
+print(http.getHeader(<span class="str">"Content-Type"</span>));
+<span class="kw">var</span> all = http.getResponseHeaders(); <span class="cmt">// кортеж</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Утилиты</h2>
+<pre><code><span class="cmt">// URL-кодирование/декодирование</span>
+<span class="kw">var</span> enc = http.urlEncode(<span class="str">"Привет мир!"</span>);  <span class="cmt">// %D0%9F%D1%80...</span>
+<span class="kw">var</span> dec = http.urlDecode(<span class="str">"%D0%9F%D1%80%D0%B8%D0%B2%D0%B5%D1%82"</span>);
+
+<span class="cmt">// MIME-тип по расширению</span>
+print(http.getMimeType(<span class="str">"index.html"</span>));   <span class="cmt">// text/html</span>
+print(http.getMimeType(<span class="str">"photo.jpg"</span>));    <span class="cmt">// image/jpeg</span>
+print(http.getMimeType(<span class="str">"data.json"</span>));    <span class="cmt">// application/json</span>
+print(http.getMimeType(<span class="str">"app.exe"</span>));      <span class="cmt">// application/x-msdownload</span>
+
+<span class="cmt">// Диагностика</span>
+print(http.lastError());  <span class="cmt">// "null" если ошибок нет</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Примеры</h2>
+
+<h3>GET-запрос с обработкой ошибок</h3>
+<pre><code>loadPlugin(<span class="str">"plugins/http.dll"</span>);
+
+<span class="kw">var</span> http = HttpClient();
+http.setTimeout(<span class="num">10000</span>);
+
+<span class="kw">if</span> (http.get(<span class="str">"https://httpbin.org/get"</span>)) {
+    <span class="kw">if</span> (http.status() == <span class="num">200</span>) {
+        print(http.getResponse());
+    } <span class="kw">else</span> {
+        print(<span class="str">"HTTP Error: "</span> + http.status() + <span class="str">" "</span> + http.statusText());
+    }
+} <span class="kw">else</span> {
+    print(<span class="str">"Connection error: "</span> + http.lastError());
+}</code></pre>
+
+<h3>POST JSON</h3>
+<pre><code><span class="kw">var</span> http = HttpClient();
+<span class="kw">var</span> json = <span class="str">"{\"name\":\"Ivan\",\"age\":30}"</span>;
+
+http.post(<span class="str">"https://httpbin.org/post"</span>, json, <span class="str">"application/json"</span>);
+print(http.status());        <span class="cmt">// 200</span>
+print(http.getResponse());   <span class="cmt">// эхо от сервера</span></code></pre>
+
+<h3>Загрузка файла</h3>
+<pre><code><span class="kw">var</span> http = HttpClient();
+<span class="kw">if</span> (http.download(<span class="str">"https://httpbin.org/robots.txt"</span>, <span class="str">"robots.txt"</span>)) {
+    print(<span class="str">"Загружено: "</span> + file.size(<span class="str">"robots.txt"</span>) + <span class="str">" байт"</span>);
+}
+
+<span class="cmt">// Multipart загрузка</span>
+<span class="kw">var</span> http2 = HttpClient();
+http2.upload(<span class="str">"https://httpbin.org/post"</span>, <span class="str">"photo.jpg"</span>, <span class="str">"photo"</span>);
+print(http2.getResponse());</code></pre>
+
+<h3>Работа с API (JSON + заголовки)</h3>
+<pre><code><span class="kw">var</span> http = HttpClient();
+http.setHeader(<span class="str">"Accept"</span>, <span class="str">"application/json"</span>);
+http.setBearerAuth(<span class="str">"my-api-token"</span>);
+http.setUserAgent(<span class="str">"MyScript/1.0"</span>);
+
+<span class="kw">if</span> (http.get(<span class="str">"https://api.example.com/users"</span>)) {
+    <span class="kw">var</span> data = json.parse(http.getResponse());
+    print(data);
+}
+
+http.clearHeaders();</code></pre>
+
+<h3>Прокси</h3>
+<pre><code><span class="kw">var</span> http = HttpClient();
+http.setProxy(<span class="str">"proxy.company.com"</span>, <span class="num">8080</span>);
+http.get(<span class="str">"https://httpbin.org/ip"</span>);
+print(http.getResponse());</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>HttpServer — встроенный HTTP-сервер</h2>
+<p>Многопоточный HTTP-сервер с callback-моделью обработки запросов. Принимает подключения в фоновом потоке, скрипт обрабатывает запросы синхронно через <code>process()</code>.</p>
+</div>
+
+<div class="doc-section">
+<h2>Создание объекта</h2>
+<pre><code><span class="kw">var</span> server = HttpServer();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Методы сервера</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>listen</code></td><td><code>port</code></td><td>bool</td><td>Начать прослушивание порта</td></tr>
+<tr><td><code>stop</code></td><td>—</td><td>bool</td><td>Остановить сервер</td></tr>
+<tr><td><code>islistening</code></td><td>—</td><td>bool</td><td>Проверка состояния прослушивания</td></tr>
+<tr><td><code>port</code></td><td>—</td><td>int</td><td>Номер текущего порта</td></tr>
+<tr><td><code>process</code></td><td><code>[timeout_ms]</code></td><td>tuple|null</td><td>Обработать один входящий запрос (возвращает кортеж запроса или null)</td></tr>
+<tr><td><code>respond</code></td><td><code>socketId, responseTuple</code></td><td>bool</td><td>Отправить HTTP-ответ и закрыть соединение</td></tr>
+<tr><td><code>lastError</code></td><td>—</td><td>string</td><td>Последняя ошибка</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>listen(port)</h2>
+<p>Начинает прослушивание указанного TCP-порта. Запускает фоновый поток для приёма подключений. Возвращает <code>true</code> при успехе.</p>
+<pre><code><span class="kw">var</span> server = HttpServer();
+<span class="kw">if</span> (server.listen(<span class="num">8080</span>)) {
+    print(<span class="str">"Сервер запущен на порту "</span> + server.port());
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>process(timeout_ms)</h2>
+<p>Ожидает входящий запрос в течение <code>timeout_ms</code> миллисекунд (по умолчанию 50). Если запрос поступил — возвращает кортеж с данными запроса. Если запросов нет — возвращает <code>null</code>.</p>
+<p>Кортеж запроса содержит:</p>
+<table>
+<tr><th>Поле</th><th>Тип</th><th>Описание</th></tr>
+<tr><td><code>method</code></td><td>string</td><td>HTTP-метод (GET, POST, ...)</td></tr>
+<tr><td><code>path</code></td><td>string</td><td>Путь запроса (/api/data)</td></tr>
+<tr><td><code>query</code></td><td>string</td><td>Строка запроса (q=test&page=1)</td></tr>
+<tr><td><code>body</code></td><td>string</td><td>Тело запроса</td></tr>
+<tr><td><code>headers</code></td><td>tuple</td><td>Заголовки запроса (ключ: значение)</td></tr>
+<tr><td><code>port</code></td><td>int</td><td>Порт сервера</td></tr>
+<tr><td><code>socket</code></td><td>int</td><td>Идентификатор соединения (для передачи в respond)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>respond(socketId, responseTuple)</h2>
+<p>Отправляет HTTP-ответ клиенту и закрывает соединение. <code>responseTuple</code> — кортеж с полями:</p>
+<table>
+<tr><th>Поле</th><th>Тип</th><th>По умолчанию</th><th>Описание</th></tr>
+<tr><td><code>status</code></td><td>int</td><td>200</td><td>HTTP-статус</td></tr>
+<tr><td><code>statusText</code></td><td>string</td><td>"OK"</td><td>Текст статуса</td></tr>
+<tr><td><code>body</code></td><td>string</td><td>""</td><td>Тело ответа</td></tr>
+<tr><td><code>headers</code></td><td>tuple</td><td>#{} </td><td>Заголовки ответа</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Пример: простой сервер</h2>
+<pre><code>loadPlugin(<span class="str">"plugins/http.dll"</span>);
+
+<span class="kw">var</span> server = HttpServer();
+server.listen(<span class="num">8080</span>);
+print(<span class="str">"Сервер запущен на порту 8080"</span>);
+
+<span class="kw">var</span> handler = function(req) {
+    print(req.method + <span class="str">" "</span> + req.path);
+    <span class="kw">return</span> #{
+        <span class="str">"status"</span>: <span class="num">200</span>,
+        <span class="str">"statusText"</span>: <span class="str">"OK"</span>,
+        <span class="str">"headers"</span>: #{"Content-Type": <span class="str">"text/plain"</span>},
+        <span class="str">"body"</span>: <span class="str">"Hello, World!"</span>
+    };
+};
+
+<span class="cmt">// Основной цикл обработки</span>
+<span class="kw">while</span> (server.islistening()) {
+    <span class="kw">var</span> req = server.process(<span class="num">100</span>);
+    <span class="kw">if</span> (req != null) {
+        <span class="kw">var</span> resp = handler(req);
+        server.respond(req.socket, resp);
+    }
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Пример: отдельный скрипт-сервер</h2>
+<pre><code><span class="cmt">// server.prg — запуск: qodeqt.exe server.prg</span>
+loadPlugin(<span class="str">"plugins/http.dll"</span>);
+
+<span class="kw">var</span> server = HttpServer();
+server.listen(<span class="num">3000</span>);
+
+<span class="kw">var</span> handler = function(req) {
+    <span class="kw">if</span> (req.method == <span class="str">"GET"</span> &amp;&amp; req.path == <span class="str">"/time"</span>) {
+        <span class="kw">return</span> #{
+            <span class="str">"status"</span>: <span class="num">200</span>,
+            <span class="str">"headers"</span>: #{"Content-Type": <span class="str">"application/json"</span>},
+            <span class="str">"body"</span>: <span class="str">"{\"time\": \"\(datetime.now())\"}"</span>
+        };
+    }
+    <span class="kw">return</span> #{
+        <span class="str">"status"</span>: <span class="num">404</span>,
+        <span class="str">"statusText"</span>: <span class="str">"Not Found"</span>,
+        <span class="str">"body"</span>: <span class="str">"Not Found"</span>
+    };
+};
+
+<span class="kw">while</span> (server.islistening()) {
+    <span class="kw">var</span> req = server.process(<span class="num">100</span>);
+    <span class="kw">if</span> (req != null) {
+        <span class="kw">var</span> resp = handler(req);
+        server.respond(req.socket, resp);
+    }
+}</code></pre>
+</div>
+
+<footer><a href="plugins.html">← К списку плагинов</a></footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QT интеграция — Script</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header>
+<h1>Модуль qt — QT интеграция</h1>
+<p>Создание виджетов, управление компоновкой, подключение сигналов, диалоги</p>
+<div class="lang-switch"><a class="active" href="qt.html">RU</a><a href="en/qt.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Главная</a> / QT</p>
+
+<div class="doc-section">
+<h2>Создание объектов</h2>
+<table>
+<tr><th>Функция</th><th>Описание</th></tr>
+<tr><td><code>qt.create(className, [parent])</code></td><td>Создание виджета по имени класса (без префикса "Q" опционально). Если parent не передан — скрипт владеет объектом</td></tr>
+<tr><td><code>dialog.newform(owner, [title])</code></td><td>Создание RuntimeForm (главное окно)</td></tr>
+<tr><td><code>dialog.newtable(owner, [title])</code></td><td>Создание RXLMainWindow (окно с таблицей) — см. <a href="rxl.html">rxl</a></td></tr>
+</table>
+<pre><code><span class="kw">var</span> btn = qt.create(<span class="str">"QPushButton"</span>, form);
+<span class="kw">var</span> timer = qt.create(<span class="str">"QTimer"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Управление приложением</h2>
+<table>
+<tr><th>Функция</th><th>Описание</th></tr>
+<tr><td><code>qt.run()</code></td><td>Запуск цикла событий (QApplication::exec)</td></tr>
+<tr><td><code>qt.processEvents()</code></td><td>Обработка отложенных событий</td></tr>
+<tr><td><code>qt.app()</code></td><td>Объект приложения (QApplication)</td></tr>
+<tr><td><code>qt.platformName()</code></td><td>Имя активной QPA-платформы: <code>"windows"</code>, <code>"offscreen"</code> и т.п.</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Запуск без GUI (headless)</h2>
+<p>Для автоматизации и CI можно запускать qodeqt без графической сессии через символический платформенный плагин <code>offscreen</code>
+(развёрнут в <code>qt/bind/platforms</code> и <code>qt/bin/platforms</code>). Формы (<code>dialog.newform</code>), таблицы (<code>dialog.newtable</code>,
+QRXLWidget) и <code>loadFromMemory</code> работают без окна.</p>
+<pre><code><span class="cmt">// 1. Передать платформу дочернему процессу (наследуется через окружение):</span>
+file.setenv(<span class="str">"QT_QPA_PLATFORM"</span>, <span class="str">"offscreen"</span>);
+var res = system.execArgv(#[qodeqt, script, outFile], #{"timeout": <span class="num">60000</span>});
+
+<span class="cmt">// 2. В дочернем скрипте проверить реальную платформу:</span>
+if (str.toString(qt.platformName()) != <span class="str">"offscreen"</span>) { … }
+
+<span class="cmt">// Либо вручную из консоли:</span>
+<span class="cmt">//   set QT_QPA_PLATFORM=offscreen && qodeqt.exe script.prg</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Утилиты</h2>
+<table>
+<tr><th>Функция</th><th>Описание</th></tr>
+<tr><td><code>qt.classes()</code></td><td>Массив имён зарегистрированных классов Qt</td></tr>
+<tr><td><code>qt.clipboardText()</code></td><td>Текст из буфера обмена</td></tr>
+<tr><td><code>qt.setClipboardText(text)</code></td><td>Поместить текст в буфер обмена</td></tr>
+<tr><td><code>qt.cursorPos()</code></td><td>Позиция курсора [x, y]</td></tr>
+<tr><td><code>qt.setCursorPos(x, y)</code></td><td>Установить позицию курсора</td></tr>
+<tr><td><code>qt.primaryScreen()</code></td><td>Основной экран</td></tr>
+<tr><td><code>qt.screens()</code></td><td>Массив экранов</td></tr>
+<tr><td><code>qt.openUrl(url)</code></td><td>Открыть ссылку системным приложением</td></tr>
+<tr><td><code>qt.homePath()</code></td><td>Домашняя директория</td></tr>
+<tr><td><code>qt.tempPath()</code></td><td>Директория временных файлов</td></tr>
+<tr><td><code>qt.currentPath()</code></td><td>Текущая рабочая директория</td></tr>
+<tr><td><code>qt.sleep(ms)</code></td><td>Пауза на ms миллисекунд</td></tr>
+<tr><td><code>qt.uuid()</code></td><td>Генерация UUID</td></tr>
+<tr><td><code>qt.random([max])</code></td><td>Случайное число 0..max-1 (по умолчанию 100)</td></tr>
+<tr><td><code>qt.currentDateTime()</code></td><td>Текущая дата/время</td></tr>
+<tr><td><code>qt.hash(data, algorithm)</code></td><td>Криптографический хеш</td></tr>
+<tr><td><code>qt.supportedImageFormats()</code></td><td>Поддерживаемые форматы изображений</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Система компоновки (Layout)</h2>
+<p>Собственная система компоновки, аналогичная VCL (Delphi).</p>
+
+<h3>Свойства виджетов</h3>
+<table>
+<tr><th>Свойство</th><th>Тип</th><th>Описание</th></tr>
+<tr><td><code>widget.align</code></td><td>string</td><td>Выравнивание: "alNone", "alTop", "alBottom", "alLeft", "alRight", "alClient"</td></tr>
+<tr><td><code>widget.anchors</code></td><td>string</td><td>Привязка: "akLeft|akTop|akRight|akBottom"</td></tr>
+<tr><td><code>widget.alignMargins</code></td><td>[l,t,r,b]</td><td>Отступы для align</td></tr>
+<tr><td><code>widget.anchorMargins</code></td><td>[l,t,r,b]</td><td>Отступы для anchors</td></tr>
+</table>
+
+<h3>Методы обновления</h3>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>widget.beginUpdate()</code></td><td>Отключение пересчёта компоновки</td></tr>
+<tr><td><code>widget.endUpdate()</code></td><td>Включение пересчёта и обновление геометрии</td></tr>
+<tr><td><code>widget.enableLayoutManager()</code></td><td>Автоматический пересчёт при изменении размера/видимости</td></tr>
+</table>
+
+<h3>Пример</h3>
+<pre><code><span class="kw">var</span> form = qt.create(<span class="str">"QWidget"</span>);
+form.enableLayoutManager();
+
+<span class="kw">var</span> btn = qt.create(<span class="str">"QPushButton"</span>, form);
+btn.text = <span class="str">"Кнопка"</span>;
+btn.align = <span class="str">"alTop"</span>;
+btn.alignMargins = [10, 10, 10, 0];
+
+<span class="kw">var</span> memo = qt.create(<span class="str">"QPlainTextEdit"</span>, form);
+memo.align = <span class="str">"alClient"</span>;</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Обработка событий (сигналов QT)</h2>
+
+<h3>1. Дизайнер (JSON)</h3>
+<p>В JSON-файле формы события указываются с оригинальными именами сигналов Qt. Ключ — имя сигнала, значение — имя функции-обработчика в скрипте.</p>
+<pre><code>{
+    "events": {
+        "clicked": "qPushButton1_clicked",
+        "formCloseQuery": "Form1_formCloseQuery"
+    }
+}</code></pre>
+<pre><code><span class="kw">function</span> <span class="fn">qPushButton1_clicked</span>(Sender, checked) {
+    form.close();
+}
+
+<span class="kw">function</span> <span class="fn">Form1_formCloseQuery</span>(Sender) {
+    <span class="kw">return</span> form.qCheckBox1.checked;
+}</code></pre>
+
+<h3>2. Скрипт (динамическое подключение)</h3>
+<p>Для динамического подключения/отключения обработчиков используется свойство с оригинальным именем сигнала. Имя функции может быть любым, включая анонимные функции (лямбды).</p>
+<pre><code>widget.имяСигнала = функцияОбработчик;</code></pre>
+
+<h3>Примеры</h3>
+<pre><code><span class="cmt">// Именованная функция</span>
+<span class="kw">function</span> <span class="fn">handleClick</span>(sender, checked) {
+    print(<span class="str">"Кнопка нажата!"</span>);
+}
+btn.clicked = handleClick;
+
+<span class="cmt">// Анонимная функция (лямбда)</span>
+btn.clicked = <span class="kw">function</span>(sender, checked) {
+    print(<span class="str">"Клик!"</span>);
+};
+
+<span class="cmt">// Лямбда без аргументов</span>
+timer.timeout = <span class="kw">function</span>() {
+    print(<span class="str">"Таймер сработал"</span>);
+};
+
+<span class="cmt">// Удаление обработчика</span>
+btn.clicked = <span class="kw">null</span>;
+
+<span class="cmt">// Динамическая смена обработчика</span>
+form.formCloseQuery = form.qCheckBox2.checked
+    ? Form1_formCloseQuery
+    : <span class="kw">function</span>(Sender) { print(<span class="str">"lambda"</span>); };</code></pre>
+
+<p>Первым аргументом в функцию всегда передаётся <code>sender</code> (объект, вызвавший сигнал). Далее следуют аргументы сигнала Qt (bool, int, QString и т.д.), которые автоматически конвертируются в типы скрипта.</p>
+</div>
+
+<div class="doc-section">
+<h2>Жизненный цикл JSON-формы</h2>
+<p>При загрузке <code>RuntimeForm</code> синхронно выполняются фазы:</p>
+<ol>
+<li>Создаются виджеты формы и применяются их свойства.</li>
+<li>Выполняется верхнеуровневый код Script-модуля формы (<code>EvalModule</code>).</li>
+<li>Подключаются события формы и виджетов.</li>
+<li>Открываются SQL-таблицы <code>QDbGridView</code> с <code>autoOpen: true</code>.</li>
+<li>Вызывается обработчик <code>formCreate</code> (OnCreate).</li>
+</ol>
+<p>Порядок сохраняется для совместимости. Подключение БД, необходимое для автоматического открытия таблиц, должно завершиться в верхнеуровневом коде до шага autoOpen; подключение в OnCreate слишком позднее. Именованные функции обработчиков следует объявить в коде формы: они должны существовать к фазе подключения событий. В OnCreate таблицы autoOpen уже открыты. Отдельные хуки/управляемая отложенная активация здесь не добавлены: они создавали бы новую семантику и не нужны, если соблюдать текущие явные фазы.
+</p>
+<pre><code><span class="cmt">// Верхнеуровневый код выполняется до autoOpen</span>
+db.connect(db.QSQLITE, <span class="str">"app.sqlite"</span>);
+
+<span class="kw">function</span> <span class="fn">formCreate</span>(Sender) {
+    <span class="cmt">// К этому моменту SQL-grid с autoOpen уже открыты</span>
+    print(form.products.currentRowIndex());
+}
+
+<span class="kw">function</span> <span class="fn">products_currentRowChanged</span>(Sender, rowIndex) {
+    <span class="cmt">// rowIndex — индекс строки с нуля</span>
+}</code></pre>
+<p>Подробности о SQL-grid и <code>currentRow()</code> см. в разделе <a href="dbgrid.html">QDbGridView</a>.</p>
+</div>
+
+<div class="doc-section">
+<h2>Общие методы виджетов</h2>
+<h3>Геометрия и видимость</h3>
+<table>
+<tr><th>Метод/свойство</th><th>Описание</th></tr>
+<tr><td><code>widget.show()</code></td><td>Показать виджет</td></tr>
+<tr><td><code>widget.hide()</code></td><td>Скрыть</td></tr>
+<tr><td><code>widget.close()</code></td><td>Закрыть</td></tr>
+<tr><td><code>widget.move(x, y)</code></td><td>Перемещение</td></tr>
+<tr><td><code>widget.resize(w, h)</code></td><td>Изменение размера</td></tr>
+<tr><td><code>widget.geometry</code></td><td>[x, y, w, h] (чтение/запись)</td></tr>
+<tr><td><code>widget.visible</code></td><td>bool (чтение/запись)</td></tr>
+<tr><td><code>widget.windowTitle</code></td><td>Заголовок окна (чтение/запись)</td></tr>
+</table>
+
+<h3>Состояние окна</h3>
+<table>
+<tr><th>Свойство</th><th>Описание</th></tr>
+<tr><td><code>widget.isFullScreen</code></td><td>Полноэкранный (bool)</td></tr>
+<tr><td><code>widget.isMaximized</code></td><td>Развёрнуто (bool)</td></tr>
+<tr><td><code>widget.isMinimized</code></td><td>Свёрнуто (bool)</td></tr>
+<tr><td><code>widget.isActiveWindow</code></td><td>Активное окно (bool)</td></tr>
+<tr><td><code>widget.raise()</code></td><td>Поднять на передний план</td></tr>
+<tr><td><code>widget.lower()</code></td><td>Опустить</td></tr>
+<tr><td><code>widget.activateWindow()</code></td><td>Активировать</td></tr>
+<tr><td><code>widget.setFocus()</code></td><td>Установить фокус</td></tr>
+<tr><td><code>widget.clearFocus()</code></td><td>Снять фокус</td></tr>
+<tr><td><code>widget.hasFocus</code></td><td>Есть ли фокус (bool)</td></tr>
+</table>
+
+<h3>Иерархия</h3>
+<table>
+<tr><th>Свойство</th><th>Описание</th></tr>
+<tr><td><code>widget.parentWidget</code></td><td>Родительский виджет</td></tr>
+<tr><td><code>widget.window</code></td><td>Окно верхнего уровня</td></tr>
+<tr><td><code>widget.children</code></td><td>Массив дочерних QObject</td></tr>
+<tr><td><code>widget.findChild(name)</code></td><td>Поиск дочернего по objectName</td></tr>
+</table>
+
+<h3>Конвертация координат</h3>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>widget.mapToGlobal(x, y)</code></td><td>В экранные координаты → [x, y]</td></tr>
+<tr><td><code>widget.mapFromGlobal(x, y)</code></td><td>Из экранных координат → [x, y]</td></tr>
+</table>
+
+<h3>Атрибуты и флаги</h3>
+<table>
+<tr><th>Метод/свойство</th><th>Описание</th></tr>
+<tr><td><code>widget.windowFlags</code></td><td>Флаги окна (int, чтение/запись)</td></tr>
+<tr><td><code>widget.setAttribute(attr, on)</code></td><td>Установка атрибута</td></tr>
+<tr><td><code>widget.testAttribute(attr)</code></td><td>Проверка атрибута</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Специфичные методы виджетов</h2>
+
+<h3>QMainWindow</h3>
+<table>
+<tr><th>Метод/свойство</th><th>Описание</th></tr>
+<tr><td><code>mw.setCentralWidget(w)</code></td><td>Центральный виджет</td></tr>
+<tr><td><code>mw.menuBar</code></td><td>Панель меню (чтение)</td></tr>
+<tr><td><code>mw.statusBar</code></td><td>Строка состояния (чтение)</td></tr>
+<tr><td><code>mw.addToolBar(title)</code></td><td>Создание и добавление тулбара</td></tr>
+<tr><td><code>mw.addDockWidget(area, dock)</code></td><td>Добавление док-панели</td></tr>
+</table>
+
+<h3>QMenu / QMenuBar / QToolBar</h3>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>menu.addMenu(title)</code></td><td>Подменю</td></tr>
+<tr><td><code>menu.addAction(text)</code></td><td>Действие</td></tr>
+<tr><td><code>menu.addSeparator()</code></td><td>Разделитель</td></tr>
+<tr><td><code>menu.clear()</code></td><td>Очистка</td></tr>
+<tr><td><code>toolbar.addWidget(w)</code></td><td>Виджет на тулбар</td></tr>
+</table>
+
+<h3>QStatusBar</h3>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>sb.showMessage(text, [timeout])</code></td><td>Сообщение (timeout=0 — постоянно)</td></tr>
+<tr><td><code>sb.clearMessage()</code></td><td>Очистка</td></tr>
+<tr><td><code>sb.addWidget(w, [stretch])</code></td><td>Добавить виджет</td></tr>
+<tr><td><code>sb.addPermanentWidget(w, [stretch])</code></td><td>Добавить постоянный виджет</td></tr>
+</table>
+
+<h3>QComboBox / QListWidget</h3>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>combo.addItem(text, [userData])</code></td><td>Добавить элемент</td></tr>
+<tr><td><code>combo.removeItem(index)</code></td><td>Удалить элемент</td></tr>
+<tr><td><code>combo.itemText(index)</code></td><td>Текст элемента</td></tr>
+<tr><td><code>combo.setItemText(index, text)</code></td><td>Изменить текст</td></tr>
+<tr><td><code>combo.findText(text)</code></td><td>Поиск по тексту (индекс)</td></tr>
+<tr><td><code>combo.count</code></td><td>Количество (чтение)</td></tr>
+<tr><td><code>list.currentItemText</code></td><td>Текст текущего (чтение)</td></tr>
+<tr><td><code>list.takeItem(index)</code></td><td>Изъять и удалить</td></tr>
+</table>
+
+<h3>QTabWidget</h3>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>tw.addTab(w, title)</code></td><td>Добавить вкладку</td></tr>
+<tr><td><code>tw.removeTab(index)</code></td><td>Удалить вкладку</td></tr>
+<tr><td><code>tw.tabText(index)</code></td><td>Текст вкладки</td></tr>
+<tr><td><code>tw.setTabText(index, text)</code></td><td>Изменить текст</td></tr>
+<tr><td><code>tw.count</code></td><td>Количество (чтение)</td></tr>
+<tr><td><code>tw.currentWidget</code></td><td>Текущий виджет (чтение)</td></tr>
+<tr><td><code>tw.widget(index)</code></td><td>Виджет по индексу</td></tr>
+</table>
+
+<h3>QTableWidget</h3>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>table.setItem(row, col, text)</code></td><td>Установить ячейку</td></tr>
+<tr><td><code>table.itemText(row, col)</code></td><td>Текст ячейки</td></tr>
+<tr><td><code>table.setRowCount(n)</code></td><td>Количество строк</td></tr>
+<tr><td><code>table.setColumnCount(n)</code></td><td>Количество столбцов</td></tr>
+<tr><td><code>table.rowCount</code></td><td>Строки (чтение)</td></tr>
+<tr><td><code>table.columnCount</code></td><td>Столбцы (чтение)</td></tr>
+<tr><td><code>table.clearContents()</code></td><td>Очистка содержимого</td></tr>
+</table>
+
+<h3>QTextEdit / QPlainTextEdit</h3>
+<table>
+<tr><th>Свойство</th><th>Описание</th></tr>
+<tr><td><code>edit.plainText</code></td><td>Простой текст (чтение/запись)</td></tr>
+</table>
+
+<h3>QTimer</h3>
+<table>
+<tr><th>Свойство</th><th>Описание</th></tr>
+<tr><td><code>timer.isActive</code></td><td>Активен ли (чтение)</td></tr>
+<tr><td><code>timer.remainingTime</code></td><td>Оставшееся время (чтение)</td></tr>
+</table>
+
+<h3>QLabel</h3>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>label.setPixmapFromFile(path)</code></td><td>Загрузить картинку</td></tr>
+<tr><td><code>label.setMovieFromFile(path)</code></td><td>Загрузить GIF/анимацию</td></tr>
+</table>
+
+<h3>QAbstractButton (QPushButton, QCheckBox и т.д.)</h3>
+<table>
+<tr><th>Метод/свойство</th><th>Описание</th></tr>
+<tr><td><code>button.text</code></td><td>Текст кнопки (чтение/запись)</td></tr>
+<tr><td><code>button.setIconFromFile(path)</code></td><td>Иконка из файла</td></tr>
+<tr><td><code>button.shortcut</code></td><td>Горячая клавиша (чтение/запись)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Пример приложения</h2>
+<pre><code><span class="kw">var</span> app = qt.app();
+<span class="kw">var</span> mainWindow = qt.create(<span class="str">"QMainWindow"</span>);
+mainWindow.windowTitle = <span class="str">"Моё приложение"</span>;
+mainWindow.resize(800, 600);
+mainWindow.enableLayoutManager();
+
+<span class="kw">var</span> central = qt.create(<span class="str">"QWidget"</span>, mainWindow);
+mainWindow.setCentralWidget(central);
+
+<span class="kw">var</span> btn = qt.create(<span class="str">"QPushButton"</span>, central);
+btn.text = <span class="str">"Нажми меня"</span>;
+btn.align = <span class="str">"alTop"</span>;
+
+<span class="kw">var</span> textEdit = qt.create(<span class="str">"QPlainTextEdit"</span>, central);
+textEdit.align = <span class="str">"alClient"</span>;
+
+<span class="kw">function</span> <span class="fn">onBtnClicked</span>(sender) {
+    dialog.showmessage(<span class="str">"Вы нажали кнопку!"</span>);
+}
+btn.clicked = onBtnClicked;
+
+<span class="kw">var</span> menuBar = mainWindow.menuBar;
+<span class="kw">var</span> fileMenu = menuBar.addMenu(<span class="str">"Файл"</span>);
+fileMenu.addAction(<span class="str">"Выход"</span>).triggered = <span class="kw">function</span>(sender) {
+    app.quit();
+};
+
+mainWindow.show();
+qt.run();</code></pre>
+</div>
+
+<footer>Script Documentation</footer>
+</div>
+</body>
+</html>

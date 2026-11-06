@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Плагин DBF — Script</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Плагин DBF</h1><p>Работа с файлами формата dBASE (DBF) — чтение, запись, создание и управление записями</p><div class="lang-switch"><a class="active" href="dbf.html">RU</a><a href="en/dbf.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Главная</a> / <a href="plugins.html">Плагины</a> / DBF</p>
+
+<div class="doc-section">
+<h2>Загрузка плагина</h2>
+<pre><code><span class="kw">if</span> (!loadPlugin(<span class="str">"plugins/dbf.dll"</span>)) {
+    print(<span class="str">"ОШИБКА: dbf.dll не загружен!"</span>);
+    system.exit(<span class="num">1</span>);
+}
+
+<span class="kw">var</span> db = dbffile();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Файловые операции</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>open</code></td><td><code>path, [encoding]</code></td><td>int (1/0)</td><td>Открытие DBF-файла. encoding: 1251 (по умолчанию) или 866</td></tr>
+<tr><td><code>close</code></td><td>—</td><td>—</td><td>Закрытие файла и очистка данных</td></tr>
+<tr><td><code>create</code></td><td><code>path, fields, [encoding]</code></td><td>int (1/0)</td><td>Создание нового DBF-файла</td></tr>
+<tr><td><code>save</code></td><td><code>[path]</code></td><td>int (1/0)</td><td>Сохранение в файл. path — опционально (по умолчанию текущий файл)</td></tr>
+<tr><td><code>isOpen</code></td><td>—</td><td>int (0/1)</td><td>Открыт ли файл</td></tr>
+<tr><td><code>isModified</code></td><td>—</td><td>int (0/1)</td><td>Были ли изменения с момента открытия/сохранения</td></tr>
+</table>
+<h3>Формат полей для create()</h3>
+<p>Массив кортежей с описанием каждого поля:</p>
+<table>
+<tr><th>Ключ</th><th>Тип</th><th>Описание</th></tr>
+<tr><td><code>name</code></td><td>string</td><td>Имя поля (до 10 символов)</td></tr>
+<tr><td><code>type</code></td><td>string</td><td>Тип: C (строка), N (число), D (дата), L (логическое)</td></tr>
+<tr><td><code>length</code></td><td>int</td><td>Длина поля в байтах</td></tr>
+<tr><td><code>decimals</code></td><td>int</td><td>Количество десятичных знаков (для N)</td></tr>
+</table>
+<pre><code><span class="cmt">// Открытие существующего файла</span>
+<span class="kw">var</span> db = dbffile();
+<span class="kw">var</span> ok = db.open(<span class="str">"C:/data/employees.dbf"</span>);
+print(<span class="str">"Открыт: "</span> + ok);
+
+<span class="cmt">// Открытие с кодировкой CP866</span>
+db.open(<span class="str">"C:/data/old_file.dbf"</span>, <span class="num">866</span>);
+
+<span class="cmt">// Создание нового файла</span>
+<span class="kw">var</span> fields = #[
+    #{"name": <span class="str">"NAME"</span>,    "type": <span class="str">"C"</span>, "length": <span class="num">30</span>, "decimals": <span class="num">0</span>},
+    #{"name": <span class="str">"AGE"</span>,     "type": <span class="str">"N"</span>, "length": <span class="num">5</span>,  "decimals": <span class="num">0</span>},
+    #{"name": <span class="str">"SALARY"</span>,  "type": <span class="str">"N"</span>, "length": <span class="num">10</span>, "decimals": <span class="num">2</span>},
+    #{"name": <span class="str">"BDATE"</span>,   "type": <span class="str">"D"</span>, "length": <span class="num">8</span>,  "decimals": <span class="num">0</span>},
+    #{"name": <span class="str">"ACTIVE"</span>,  "type": <span class="str">"L"</span>, "length": <span class="num">1</span>,  "decimals": <span class="num">0</span>}
+];
+db.create(<span class="str">"C:/data/new.dbf"</span>, fields);
+
+<span class="cmt">// Сохранение</span>
+db.save();
+<span class="cmt">// Или сохранить в другой файл:</span>
+db.save(<span class="str">"C:/data/backup.dbf"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Навигация по записям</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>next</code></td><td>—</td><td>int (0/1)</td><td>Переход к следующей записи. Возвращает 0 при достижении EOF</td></tr>
+<tr><td><code>prev</code></td><td>—</td><td>int (0/1)</td><td>Переход к предыдущей записи. Возвращает 0 при достижении BOF</td></tr>
+<tr><td><code>rewind</code></td><td>—</td><td>—</td><td>Перемотка в начало (указатель перед первой записью)</td></tr>
+<tr><td><code>moveTo</code></td><td><code>n</code></td><td>int (1/0)</td><td>Переход к записи по номеру (1-based)</td></tr>
+<tr><td><code>eof</code></td><td>—</td><td>int (0/1)</td><td>Достигнут ли конец файла</td></tr>
+<tr><td><code>bof</code></td><td>—</td><td>int (0/1)</td><td>Находимся ли перед первой записью</td></tr>
+<tr><td><code>recno</code></td><td>—</td><td>int</td><td>Текущий номер записи (1-based, 0 = перед первой)</td></tr>
+<tr><td><code>recordCount</code></td><td>—</td><td>int</td><td>Общее количество записей</td></tr>
+</table>
+<pre><code><span class="kw">var</span> db = dbffile();
+db.open(<span class="str">"C:/data/employees.dbf"</span>);
+
+<span class="cmt">// Последовательный обход</span>
+db.rewind();
+<span class="kw">while</span> (db.next()) {
+    <span class="kw">var</span> row = db.currentRow();
+    print(row[<span class="str">"NAME"</span>]);
+}
+
+<span class="cmt">// Переход к конкретной записи</span>
+db.moveTo(<span class="num">5</span>);  <span class="cmt">// 5-я запись</span>
+<span class="kw">var</span> row = db.currentRow();
+print(row);
+
+<span class="cmt">// Позиция в файле</span>
+print(<span class="str">"Запись: "</span> + db.recno() + <span class="str">" из "</span> + db.recordCount());
+print(<span class="str">"EOF: "</span> + db.eof());
+print(<span class="str">"BOF: "</span> + db.bof());</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Чтение данных</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>readAll</code></td><td><code>[asTuple]</code></td><td>array / tuple</td><td>Чтение всех записей. По умолчанию — массив кортежей</td></tr>
+<tr><td><code>row</code></td><td><code>n</code></td><td>tuple / null</td><td>Чтение записи по номеру (1-based)</td></tr>
+<tr><td><code>currentRow</code></td><td>—</td><td>tuple / null</td><td>Текущая запись по указателю навигации</td></tr>
+<tr><td><code>readFlat</code></td><td>—</td><td>array</td><td>Плоский массив всех значений подряд</td></tr>
+</table>
+<h3>Форматы возвращаемых данных</h3>
+<table>
+<tr><th>Метод</th><th>Формат</th><th>Пример</th></tr>
+<tr><td><code>readAll()</code></td><td>array of tuple</td><td><code>[{"NAME":"Иван","AGE":30}, {"NAME":"Пётр","AGE":25}]</code></td></tr>
+<tr><td><code>readAll(true)</code></td><td>tuple of tuple</td><td><code>{1:{"NAME":"Иван"}, 2:{"NAME":"Пётр"}}</code></td></tr>
+<tr><td><code>row(n)</code></td><td>tuple</td><td><code>{"NAME":"Иван","AGE":30}</code></td></tr>
+<tr><td><code>readFlat()</code></td><td>array</td><td><code>["Иван", 30, "Пётр", 25, ...]</code></td></tr>
+</table>
+<h3>Типы значений в кортеже</h3>
+<table>
+<tr><th>DBF-тип</th><th>Тип в скрипте</th><th>Пример</th></tr>
+<tr><td><code>C</code> (Character)</td><td>string</td><td><code>"Иван"</code></td></tr>
+<tr><td><code>N</code> (Numeric, decimals=0)</td><td>int</td><td><code>30</code></td></tr>
+<tr><td><code>N</code> (Numeric, decimals&gt;0)</td><td>double</td><td><code>50000.00</code></td></tr>
+<tr><td><code>D</code> (Date)</td><td>datetime</td><td><code>datetime</code></td></tr>
+<tr><td><code>L</code> (Logical)</td><td>int (0/1)</td><td><code>1</code> или <code>0</code></td></tr>
+</table>
+<pre><code><span class="kw">var</span> db = dbffile();
+db.open(<span class="str">"C:/data/employees.dbf"</span>);
+
+<span class="cmt">// Прочитать все записи</span>
+<span class="kw">var</span> rows = db.readAll();
+print(<span class="str">"Записей: "</span> + rows.size());
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i < rows.size(); i++) {
+    print(rows[i][<span class="str">"NAME"</span>] + <span class="str">" — "</span> + rows[i][<span class="str">"AGE"</span>]);
+}
+
+<span class="cmt">// Прочитать одну запись</span>
+<span class="kw">var</span> row = db.row(<span class="num">3</span>);  <span class="cmt">// 3-я запись</span>
+print(row[<span class="str">"NAME"</span>]);
+print(row[<span class="str">"SALARY"</span>]);
+
+<span class="cmt">// Текущая запись (после next/moveTo)</span>
+db.moveTo(<span class="num">1</span>);
+<span class="kw">var</span> cur = db.currentRow();
+print(cur);
+
+<span class="cmt">// Плоский массив</span>
+<span class="kw">var</span> flat = db.readFlat();
+print(<span class="str">"Элементов: "</span> + flat.size());  <span class="cmt">// recordCount * fieldCount</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Запись данных</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>append</code></td><td><code>(val1, val2, ...)</code> или <code>(array)</code> или <code>(tuple)</code></td><td>int (1/0)</td><td>Добавление записи (3 формы вызова)</td></tr>
+<tr><td><code>updateRow</code></td><td><code>n, data</code></td><td>int (1/0)</td><td>Обновление записи по номеру (1-based)</td></tr>
+<tr><td><code>updateCurrentRow</code></td><td><code>data</code></td><td>int (1/0)</td><td>Обновление текущей записи</td></tr>
+<tr><td><code>writeAll</code></td><td><code>data</code></td><td>int (1/0)</td><td>Полная замена всех записей</td></tr>
+</table>
+<h3>Формы вызова append()</h3>
+<table>
+<tr><th>Форма</th><th>Пример</th></tr>
+<tr><td>Отдельные аргументы</td><td><code>db.append("Иван", 30, 50000.00, dt, 1)</code></td></tr>
+<tr><td>Массив</td><td><code>db.append(#["Иван", 30, 50000.00, dt, 1])</code></td></tr>
+<tr><td>Кортеж</td><td><code>db.append(#{"NAME":"Иван", "AGE":30, "SALARY":50000.00})</code></td></tr>
+</table>
+<pre><code><span class="kw">var</span> db = dbffile();
+db.open(<span class="str">"C:/data/employees.dbf"</span>);
+
+<span class="cmt">// Форма 1: отдельные аргументы</span>
+<span class="kw">var</span> dt = datetime.makedatetime(<span class="num">2024</span>, <span class="num">1</span>, <span class="num">15</span>);
+db.append(<span class="str">"Иванов Иван"</span>, <span class="num">30</span>, <span class="num">50000.00</span>, dt, <span class="num">1</span>);
+
+<span class="cmt">// Форма 2: массив</span>
+db.append(#[<span class="str">"Петров Пётр"</span>, <span class="num">25</span>, <span class="num">45000.50</span>, dt, <span class="num">1</span>]);
+
+<span class="cmt">// Форма 3: кортеж (именованные поля)</span>
+db.append(#{
+    <span class="str">"NAME"</span>:   <span class="str">"Сидоров Сидор"</span>,
+    <span class="str">"AGE"</span>:    <span class="num">40</span>,
+    <span class="str">"SALARY"</span>: <span class="num">60000.00</span>,
+    <span class="str">"BDATE"</span>:  datetime.makedatetime(<span class="num">1984</span>, <span class="num">5</span>, <span class="num">20</span>),
+    <span class="str">"ACTIVE"</span>: <span class="num">1</span>
+});
+
+<span class="cmt">// Обновление записи по номеру</span>
+db.updateRow(<span class="num">1</span>, #{"NAME": <span class="str">"Иванов И.И."</span>, <span class="str">"AGE"</span>: <span class="num">31</span>});
+
+<span class="cmt">// Обновление текущей записи</span>
+db.moveTo(<span class="num">2</span>);
+db.updateCurrentRow(#{"SALARY": <span class="num">55000.00</span>});
+
+<span class="cmt">// Полная замена данных</span>
+<span class="kw">var</span> newData = #[
+    #{"NAME": <span class="str">"Новый"</span>, <span class="str">"AGE"</span>: <span class="num">20</span>, <span class="str">"SALARY"</span>: <span class="num">30000.00</span>, <span class="str">"BDATE"</span>: dt, <span class="str">"ACTIVE"</span>: <span class="num">1</span>}
+];
+db.writeAll(newData);
+
+<span class="cmt">// Сохранение</span>
+db.save();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Удаление записей</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>deleteRow</code></td><td><code>n</code></td><td>int (1/0)</td><td>Пометка записи как удалённой (1-based)</td></tr>
+<tr><td><code>pack</code></td><td>—</td><td>—</td><td>Физическое удаление всех помеченных записей</td></tr>
+<tr><td><code>isDeleted</code></td><td><code>n</code></td><td>int (0/1)</td><td>Проверка, помечена ли запись как удалённая</td></tr>
+<tr><td><code>undelete</code></td><td><code>n</code></td><td>int (1/0)</td><td>Восстановление удалённой записи</td></tr>
+</table>
+<p><strong>Важно:</strong> в DBF удаление работает в два этапа. Сначала запись <strong>помечается</strong> как удалённая (deleteRow), затем при вызове <strong>pack()</strong> помеченные записи физически удаляются.</p>
+<pre><code><span class="kw">var</span> db = dbffile();
+db.open(<span class="str">"C:/data/employees.dbf"</span>);
+
+<span class="cmt">// Пометить запись на удаление</span>
+db.deleteRow(<span class="num">5</span>);
+
+<span class="cmt">// Проверить статус</span>
+print(db.isDeleted(<span class="num">5</span>));  <span class="cmt">// 1</span>
+print(db.isDeleted(<span class="num">1</span>));  <span class="cmt">// 0</span>
+
+<span class="cmt">// Восстановить если нужно</span>
+db.undelete(<span class="num">5</span>);
+print(db.isDeleted(<span class="num">5</span>));  <span class="cmt">// 0</span>
+
+<span class="cmt">// Пометить снова</span>
+db.deleteRow(<span class="num">5</span>);
+
+<span class="cmt">// Физически удалить все помеченные</span>
+db.pack();
+print(db.recordCount());  <span class="cmt">// стало меньше</span>
+
+db.save();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Метаданные полей</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>fieldCount</code></td><td>—</td><td>int</td><td>Количество полей</td></tr>
+<tr><td><code>fields</code></td><td>—</td><td>array of tuple</td><td>Описания полей: {name, type, length, decimals}</td></tr>
+<tr><td><code>fieldMeta</code></td><td>—</td><td>array of tuple</td><td>Алиас fields()</td></tr>
+<tr><td><code>fieldNames</code></td><td>—</td><td>array of string</td><td>Массив имён полей</td></tr>
+<tr><td><code>getEncoding</code></td><td>—</td><td>int</td><td>Текущая кодировка (1251 или 866)</td></tr>
+<tr><td><code>setEncoding</code></td><td><code>enc</code></td><td>—</td><td>Установка кодировки (1251 или 866)</td></tr>
+</table>
+<pre><code><span class="kw">var</span> db = dbffile();
+db.open(<span class="str">"C:/data/employees.dbf"</span>);
+
+<span class="cmt">// Количество полей и записей</span>
+print(<span class="str">"Полей: "</span> + db.fieldCount());
+print(<span class="str">"Записей: "</span> + db.recordCount());
+
+<span class="cmt">// Имена полей</span>
+<span class="kw">var</span> names = db.fieldNames();
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i < names.size(); i++) {
+    print(<span class="str">"  "</span> + names[i]);
+}
+
+<span class="cmt">// Полные описания полей</span>
+<span class="kw">var</span> meta = db.fields();
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i < meta.size(); i++) {
+    print(<span class="str">"  "</span> + meta[i].name
+        + <span class="str">" : "</span> + meta[i].type
+        + <span class="str">"("</span> + meta[i].length + <span class="str">","</span> + meta[i].decimals + <span class="str">")"</span>);
+}
+
+<span class="cmt">// Кодировка</span>
+print(<span class="str">"Кодировка: "</span> + db.getEncoding());  <span class="cmt">// 1251</span>
+db.setEncoding(<span class="num">866</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Поиск записей</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>locate</code></td><td><code>fieldName, value</code></td><td>int</td><td>Поиск по значению поля. Возвращает номер записи (1-based) или 0 если не найдено. Перемещает указатель</td></tr>
+</table>
+<pre><code><span class="kw">var</span> db = dbffile();
+db.open(<span class="str">"C:/data/employees.dbf"</span>);
+
+<span class="cmt">// Найти запись с именем "Иван"</span>
+<span class="kw">var</span> rec = db.locate(<span class="str">"NAME"</span>, <span class="str">"Иван"</span>);
+<span class="kw">if</span> (rec > <span class="num">0</span>) {
+    print(<span class="str">"Найдена запись #"</span> + rec);
+    <span class="kw">var</span> row = db.currentRow();
+    print(row);
+} <span class="kw">else</span> {
+    print(<span class="str">"Не найдено"</span>);
+}
+
+<span class="cmt">// Поиск с навигацией — найти все записи</span>
+db.rewind();
+<span class="kw">while</span> (db.next()) {
+    <span class="kw">var</span> row = db.currentRow();
+    <span class="kw">if</span> (row[<span class="str">"AGE"</span>] > <span class="num">30</span>) {
+        print(row[<span class="str">"NAME"</span>] + <span class="str">" — "</span> + row[<span class="str">"AGE"</span>]);
+    }
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Пример: создание базы данных</h2>
+<pre><code><span class="kw">if</span> (!loadPlugin(<span class="str">"plugins/dbf.dll"</span>)) { system.exit(<span class="num">1</span>); }
+
+<span class="kw">var</span> db = dbffile();
+
+<span class="cmt">// Определение структуры</span>
+<span class="kw">var</span> fields = #[
+    #{"name": <span class="str">"CODE"</span>,    "type": <span class="str">"N"</span>, "length": <span class="num">6</span>,  "decimals": <span class="num">0</span>},
+    #{"name": <span class="str">"NAME"</span>,    "type": <span class="str">"C"</span>, "length": <span class="num">50</span>, "decimals": <span class="num">0</span>},
+    #{"name": <span class="str">"PRICE"</span>,   "type": <span class="str">"N"</span>, "length": <span class="num">12</span>, "decimals": <span class="num">2</span>},
+    #{"name": <span class="str">"INSTOCK"</span>, "type": <span class="str">"N"</span>, "length": <span class="num">8</span>,  "decimals": <span class="num">0</span>},
+    #{"name": <span class="str">"ACTIVE"</span>,  "type": <span class="str">"L"</span>, "length": <span class="num">1</span>,  "decimals": <span class="num">0</span>}
+];
+
+db.create(<span class="str">"C:/data/products.dbf"</span>, fields);
+print(<span class="str">"Файл создан!"</span>);
+
+<span class="cmt">// Добавление товаров</span>
+db.append(<span class="num">1001</span>, <span class="str">"Ноутбук ASUS"</span>,     <span class="num">54990.00</span>, <span class="num">15</span>, <span class="num">1</span>);
+db.append(<span class="num">1002</span>, <span class="str">"Монитор Samsung"</span>,  <span class="num">23990.50</span>, <span class="num">8</span>,  <span class="num">1</span>);
+db.append(<span class="num">1003</span>, <span class="str">"Клавиатура Logi"</span>, <span class="num">2490.00</span>,  <span class="num">42</span>, <span class="num">1</span>);
+db.append(<span class="num">1004</span>, <span class="str">"Мышь A4Tech"</span>,     <span class="num">590.00</span>,   <span class="num">100</span>,<span class="num">0</span>);
+
+db.save();
+print(<span class="str">"Данные сохранены!"</span>);
+print(<span class="str">"Записей: "</span> + db.recordCount());  <span class="cmt">// 4</span>
+
+db.close();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Пример: чтение и обработка</h2>
+<pre><code><span class="kw">var</span> db = dbffile();
+db.open(<span class="str">"C:/data/products.dbf"</span>);
+
+<span class="cmt">// Прочитать все записи</span>
+<span class="kw">var</span> products = db.readAll();
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i < products.size(); i++) {
+    <span class="kw">var</span> p = products[i];
+    print(p[<span class="str">"CODE"</span>] + <span class="str">" | "</span>
+        + p[<span class="str">"NAME"</span>] + <span class="str">" | "</span>
+        + p[<span class="str">"PRICE"</span>] + <span class="str">" руб."</span>);
+}
+
+<span class="cmt">// Найти товары дороже 10000</span>
+print(<span class="str">"\nДорогие товары:"</span>);
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i < products.size(); i++) {
+    <span class="kw">if</span> (products[i][<span class="str">"PRICE"</span>] > <span class="num">10000</span>) {
+        print(<span class="str">"  "</span> + products[i][<span class="str">"NAME"</span>]);
+    }
+}
+
+<span class="cmt">// Структура таблицы</span>
+<span class="kw">var</span> meta = db.fields();
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i < meta.size(); i++) {
+    print(meta[i].name + <span class="str">": тип="</span> + meta[i].type
+        + <span class="str">" длина="</span> + meta[i].length);
+}
+
+db.close();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Пример: удаление и упаковка</h2>
+<pre><code><span class="kw">var</span> db = dbffile();
+db.open(<span class="str">"C:/data/products.dbf"</span>);
+
+<span class="cmt">// Удалить товар с кодом 1004</span>
+<span class="kw">var</span> rec = db.locate(<span class="str">"CODE"</span>, <span class="str">"1004"</span>);
+<span class="kw">if</span> (rec > <span class="num">0</span>) {
+    db.deleteRow(rec);
+    print(<span class="str">"Запись #"</span> + rec + <span class="str">" помечена на удаление"</span>);
+}
+
+<span class="cmt">// Проверить</span>
+print(<span class="str">"Удалена: "</span> + db.isDeleted(rec));  <span class="cmt">// 1</span>
+
+<span class="cmt">// Восстановить если ошиблись</span>
+<span class="cmt">// db.undelete(rec);</span>
+
+<span class="cmt">// Физически удалить</span>
+db.pack();
+print(<span class="str">"Осталось записей: "</span> + db.recordCount());
+
+db.save();
+db.close();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Пример: копирование данных</h2>
+<pre><code><span class="kw">var</span> db = dbffile();
+
+<span class="cmt">// Открыть исходный файл</span>
+db.open(<span class="str">"C:/data/source.dbf"</span>);
+<span class="kw">var</span> data = db.readAll();
+<span class="kw">var</span> meta = db.fields();
+db.close();
+
+<span class="cmt">// Создать новый файл с той же структурой</span>
+db.create(<span class="str">"C:/data/copy.dbf"</span>, meta);
+db.writeAll(data);
+db.save();
+db.close();
+
+print(<span class="str">"Скопировано записей: "</span> + data.size());</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Обработка ошибок</h2>
+<pre><code><span class="kw">var</span> db = dbffile();
+
+<span class="cmt">// Проверка открытия</span>
+<span class="kw">if</span> (!db.open(<span class="str">"C:/data/missing.dbf"</span>)) {
+    print(<span class="str">"Файл не найден или повреждён!"</span>);
+    system.exit(<span class="num">1</span>);
+}
+
+<span class="cmt">// Проверка после операций</span>
+<span class="kw">var</span> ok = db.append(<span class="str">"test"</span>, <span class="num">123</span>);
+<span class="kw">if</span> (!ok) {
+    print(<span class="str">"Ошибка записи!"</span>);
+}
+
+<span class="cmt">// Проверка чтения</span>
+<span class="kw">var</span> row = db.row(<span class="num">999</span>);
+<span class="kw">if</span> (row.isnull()) {
+    print(<span class="str">"Запись не найдена!"</span>);
+}
+
+<span class="cmt">// Проверка текущего состояния</span>
+print(<span class="str">"Открыт: "</span> + db.isOpen());
+print(<span class="str">"Изменён: "</span> + db.isModified());
+
+db.close();</code></pre>
+</div>
+
+<footer><a href="plugins.html">← К списку плагинов</a></footer>
+</div>
+</body>
+</html>

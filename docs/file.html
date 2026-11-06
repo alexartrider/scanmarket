@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Модуль file — Script</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Модуль file</h1><p>Работа с файловой системой — доступен глобально</p><div class="lang-switch"><a class="active" href="file.html">RU</a><a href="en/file.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Главная</a> / file</p>
+
+<div class="doc-section">
+<h2>Константы</h2>
+<h3>Кодировки</h3>
+<table>
+<tr><th>Константа</th><th>Описание</th></tr>
+<tr><td><code>file.ENC_UTF16_LE</code></td><td>UTF-16 Little Endian</td></tr>
+<tr><td><code>file.ENC_UTF16_BE</code></td><td>UTF-16 Big Endian</td></tr>
+<tr><td><code>file.ENC_UTF8_BOM</code></td><td>UTF-8 с BOM</td></tr>
+<tr><td><code>file.ENC_UTF8_NO_BOM</code></td><td>UTF-8 без BOM</td></tr>
+<tr><td><code>file.ENC_CP1251</code></td><td>Windows-1251</td></tr>
+<tr><td><code>file.ENC_UNKNOWN</code></td><td>Автоопределение</td></tr>
+</table>
+<h3>Разделители путей</h3>
+<table>
+<tr><td><code>file.sep</code></td><td>Основной разделитель (\ на Windows, / на Linux)</td></tr>
+<tr><td><code>file.altsep</code></td><td>Альтернативный (/ на Windows)</td></tr>
+<tr><td><code>file.pathsep</code></td><td>Разделитель PATH (; / :)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Проверка существования и тип</h2>
+<table>
+<tr><th>Функция</th><th>Описание</th></tr>
+<tr><td><code>file.exists(path)</code></td><td>Файл или директория существует</td></tr>
+<tr><td><code>file.isfile(path)</code></td><td>Обычный файл</td></tr>
+<tr><td><code>file.isdir(path)</code></td><td>Директория</td></tr>
+<tr><td><code>file.issymlink(path)</code></td><td>Символическая ссылка</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Информация о файле</h2>
+<table>
+<tr><th>Функция</th><th>Описание</th></tr>
+<tr><td><code>file.size(path)</code></td><td>Размер в байтах</td></tr>
+<tr><td><code>file.mtime(path)</code></td><td>Время модификации</td></tr>
+<tr><td><code>file.ctime(path)</code></td><td>Windows: время создания; POSIX: время изменения метаданных (ctime), не время создания</td></tr>
+<tr><td><code>file.atime(path)</code></td><td>Время доступа</td></tr>
+<tr><td><code>file.isreadonly(path)</code></td><td>Атрибут «Только чтение»</td></tr>
+<tr><td><code>file.ishidden(path)</code></td><td>Атрибут «Скрытый»</td></tr>
+</table>
+<p>Методы времени возвращают локальную дату/время типа <code>DateTime</code> с точностью до секунды. На POSIX файловые системы обычно не предоставляют переносимый атрибут времени создания.</p>
+</div>
+
+<div class="doc-section">
+<h2>Чтение</h2>
+<table>
+<tr><th>Функция</th><th>Описание</th></tr>
+<tr><td><code>file.read(path, [enc])</code></td><td>Читает как строку (по умолчанию кодировка определяется автоматически; BOM пропускается, если он есть)</td></tr>
+<tr><td><code>file.readlines(path)</code></td><td>Массив строк: делит по <code>\n</code>, у каждой строки срезает завершающий <code>\r</code> (CRLF читается корректно). Пустые строки сохраняются; завершающий перевод строки НЕ даёт пустого хвостового элемента (как Python <code>str.splitlines()</code>); пустой файл → <code>[]</code>. ⚠️ <code>str.split(text, "\n")</code> (regex) для завершающего перевода строки возвращает хвостовую пустую строку — для построчной работы используйте <code>readlines</code></td></tr>
+<tr><td><code>file.readmeta(path)</code></td><td>Читает файл и возвращает кортеж <code>#{"text", "enc", "bom"}</code>: текст + определённая кодировка (<code>file.ENC_*</code>) + наличие BOM. Пустой/отсутствующий файл → <code>enc=UTF8_NO_BOM</code>, <code>text=""</code>; нераспознанная кодировка (<code>ENC_UNKNOWN</code>) → <code>text=""</code> (содержимое доступно через <code>file.readbytes</code>)</td></tr>
+<tr><td><code>file.readbytes(path)</code></td><td>Массив int64 значений (каждый элемент — байт)</td></tr>
+</table>
+<p><b>Автоопределение кодировки</b> (общее для <code>read</code> и <code>readmeta</code>): BOM (UTF-8/UTF-16 LE/BE) → по BOM; иначе валидный UTF-8 → <code>UTF8_NO_BOM</code> (в т.ч. чистый ASCII — безопасно, ASCII ⊂ UTF-8); иначе похожий на CP1251 → <code>CP1251</code>; иначе <code>UNKNOWN</code>. UTF-16 LE без BOM определяется по нулевым байтам. BOM пропускается при чтении только если он фактически есть (BOM-less UTF-16 декодируется без смещения).</p>
+</div>
+
+<div class="doc-section">
+<h2>Запись</h2>
+<p><code>file.write()</code> и <code>file.append()</code> по умолчанию пишут UTF-16 LE (сохранено для совместимости). Для исходников и конфигов используйте <code>file.writeatom()</code> — по умолчанию UTF-8 без BOM.</p>
+<table>
+<tr><th>Функция</th><th>Описание</th></tr>
+<tr><td><code>file.write(path, text, [enc])</code></td><td>Запись строки (UTF-16 LE по умолчанию)</td></tr>
+<tr><td><code>file.writebytes(path, data)</code></td><td>Запись массива байт или ByteArray</td></tr>
+<tr><td><code>file.append(path, text, [enc])</code></td><td>Дописывание в конец файла</td></tr>
+<tr><td><code>file.writeatom(path, text, [opts])</code></td><td>Атомарная запись: временный файл + замена. По умолчанию UTF-8 без BOM. → <code>true</code>, при ошибке — исключение</td></tr>
+<tr><td><code>file.writeLines(path, arr, [opts])</code></td><td>Атомарная запись массива строк (join + <code>\n</code> в конце). Аналог Python-цикла записи строк</td></tr>
+<tr><td><code>file.appendLines(path, arr, [opts])</code></td><td>Атомарное дописывание массива строк в конец файла</td></tr>
+</table>
+<h3>Опции file.writeatom</h3>
+<pre><code>file.writeatom(path, text, #{
+    <span class="str">"enc"</span>:       <span class="str">"utf8"</span> | <span class="str">"utf8-nobom"</span> | <span class="str">"utf16"</span> | <span class="str">"cp1251"</span>,  <span class="cmt">// по умолчанию utf8-nobom</span>
+    <span class="str">"overwrite"</span>: <span class="num">1</span> | <span class="num">0</span>,          <span class="cmt">// 0 — бросить исключение, если файл уже существует</span>
+    <span class="str">"backup"</span>:    <span class="num">1</span> | <span class="str">"путь.bak"</span>, <span class="cmt">// создать резервную копию до замены (по умолчанию без бэкапа)</span>
+    <span class="str">"verify"</span>:    <span class="num">1</span> | <span class="num">0</span>           <span class="cmt">// прочитать файл после замены и сверить содержимое (по умолчанию 1)</span>
+});</code></pre>
+<p>При ошибке верификации файл откатывается из резервной копии, если она была включена.</p>
+</div>
+
+<div class="doc-section">
+<h2>Сравнение</h2>
+<table>
+<tr><th>Функция</th><th>Описание</th></tr>
+<tr><td><code>file.diff(old, new)</code></td><td>Построчный diff (LCS) двух строк → массив строк: <code>" общая строка"</code>, <code>"-удалённая"</code>, <code>"+добавленная"</code></td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Операции с файлами</h2>
+<table>
+<tr><th>Функция</th><th>Описание</th></tr>
+<tr><td><code>file.copy(src, dst)</code></td><td>Копирование</td></tr>
+<tr><td><code>file.move(src, dst)</code></td><td>Перемещение/переименование</td></tr>
+<tr><td><code>file.remove(path)</code></td><td>Удаление</td></tr>
+<tr><td><code>file.touch(path)</code></td><td>Обновление mtime (или создание)</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Директории</h2>
+<table>
+<tr><th>Функция</th><th>Описание</th></tr>
+<tr><td><code>file.mkdir(path)</code></td><td>Создание директории</td></tr>
+<tr><td><code>file.mkdirrecursive(path)</code></td><td>Создание со всеми промежуточными</td></tr>
+<tr><td><code>file.rmdir(path)</code></td><td>Удаление пустой директории</td></tr>
+<tr><td><code>file.rmdirrecursive(path)</code></td><td>Удаление со содержимым (!)</td></tr>
+<tr><td><code>file.dir([path, [pattern]])</code></td><td>Список файлов/папок</td></tr>
+<tr><td><code>file.dirrecursive([path, [pattern]])</code></td><td>Рекурсивный обход</td></tr>
+<tr><td><code>file.glob(pattern, [root])</code></td><td>Поиск по шаблону (аналог Python <code>glob</code>): <code>*.prg</code>, <code>src/*.prg</code>, <code>src/**/*.prg</code> (рекурсивно). В <code>dir</code> маска проверяется только по имени файла</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Работа с путями</h2>
+<table>
+<tr><th>Функция</th><th>Описание</th></tr>
+<tr><td><code>file.basename(path)</code></td><td>Имя файла с расширением</td></tr>
+<tr><td><code>file.filename(path)</code></td><td>Имя файла без расширения</td></tr>
+<tr><td><code>file.dirname(path)</code></td><td>Путь к родительской директории</td></tr>
+<tr><td><code>file.extension(path)</code></td><td>Расширение (с точкой)</td></tr>
+<tr><td><code>file.absolute(path)</code></td><td>Абсолютный путь</td></tr>
+<tr><td><code>file.relative(path, base)</code></td><td>Относительный путь от base</td></tr>
+<tr><td><code>file.join(p1, p2, ...)</code></td><td>Безопасное склеивание путей</td></tr>
+<tr><td><code>file.normalize(path)</code></td><td>Нормализация (убирает .. и лишние /)</td></tr>
+<tr><td><code>file.split(path)</code></td><td>Разделение на (dir, file)</td></tr>
+<tr><td><code>file.splitext(path)</code></td><td>Разделение на (name, ext)</td></tr>
+<tr><td><code>file.expanduser(path)</code></td><td>Замена ~ на домашнюю директорию</td></tr>
+<tr><td><code>file.realpath(path)</code></td><td>Канонический путь</td></tr>
+<tr><td><code>file.samefile(p1, p2)</code></td><td>Один и тот же файл</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Системные пути и окружение</h2>
+<table>
+<tr><th>Функция</th><th>Описание</th></tr>
+<tr><td><code>file.homedir()</code></td><td>Домашняя директория</td></tr>
+<tr><td><code>file.tempdir()</code></td><td>Временная директория</td></tr>
+<tr><td><code>file.tempfile()</code></td><td>Временный файл</td></tr>
+<tr><td><code>file.getcwd()</code></td><td>Текущая рабочая директория</td></tr>
+<tr><td><code>file.chdir(path)</code></td><td>Смена рабочей директории</td></tr>
+<tr><td><code>file.getenv(name)</code></td><td>Переменная окружения</td></tr>
+<tr><td><code>file.setenv(name, val)</code></td><td>Установка переменной окружения</td></tr>
+<tr><td><code>file.environ()</code></td><td>Все переменные окружения</td></tr>
+<tr><td><code>file.space(path)</code></td><td>Информация о диске</td></tr>
+</table>
+</div>
+
+<footer><a href="index.html">← На главную</a></footer>
+</div>
+</body>
+</html>

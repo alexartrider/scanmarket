@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Плагин WebSocket — Script</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header><h1>Плагин WebSocket</h1><p>WebSocket клиент — двусторонняя связь в реальном времени, текстовые и бинарные сообщения, ping/pong</p><div class="lang-switch"><a class="active" href="websocket.html">RU</a><a href="en/websocket.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Главная</a> / <a href="plugins.html">Плагины</a> / WebSocket</p>
+
+<div class="doc-section">
+<h2>Зависимости</h2>
+<p>Требуются OpenSSL 3: <code>libssl-3-x64.dll</code>, <code>libcrypto-3-x64.dll</code> (размещаются рядом с бинарником).</p>
+<p>Входящие текстовые и бинарные сообщения собираются из WebSocket-фрагментов; общий размер сообщения ограничен 64 MiB.</p>
+</div>
+
+<div class="doc-section">
+<h2>Загрузка плагина</h2>
+<pre><code>loadPlugin(<span class="str">"plugins/websocket.dll"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Создание объекта</h2>
+<pre><code><span class="kw">var</span> ws = WebSocket();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Методы</h2>
+<table>
+<tr><th>Метод</th><th>Аргументы</th><th>Возвращает</th><th>Описание</th></tr>
+<tr><td><code>connect</code></td><td><code>url</code></td><td>bool</td><td>Подключение к WebSocket-серверу (ws:// или wss://)</td></tr>
+<tr><td><code>disconnect</code></td><td>—</td><td>bool</td><td>Отключение без отправки close-фрейма</td></tr>
+<tr><td><code>isconnected</code></td><td>—</td><td>bool</td><td>Проверка состояния подключения</td></tr>
+<tr><td><code>send</code></td><td><code>text</code></td><td>bool</td><td>Отправка текстового сообщения</td></tr>
+<tr><td><code>sendBinary</code></td><td><code>data</code></td><td>bool</td><td>Отправка бинарных данных (ByteArray или строка)</td></tr>
+<tr><td><code>recv</code></td><td>—</td><td>string|null</td><td>Получение следующего текстового сообщения</td></tr>
+<tr><td><code>recvBinary</code></td><td>—</td><td>ByteArray|null</td><td>Получение следующего бинарного сообщения</td></tr>
+<tr><td><code>ping</code></td><td>—</td><td>bool</td><td>Отправка ping-фрейма</td></tr>
+<tr><td><code>close</code></td><td>—</td><td>bool</td><td>Корректное закрытие соединения (close-фрейм)</td></tr>
+<tr><td><code>hasMessage</code></td><td>—</td><td>bool</td><td>Есть ли сообщения в очереди</td></tr>
+<tr><td><code>messageCount</code></td><td>—</td><td>int</td><td>Количество сообщений в очереди</td></tr>
+<tr><td><code>clearMessages</code></td><td>—</td><td>bool</td><td>Очистка очереди сообщений</td></tr>
+<tr><td><code>setTimeout</code></td><td><code>[ms]</code></td><td>int</td><td>Таймаут чтения (мсек). Без аргументов — геттер</td></tr>
+<tr><td><code>lastError</code></td><td>—</td><td>string|null</td><td>Последняя ошибка</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Подключение</h2>
+<p>Поддерживается <code>ws://</code> (обычный) и <code>wss://</code> (SSL/TLS).</p>
+<pre><code><span class="kw">var</span> ws = WebSocket();
+
+<span class="cmt">// ws://</span>
+ws.connect(<span class="str">"ws://echo.websocket.events"</span>);
+
+<span class="cmt">// wss://</span>
+ws.connect(<span class="str">"wss://echo.websocket.events"</span>);
+
+<span class="cmt">// с портом</span>
+ws.connect(<span class="str">"ws://localhost:8080"</span>);
+
+<span class="cmt">// с путём</span>
+ws.connect(<span class="str">"wss://example.com/chat"</span>);
+
+print(ws.isconnected());  <span class="cmt">// 1</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Текстовые сообщения</h2>
+<pre><code><span class="kw">var</span> ws = WebSocket();
+ws.connect(<span class="str">"wss://echo.websocket.events"</span>);
+
+<span class="cmt">// Отправка</span>
+ws.send(<span class="str">"Привет, мир!"</span>);
+ws.send(<span class="str">"val=\(42)"</span>);
+
+<span class="cmt">// Получение</span>
+<span class="kw">var</span> msg = ws.recv();
+<span class="kw">if</span> (msg != null) {
+    print(<span class="str">"Получено: \(msg)"</span>);
+}
+
+<span class="cmt">// Проверка наличия сообщений</span>
+<span class="kw">if</span> (ws.hasMessage()) {
+    <span class="kw">var</span> next = ws.recv();
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Бинарные сообщения</h2>
+<pre><code><span class="kw">var</span> ws = WebSocket();
+ws.connect(<span class="str">"wss://echo.websocket.events"</span>);
+
+<span class="cmt">// Отправка бинарных данных (ByteArray)</span>
+<span class="kw">var</span> ba = ByteArray();
+ba.push(0x48);  <span class="cmt">// H</span>
+ba.push(0x65);  <span class="cmt">// e</span>
+ba.push(0x6C);  <span class="cmt">// l</span>
+ba.push(0x6C);  <span class="cmt">// l</span>
+ba.push(0x6F);  <span class="cmt">// o</span>
+ws.sendBinary(ba);
+
+<span class="cmt">// Получение бинарных данных</span>
+<span class="kw">var</span> data = ws.recvBinary();
+<span class="kw">if</span> (data != null) {
+    print(<span class="str">"Размер: \(data.size())"</span>);
+    print(<span class="str">"Первый байт: \(data[0])"</span>);
+}
+
+<span class="cmt">// Отправка строки как бинарных данных</span>
+ws.sendBinary(<span class="str">"raw bytes"</span>);</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Ping / Pong</h2>
+<p>Плагин автоматически отвечает на ping-фреймы сервера pong-фреймами.</p>
+<pre><code><span class="kw">var</span> ws = WebSocket();
+ws.connect(<span class="str">"wss://echo.websocket.events"</span>);
+
+<span class="cmt">// Ручная отправка ping</span>
+ws.ping();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Закрытие соединения</h2>
+<pre><code><span class="kw">var</span> ws = WebSocket();
+ws.connect(<span class="str">"wss://echo.websocket.events"</span>);
+
+<span class="cmt">// Корректное закрытие (отправляет close-фрейм)</span>
+ws.close();
+
+<span class="cmt">// Некорректное отключение (без close-фрейма)</span>
+ws.disconnect();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Очередь сообщений</h2>
+<pre><code><span class="kw">var</span> ws = WebSocket();
+ws.connect(<span class="str">"wss://echo.websocket.events"</span>);
+
+<span class="cmt">// Количество сообщений в очереди</span>
+print(ws.messageCount());
+
+<span class="cmt">// Есть ли сообщения</span>
+print(ws.hasMessage());  <span class="cmt">// 1 или 0</span>
+
+<span class="cmt">// Обработка всех сообщений</span>
+<span class="kw">while</span> (ws.hasMessage()) {
+    <span class="kw">var</span> msg = ws.recv();
+    print(msg);
+}
+
+<span class="cmt">// Очистка очереди</span>
+ws.clearMessages();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Таймаут</h2>
+<pre><code><span class="kw">var</span> ws = WebSocket();
+ws.connect(<span class="str">"wss://echo.websocket.events"</span>);
+
+<span class="cmt">// Установка таймаута чтения (мсек)</span>
+ws.setTimeout(5000);  <span class="cmt">// 5 секунд</span>
+
+<span class="cmt">// Получение текущего таймаута</span>
+<span class="kw">var</span> timeout = ws.setTimeout();  <span class="cmt">// геттер</span></code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Пример: Echo-клиент</h2>
+<pre><code>loadPlugin(<span class="str">"plugins/websocket.dll"</span>);
+
+<span class="kw">var</span> ws = WebSocket();
+
+<span class="kw">if</span> (ws.connect(<span class="str">"wss://echo.websocket.events"</span>)) {
+    print(<span class="str">"Подключено!"</span>);
+
+    <span class="cmt">// Отправка сообщений</span>
+    ws.send(<span class="str">"Привет!"</span>);
+    ws.send(<span class="str">"Echo test"</span>);
+
+    <span class="cmt">// Ожидание ответов</span>
+    system.sleep(2000);
+
+    <span class="kw">while</span> (ws.hasMessage()) {
+        <span class="kw">var</span> msg = ws.recv();
+        print(<span class="str">"Эхо: \(msg)"</span>);
+    }
+
+    ws.close();
+} <span class="kw">else</span> {
+    print(<span class="str">"Ошибка: \(ws.lastError())"</span>);
+}</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Пример: Получение бинарных данных</h2>
+<pre><code>loadPlugin(<span class="str">"plugins/websocket.dll"</span>);
+
+<span class="kw">var</span> ws = WebSocket();
+ws.connect(<span class="str">"wss://echo.websocket.events"</span>);
+
+<span class="cmt">// Отправка бинарных данных</span>
+<span class="kw">var</span> data = ByteArray();
+<span class="kw">for</span> (<span class="kw">var</span> i = 0; i &lt; 256; i++) {
+    data.push(i);
+}
+ws.sendBinary(data);
+
+system.sleep(1000);
+
+<span class="kw">var</span> received = ws.recvBinary();
+<span class="kw">if</span> (received != null) {
+    print(<span class="str">"Получено байт: \(received.size())"</span>);
+}
+
+ws.close();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Пример: Оработка ошибок</h2>
+<pre><code>loadPlugin(<span class="str">"plugins/websocket.dll"</span>);
+
+<span class="kw">var</span> ws = WebSocket();
+ws.setTimeout(5000);
+
+<span class="kw">if</span> (!ws.connect(<span class="str">"wss://invalid-host.example.com"</span>)) {
+    print(<span class="str">"Ошибка подключения: \(ws.lastError())"</span>);
+    <span class="kw">return</span>;
+}
+
+ws.send(<span class="str">"test"</span>);
+
+<span class="kw">if</span> (ws.recv() == null) {
+    print(<span class="str">"Нет ответа. Ошибка: \(ws.lastError())"</span>);
+}
+
+ws.close();</code></pre>
+</div>
+
+<div class="doc-section">
+<h2>Пример: Библиотека без SSL (только ws://)</h2>
+<p>Для подключения к серверам без шифрования:</p>
+<pre><code><span class="kw">var</span> ws = WebSocket();
+ws.connect(<span class="str">"ws://localhost:9001"</span>);</code></pre>
+<p>Для подключения к серверам с SSL:</p>
+<pre><code><span class="kw">var</span> ws = WebSocket();
+ws.connect(<span class="str">"wss://secure-server.com"</span>);</code></pre>
+</div>
+
+</div>
+</body>
+</html>

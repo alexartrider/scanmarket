@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QDbDirectoryView — Script</title>
+<link rel="stylesheet" href="style.css">
+<script>(function(){var p=location.pathname.split('/').pop(),q=location.search+location.hash,l=null;try{l=localStorage.getItem('qodeDocsLang')}catch(e){}var nav=((navigator.languages&&navigator.languages[0])||navigator.language||''),ru=/^ru\b/i.test(nav);if(l==='en'||(!l&&!ru)){location.replace('en/'+p+q)}})();</script>
+</head>
+<body>
+<header>
+<h1>QDbDirectoryView — Проводник</h1>
+<p>Иерархический или плоский просмотр данных с навигацией по папкам</p>
+<div class="lang-switch"><a class="active" href="dbgrid_directory.html">RU</a><a href="en/dbgrid_directory.html" onclick="try{localStorage.setItem('qodeDocsLang','en')}catch(e){}">EN</a></div>
+</header>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">Главная</a> / <a href="qt.html">QT</a> / QDbDirectoryView</p>
+
+<div class="doc-section">
+<h2>Описание</h2>
+<p><code>QDbDirectoryView</code> — комплексный виджет для навигации по иерархическим данным (папки, деревья). Включает в себя:</p>
+<ul>
+<li><strong>Таблицу данных</strong> (QDbGridView) для отображения записей</li>
+<li><strong>Панель навигации</strong> «хлебные крошки» для отображения текущего пути</li>
+<li><strong>Переключатель режимов</strong> — иерархический или плоский</li>
+</ul>
+
+<p>Таблица должна содержать поля:</p>
+<ul>
+<li><code>rowid</code> — уникальный идентификатор строки</li>
+<li><code>name</code> — наименование</li>
+<li><code>folder</code> — 1 если папка, 0 если файл/запись</li>
+<li><code>parent</code> — ID родительской папки (-1 для корня)</li>
+</ul>
+</div>
+
+<div class="doc-section">
+<h2>Свойства</h2>
+<table>
+<tr><th>Свойство</th><th>Тип</th><th>Описание</th></tr>
+<tr><td><code>tableName</code></td><td>string</td><td>Имя таблицы в базе данных</td></tr>
+<tr><td><code>directoryMode</code></td><td>bool</td><td>Режим проводника (иерархическая навигация)</td></tr>
+<tr><td><code>viewMode</code></td><td>int</td><td>0 = Hierarchical (иерархия), 1 = Flat (плоский)</td></tr>
+<tr><td><code>currentFolderId</code></td><td>int64</td><td>ID текущей папки (read-only)</td></tr>
+<tr><td><code>columns</code></td><td>string (JSON)</td><td>Описание колонок (как у QDbGridView)</td></tr>
+<tr><td><code>readOnly</code></td><td>bool</td><td>Только для чтения</td></tr>
+<tr><td><code>showGridLines</code></td><td>bool</td><td>Показывать линии сетки</td></tr>
+<tr><td><code>autoOpen</code></td><td>bool</td><td>Автоматически открывать при создании</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Методы</h2>
+<h3>Навигация</h3>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>navigateTo(folderId)</code></td><td>Перейти в папку по ID</td></tr>
+<tr><td><code>navigateToRoot()</code></td><td>Перейти в корень</td></tr>
+<tr><td><code>navigateUp()</code></td><td>Перейти на уровень вверх</td></tr>
+<tr><td><code>isRoot()</code></td><td>Находится ли в корне (bool)</td></tr>
+</table>
+
+<h3>Данные</h3>
+<table>
+<tr><th>Метод</th><th>Описание</th></tr>
+<tr><td><code>open()</code></td><td>Открыть таблицу. Возвращает true при успехе</td></tr>
+<tr><td><code>close()</code></td><td>Закрыть таблицу</td></tr>
+<tr><td><code>refresh()</code></td><td>Обновить данные</td></tr>
+<tr><td><code>isActive()</code></td><td>Открыта ли таблица (bool)</td></tr>
+<tr><td><code>currentRow()</code></td><td>Текущая строка как QVariantMap</td></tr>
+<tr><td><code>currentIsFolder()</code></td><td>Текущая запись — папка (bool)</td></tr>
+<tr><td><code>currentRowId()</code></td><td>ID текущей строки (int64)</td></tr>
+<tr><td><code>gridView()</code></td><td>Доступ к внутреннему QDbGridView</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Сигналы</h2>
+<table>
+<tr><th>Сигнал</th><th>Аргументы</th><th>Описание</th></tr>
+<tr><td><code>rowDoubleClicked</code></td><td>int row, int64 rowId, bool isFolder</td><td>Двойной клик по строке</td></tr>
+<tr><td><code>currentRowChanged</code></td><td>int row, int64 rowId, bool isFolder</td><td>Смена текущей строки</td></tr>
+<tr><td><code>folderChanged</code></td><td>int64 folderId, string folderName</td><td>Смена папки</td></tr>
+<tr><td><code>beforeOpen</code></td><td>—</td><td>Перед открытием</td></tr>
+<tr><td><code>afterOpen</code></td><td>—</td><td>После открытия</td></tr>
+<tr><td><code>beforeClose</code></td><td>—</td><td>Перед закрытием</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Горячие клавиши</h2>
+<table>
+<tr><th>Клавиша</th><th>Действие</th></tr>
+<tr><td><code>Backspace</code></td><td>Перейти на уровень вверх (в иерархическом режиме)</td></tr>
+<tr><td><code>Enter (двойной клик)</code></td><td>Войти в папку или открыть запись</td></tr>
+</table>
+</div>
+
+<div class="doc-section">
+<h2>Примеры</h2>
+
+<h3>Базовый проводник</h3>
+<pre><code><span class="kw">var</span> dir = qt.create(<span class="str">"QDbDirectoryView"</span>, form);
+dir.tableName = <span class="str">"files"</span>;
+dir.directoryMode = <span class="kw">true</span>;
+dir.viewMode = <span class="num">0</span>;  <span class="cmt">// Hierarchical</span>
+dir.columns = <span class="str">'[
+    {"field":"rowid","caption":"ID","width":50},
+    {"field":"name","caption":"Наименование","width":300},
+    {"field":"folder","caption":"Тип","width":80}
+]'</span>;
+dir.align = <span class="str">"alClient"</span>;
+dir.autoOpen = <span class="kw">true</span>;</code></pre>
+
+<h3>Плоский режим (без навигации)</h3>
+<pre><code><span class="kw">var</span> dir = qt.create(<span class="str">"QDbDirectoryView"</span>, form);
+dir.tableName = <span class="str">"employees"</span>;
+dir.directoryMode = <span class="kw">false</span>;
+dir.align = <span class="str">"alClient"</span>;
+dir.open();</code></pre>
+
+<h3>Обработка событий</h3>
+<pre><code><span class="cmt">// Двойной клик — открыть папку или файл</span>
+dir.rowDoubleClicked = <span class="kw">function</span>(sender, row, rowId, isFolder) {
+    <span class="kw">if</span> (isFolder) {
+        sender.navigateTo(rowId);
+    } <span class="kw">else</span> {
+        print(<span class="str">"Открыть файл: \(rowId)"</span>);
+    }
+};
+
+<span class="cmt">// Смена папки</span>
+dir.folderChanged = <span class="kw">function</span>(sender, folderId, folderName) {
+    form.windowTitle = <span class="str">"Проводник — \(folderName)"</span>;
+};</code></pre>
+
+<h3>Ручное управление навигацией</h3>
+<pre><code>dir.open();                 <span class="cmt">// открыть</span>
+dir.navigateTo(42);         <span class="cmt">// войти в папку 42</span>
+dir.navigateUp();           <span class="cmt">// вернуться назад</span>
+dir.navigateToRoot();       <span class="cmt">// в корень</span>
+<span class="kw">var</span> id = dir.currentRowId();  <span class="cmt">// текущий ID</span>
+dir.refresh();              <span class="cmt">// обновить</span></code></pre>
+</div>
+
+<footer><a href="qt.html">← QT интеграция</a></footer>
+</div>
+</body>
+</html>
