@@ -12,7 +12,7 @@
 // Вывод тестов идёт в общий лог qt/bind/log; итог раннера — в конце.
 
 var sampleDir = file.dirname(system.getcommandline().args[0]);
-var qodeqt    = file.normalize(file.join(sampleDir, "..", "bin", "qodeqt.exe"));
+var qodeqt    = file.normalize(system.getcommandline().app);   // текущий исполняемый файл qodeqt/qodegui
 var timeoutMs = 120000;
 
 // аргументы: имена/шаблоны тестов + опция --timeout=
