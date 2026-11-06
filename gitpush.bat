@@ -1,5 +1,4 @@
 @echo off
-setlocal enabledelayedexpansion
 rem ============================================================
 rem  ScanMarket: Git commit + push helper
 rem  Usage:
@@ -15,26 +14,21 @@ cd /d "%~dp0"
 
 echo [1/4] git add -A ...
 git add -A
-if errorlevel 1 (
+if not %errorlevel%==0 (
     echo ERROR: git add failed.
     exit /b 1
 )
 
 echo [2/4] git commit -m "%MSG%" ...
 git commit -m "%MSG%"
-if errorlevel 1 (
-    echo Note: nothing to commit (or commit was not created).
-    goto :push
-)
+set "COMMIT_RC=%errorlevel%"
 
-:push
 echo [3/4] git push ...
 git push
-
-if errorlevel 1 (
+if not %errorlevel%==0 (
     echo.
     echo WARNING: push failed. Check NAS/SSH access, the remote URL
-    echo (git remote -v) and that the repository exists on the server.
+    echo ^(git remote -v^) and that the repository exists on the server.
     exit /b 1
 )
 
@@ -42,4 +36,6 @@ echo [4/4] Done. Current status:
 git status -sb
 echo.
 echo Pushed: "%MSG%"
-endlocal
+if not "%COMMIT_RC%"=="0" echo (note: no new commit was created - nothing changed)
+
+exit /b 0
