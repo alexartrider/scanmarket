@@ -27,6 +27,10 @@
 <tr><td><code>json.stringify(value)</code></td><td>Value → JSON string (compact form)</td></tr>
 <tr><td><code>json.stringify(value, true)</code></td><td>Pretty-printed output with indentation (4 spaces)</td></tr>
 <tr><td><code>json.stringify(value, true, indent)</code></td><td>Pretty-printed output with the given indentation (number of spaces)</td></tr>
+<tr><td><code>json.formatText(jsonText, [indent])</code></td><td>Format JSON text directly through RapidJSON DOM, without round-tripping types through ScriptValue</td></tr>
+<tr><td><code>json.getText(jsonText, path)</code></td><td>Get a JSON value by path as a JSON fragment, preserving boolean/object/array types</td></tr>
+<tr><td><code>json.replaceText(jsonText, path, replacementJsonText, [pretty], [indent])</code></td><td>Replace a value by path with a JSON fragment while preserving JSON types</td></tr>
+<tr><td><code>json.setFieldText(jsonText, objectPath, key, replacementJsonText)</code></td><td>Set an object field by path (including in an empty QRXL cell) without passing through ScriptValue</td></tr>
 <tr><td><code>json.validate(string)</code></td><td>Checks whether the JSON is valid → <code>true</code> / <code>false</code></td></tr>
 </table>
 </div>

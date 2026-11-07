@@ -56,8 +56,35 @@ function loadConfig(path) export {
             "stopTrailing": 5,         // остановить прокрутку после этого числа шагов без новых избранных карточек
             "chunk": 12                // размер порции карточек при запросе через CDP
         },
+        "wildberries": #{
+            "favoritesUrl": "https://www.wildberries.ru/lk/favorites",
+            "dbPath": "private_data/wildberries/wildberries.sqlite",
+            "waitLoginSeconds": 300,   // сколько ждать входа/страницы избранного
+            "pageWaitSeconds": 25,     // сколько ждать полной загрузки страницы
+            "maxScrollSteps": 40,      // максимум шагов прокрутки избранного
+            "stopTrailing": 5,         // остановить прокрутку после этого числа шагов без новых избранных карточек
+            "chunk": 12                // размер порции карточек при запросе через CDP
+        },
+        "yandexmarket": #{
+            "favoritesUrl": "https://market.yandex.ru/my/wishlist",
+            "dbPath": "private_data/yandexmarket/yandexmarket.sqlite",
+            "waitLoginSeconds": 300,   // сколько ждать входа/страницы избранного
+            "pageWaitSeconds": 25,     // сколько ждать полной загрузки страницы
+            "maxScrollSteps": 40,      // максимум шагов прокрутки избранного
+            "stopTrailing": 5,         // остановить прокрутку после этого числа шагов без новых избранных карточек
+            "chunk": 12                // размер порции карточек при запросе через CDP
+        },
         "db": #{
             "path": "private_data/ozon/ozon.sqlite"
+        },
+        "cronWb": #{
+            "taskName": "ScanMarketWildberries", // имя task планировщика Windows
+            "mode": "daily",              // daily | hourly
+            "start": "06:00",             // время для daily (/sc daily /st)
+            "everyHours": 6,              // шаг для hourly (/sc hourly /mo)
+            "exe": "bin/qodeqt.exe",          // исполнитель для task
+            "script": "wildberries_scan.prg", // скрипт
+            "bat": "scan_wildberries.bat"     // BAT-файл запуска
         },
         "cron": #{
             "taskName": "ScanMarketOzon", // имя task планировщика Windows
@@ -67,6 +94,15 @@ function loadConfig(path) export {
             "exe": "bin/qodeqt.exe",          // исполнитель для task
             "script": "ozon_scan.prg",    // скрипт
             "bat": "scan_ozon.bat"        // BAT-файл запуска (переход в каталог проекта и запуск скрипта)
+        },
+        "cronYm": #{
+            "taskName": "ScanMarketYandexMarket", // имя task планировщика Windows
+            "mode": "daily",              // daily | hourly
+            "start": "06:00",             // время для daily (/sc daily /st)
+            "everyHours": 6,              // шаг для hourly (/sc hourly /mo)
+            "exe": "bin/qodeqt.exe",          // исполнитель для task
+            "script": "yandexmarket_scan.prg", // скрипт
+            "bat": "scan_yandexmarket.bat"     // BAT-файл запуска (переход в каталог проекта и запуск скрипта)
         }
     };
     if (!file.exists(configFile)) {

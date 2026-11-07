@@ -31,12 +31,13 @@
 
 <div class="doc-section">
 <h2>Поиск и проверка</h2>
-<p><code>str.find()</code> — есть (в отличие от старой документации); <code>str.rpos</code> не существует, поиск с конца — <code>str.rfind()</code>.</p>
+<p><code>str.find()</code> — есть (в отличие от старой документации); <code>str.rpos</code> — синоним <code>str.rfind()</code>: поиск с конца (поддерживается <code>[start]</code>). Вызовы <code>str.rpos</code> и <code>str.rfind</code> взаимозаменяемы.</p>
 <table>
 <tr><th>Функция</th><th>Описание</th></tr>
 <tr><td><code>str.find(s, sub)</code></td><td>Есть ли вхождение → <code>true</code> / <code>false</code> (подстрока как литерал, без regex)</td></tr>
 <tr><td><code>str.pos(s, sub)</code></td><td>Позиция первого вхождения или -1</td></tr>
 <tr><td><code>str.rfind(s, sub, [start])</code></td><td>Позиция последнего вхождения (поиск от start) или -1</td></tr>
+<tr><td><code>str.rpos(s, sub, [start])</code></td><td>Синоним <code>str.rfind</code>: позиция последнего вхождения или -1</td></tr>
 <tr><td><code>str.count(s, sub)</code></td><td>Количество вхождений (неперекрывающихся; для пустой подстроки — len+1, как в Python)</td></tr>
 <tr><td><code>str.positions(s, sub)</code></td><td>Массив позиций всех неперекрывающихся вхождений (пустой, если нет)</td></tr>
 <tr><td><code>str.startswith(s, prefix)</code></td><td>Начинается ли строка с prefix</td></tr>

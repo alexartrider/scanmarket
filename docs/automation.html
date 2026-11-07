@@ -149,17 +149,35 @@ print("files=" + json.stringify(r.args));</code></pre>
 
 <div class="doc-section">
 <h2>JSON-формы (jsonedit)</h2>
-<p>Работает со строкой JSON (обычно содержимое <code>*.json</code>-формы). <b>Возвращает НОВУЮ строку</b> — исходник не меняется.</p>
+<p>Ресурс — это не просто JSON: в нём есть <code>code.text</code>, дерево Qt-формы и таблицы <code>rxl[]</code>. Точечные операции сохраняют JSON boolean <code>true/false</code> (они не проходят через ScriptValue, где bool представлен int). Все операции возвращают <b>новую строку</b>.</p>
 <table>
 <tr><th>Функция</th><th>Описание</th></tr>
 <tr><td><code>jsonedit.format(jsonText, [indent])</code></td><td>Переформатировать JSON (по умолчанию 4 пробела)</td></tr>
 <tr><td><code>jsonedit.getText(jsonText, path, [def])</code></td><td>Значение по пути (пути вида <code>a.b[0].c</code>)</td></tr>
 <tr><td><code>jsonedit.setText(jsonText, path, value, [indent])</code></td><td>JSON-строка после изменения по пути</td></tr>
-<tr><td><code>jsonedit.validateForm(jsonText)</code></td><td>Проверка структуры RuntimeForm → <code>#{"ok","errors"}</code></td></tr>
+<tr><td><code>jsonedit.setTextRaw(jsonText, path, jsonValueText)</code> / <code>setBool(...)</code></td><td>Установить готовый JSON-фрагмент / настоящий JSON boolean</td></tr>
+<tr><td><code>jsonedit.validateForm(jsonText)</code></td><td>Проверка структуры формы и QRXL → <code>#{"ok","errors"}</code></td></tr>
+<tr><td><code>jsonedit.validateHandlers(jsonText)</code></td><td>Проверка ссылок событий на функции в <code>code.text</code> (требует <code>funcedit.prg</code>)</td></tr>
+<tr><td><code>jsonedit.validateCode(jsonText)</code></td><td>Синтаксическая проверка <code>code.text</code> без выполнения скрипта или <code>formCreate</code></td></tr>
+<tr><td><code>jsonedit.validateResource(jsonText, [checkHandlers])</code></td><td>Общая проверка ресурса, опционально с проверкой обработчиков</td></tr>
+<tr><td><code>jsonedit.inspect(jsonText)</code></td><td>Сводка по форме, виджетам, событиям и размерам QRXL-таблиц</td></tr>
 <tr><td><code>jsonedit.collectEvents(jsonText)</code></td><td>Все события формы/виджетов → массив <code>#{"entity","event","handler"}</code></td></tr>
 <tr><td><code>jsonedit.findWidgetPath(jsonText, name)</code></td><td>Путь к виджету (напр. <code>form.widgets[2]</code>) или <code>null</code></td></tr>
 <tr><td><code>jsonedit.handlerFor(jsonText, entityPath, event)</code></td><td>Имя обработчика события</td></tr>
+<tr><td><code>jsonedit.setWidgetProperty / setWidgetEvent(...)</code></td><td>Изменение свойства/обработчика виджета по имени</td></tr>
+<tr><td><code>jsonedit.renameWidget / renameTable(...)</code></td><td>Переименование с проверкой коллизий имён</td></tr>
+<tr><td><code>jsonedit.getCell / setCell(jsonText, table, row, col[, value])</code></td><td>Чтение/запись QRXL-ячеек (индексы 0-based); setCell не меняет размер таблицы неявно</td></tr>
+<tr><td><code>jsonedit.resizeTable(jsonText, table, rows, cols)</code></td><td>Явное изменение размера таблицы и пустых ячеек</td></tr>
+<tr><td><code>jsonedit.planFile(path, transformFn) / applyFile(plan, [opts])</code></td><td>План → diff → валидация → атомарная запись; требуют <code>fileedit.prg</code></td></tr>
 </table>
+<p>Валидатор проверяет структуру, уникальность имён, события, ячейки, диапазоны стилей/шрифтов, объединения и объекты таблиц. Он не выполняет пользовательский код и не заменяет компиляцию/интеграционный запуск формы.</p>
+<pre><code>loadModule(file.join(scriptlib, "fileedit.prg"));
+loadModule(file.join(scriptlib, "funcedit.prg"));
+var plan = jsonedit.planFile("form.json", function(text) {
+    return jsonedit.setWidgetProperty(text, "btnSave", "text", "Сохранить");
+});
+print(plan.diff);  <span class="cmt">// проверить до записи</span>
+jsonedit.applyFile(plan, #{"backup": 1});</code></pre>
 </div>
 
 <div class="doc-section">

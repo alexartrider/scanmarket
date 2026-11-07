@@ -40,6 +40,7 @@ var favoritesScanComplete = false;
 var favoritesFoundIds = #[];
 var favoritesRecommendationStart = -1;
 var recommendationsMarkerText = "Подобрали для вас";
+var recommendationsMarkerTextAlt = "Рекомендовано для вас";
 
 // ---------- JS-пробы (нестабильные class-name не используем,
 // ориентируемся на структуру DOM и атрибуты элементов) ----------
@@ -51,8 +52,9 @@ function jsRecommendationsStartProbe() {
     return "(function(){try{var tiles=document.querySelectorAll('div[data-index]');var marker=null;"
         + "var nodes=document.querySelectorAll('span,div');"
         + "for(var i=0;i<nodes.length;i++){var e=nodes[i];"
-        + "if(e.children.length===0&&e.textContent&&e.textContent.indexOf("
-        + json.stringify(recommendationsMarkerText) + ")>=0){marker=e;break;}}"
+        + "if(e.children.length===0&&e.textContent&&(e.textContent.indexOf("
+        + json.stringify(recommendationsMarkerText) + ")>=0||e.textContent.indexOf("
+        + json.stringify(recommendationsMarkerTextAlt) + ")>=0)){marker=e;break;}}"
         + "if(marker===null)return -1;"
         + "for(var i=0;i<tiles.length;i++){"
         + "if((marker.compareDocumentPosition(tiles[i])&4)!==0)return i;}"
@@ -164,6 +166,33 @@ function favCount(page) export {
     var v = evalStr(page, jsTileCount);
     if (v == null) return -1;
     return str.toInt(str.toString(v));
+}
+
+// Проверяет именно избранное, а не карточки рекомендаций ниже списка.
+// Возвращает число товаров до блока рекомендаций либо -1,
+// если список избранного ещё не подтверждён.
+function favAuthState(page) export {
+    if (page == null) return -1;
+
+    var marker = json.stringify(recommendationsMarkerText);
+    var script = "(function(){try{"
+        + "var title=(document.title||'').toLowerCase();"
+        + "if(title.indexOf('antibot')>=0||title.indexOf('challenge')>=0)return -1;"
+        + "var tiles=document.querySelectorAll('div[data-index]');"
+        + "var marker=null;var nodes=document.querySelectorAll('span,div');"
+        + "for(var i=0;i<nodes.length;i++){var e=nodes[i];"
+        + "if(e.children.length===0&&e.textContent&&(e.textContent.indexOf(" + marker + ")>=0||"
+        + "e.textContent.indexOf(" + json.stringify(recommendationsMarkerTextAlt) + ")>=0)){"
+        + "marker=e;break;}}"
+        + "var favorites=0;"
+        + "if(marker!==null){for(var j=0;j<tiles.length;j++){"
+        + "if((marker.compareDocumentPosition(tiles[j])&4)!==0)break;favorites++;}}"
+        + "if(favorites>0)return favorites;return -1;"
+        + "}catch(e){return -1;}})()";
+
+    var result = evalStr(page, script);
+    if (result == null) return -1;
+    return str.toInt(str.toString(result));
 }
 
 // Прокручивает страницу до конца, чтобы подгрузить все карточки.

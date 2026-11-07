@@ -127,6 +127,19 @@ grid.currentRowChanged = <span class="kw">function</span>(sender, row) {
 grid.refresh();       <span class="cmt">// обновить данные</span>
 <span class="kw">var</span> row = grid.currentRow();  <span class="cmt">// row["product_id"], row["name"]; NULL → null</span>
 grid.close();         <span class="cmt">// закрыть</span></code></pre>
+
+<h3>Жизненный цикл: close() → смена SQL и/или БД → open()</h3>
+<p><code>close()</code> закрывает внутренний DataSet: освобождает модель и QSqlQuery, поэтому после него можно безопасно менять SQL и переключать соединение (<code>db.disconnect()</code> → <code>db.connect()</code>) и снова вызывать <code>open()</code>. Это штатный способ переоткрытия грида при смене базы (например, переключение магазина в ScanMarket).</p>
+<ul>
+<li><code>open()</code> всегда выполняет текущий <code>sql</code> на текущем активном соединении; смена <code>sql</code> и соединения между <code>close()</code> и <code>open()</code> корректно отражается в таблице.</li>
+<li><code>refresh()</code> на открытой таблице заново выполняет SQL на текущем соединении (актуальные данные). После <code>close()</code> refresh не восстанавливает старую модель: таблица остаётся пустой.</li>
+<li>Если <code>sql</code> не задан, соединение недоступно или запрос завершился ошибкой, <code>open()</code> возвращает <code>false</code> и не изменяет показанные данные.</li>
+</ul>
+<pre><code>grid.close();                 <span class="cmt">// освободить DataSet и модель</span>
+db.disconnect();
+db.connect(db.QSQLITE, otherFile);
+grid.sql = <span class="str">"SELECT ..."</span>;
+<span class="kw">var</span> ok = grid.open();        <span class="cmt">// новый запрос на новом соединении</span></code></pre>
 </div>
 
 <footer><a href="qt.html">← QT интеграция</a></footer>

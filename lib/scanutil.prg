@@ -406,7 +406,7 @@ function readmeInfo(path) export {
 // ---------- root cleanup ----------
 
 // core scripts, configs, docs, binaries
-var rootKeepList = #["ozon_scan.prg", "ozon_auth.prg", "ozon_check_session.prg", "ozon_setup_cron.prg", "checkload.prg", "config.json", "README.md", "AGENTS.md", "scan_ozon.bat"];
+var rootKeepList = #["ozon_scan.prg", "ozon_auth.prg", "ozon_check_session.prg", "ozon_setup_cron.prg", "wildberries_scan.prg", "wildberries_auth.prg", "wildberries_check_session.prg", "wildberries_setup_cron.prg", "yandexmarket_scan.prg", "yandexmarket_auth.prg", "yandexmarket_check_session.prg", "yandexmarket_setup_cron.prg", "checkload.prg", "config.json", "README.md", "AGENTS.md", "scan_ozon.bat", "scan_wildberries.bat", "scan_yandexmarket.bat", "auth_ozon.bat", "auth_wildberries.bat", "auth_yandexmarket.bat"];
 
 // Remove one-off diagnostic scripts older than N hours
 // dryRun default true — проелл only. Returns report string

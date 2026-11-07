@@ -112,28 +112,28 @@ function stopExisting() export {
 }
 
 // Запуск браузера с профилем и портом DevTools
-function openBrowser(headless, startUrl, proxyMode) export {
+function openBrowser(headless, startUrl, proxyMode, startMinimized) export {
     var exe = findBrowser();
     if (exe == null) throw "Не найден браузер (Edge/Chrome/Yandex). Укажите browser.execPath в config.json";
     var a = #[
-        "\"" + exe + "\"",
-        "--user-data-dir=\"" + profileDir + "\"",
+        exe,
+        "--user-data-dir=" + profileDir,
         "--remote-debugging-port=" + str.toString(debugPort),
         "--no-first-run",
         "--no-default-browser-check",
+        "--start-maximized",
         "--disable-backgrounding-occluded-windows",
         "--disable-background-timer-throttling",
         "--disable-renderer-backgrounding",
-        "--disable-blink-features=AutomationControlled",
         "--window-size=1600,1000"
     ];
     if (headless) a.push("--headless=new", "--mute-audio", "--hide-scrollbars");
+    if (startMinimized == true) a.push("--start-minimized");
     if (proxyMode != null and proxyMode != "") {
         if (proxyMode == "direct") a.push("--proxy-bypass-list=*");
-        else a.push("--proxy=\"" + proxyMode + "\"");
+        else a.push("--proxy=" + proxyMode);
     }
-    if (startUrl != null and startUrl != "") a.push("\"" + startUrl + "\"");
-    var cmd = a.joined(" ");
+    if (startUrl != null and startUrl != "") a.push(startUrl);
     // Не выводим всю командную строку браузера одной строкой: длинные флаги
     // Chromium переполняют ширину консоли и портят отображение следующих логов.
     print("Запуск браузера: \(exe)");
@@ -148,10 +148,10 @@ function openBrowser(headless, startUrl, proxyMode) export {
         print("Не удалось получить состояние консоли перед запуском браузера: \(str.toString(e))");
     }
 
-    // Браузер — долгоживущий GUI-процесс. Отсоединяем его от консоли Qode
-    // и задаём большой таймаут ожидания процесса, чтобы движок не завершил его
-    // через стандартные 60 секунд.
-    var proc = system.systemasync(cmd, "", 86400000, #{"console": "detached"});
+    // Передаём executable и аргументы отдельно: systemasync(cmd) запускает
+    // командную строку через оболочку, а profileDir и URL могут содержать
+    // пробелы. execArgvAsync сохраняет аргументы и отсоединяет GUI от консоли.
+    var proc = system.execArgvAsync(a, #{"timeout": 86400000, "console": "detached"});
 
     return proc;
 }
@@ -427,6 +427,12 @@ function findOzonTarget(port) export {
     return findTarget(port, "ozon.ru", null);
 }
 
+function findWildberriesTarget(port) export {
+    var t = findTarget(port, "lk/favorites", null);
+    if (t != null) return t;
+    return findTarget(port, "wildberries.ru", null);
+}
+
 function reconnectFavorites(port, favUrl) export {
     var t = findOzonTarget(port);
     if (t == null) {
@@ -434,6 +440,130 @@ function reconnectFavorites(port, favUrl) export {
         system.sleep(2);
         t = findOzonTarget(port);
     }
+    if (t == null) return null;
+    return attachToPage(t);
+}
+
+// Подключается к вкладке Wildberries, не порождая лишние вкладки:
+// сначала ищет вкладку WB, иначе берёт любую существующую страницу
+// и переходит по favUrl; новую вкладку открывает только если страниц нет.
+function reconnectWildberries(port, favUrl) export {
+    var t = findWildberriesTarget(port);
+    if (t != null)
+        return attachToPage(t);
+
+    var anyTab = findTarget(port, "", null);
+    if (anyTab != null) {
+        var p = attachToPage(anyTab);
+        if (p != null) {
+            navigate(p, favUrl);
+            return p;
+        }
+    }
+
+    t = openTab(port, favUrl);
+    system.sleep(2);
+    t = findWildberriesTarget(port);
+    if (t == null) return null;
+    return attachToPage(t);
+}
+
+function findYandexMarketTarget(port) export {
+    var t = findTarget(port, "my/wishlist", null);
+    if (t != null) return t;
+    return findTarget(port, "market.yandex.ru", null);
+}
+
+// Показывает и активирует окно браузера для выбранной вкладки.
+// На Windows detached-запуск иногда оставляет окно свёрнутым/за другими окнами.
+function showTargetWindow(target) export {
+    if (target == null) return false;
+
+    var version = versionInfo(debugPort);
+    if (version == null) {
+        print("Не удалось получить browser websocket для показа окна.");
+        return false;
+    }
+
+    var browserUrl = coalesce(version.get("webSocketDebuggerUrl"), "");
+    if (browserUrl == "") {
+        print("В browser websocket отсутствует адрес подключения.");
+        return false;
+    }
+
+    var browser = CdpClient();
+    if (!browser.connect(browserUrl)) {
+        print("Не удалось подключиться к browser websocket: " + coalesce(browser.lastError, ""));
+        return false;
+    }
+
+    var targetId = coalesce(target.get("id"), "");
+    if (targetId == "") {
+        browser.closeconn();
+        print("У вкладки отсутствует target id — окно не активировано.");
+        return false;
+    }
+
+    var windowInfo = browser.call("Browser.getWindowForTarget", #{"targetId": targetId});
+    if (windowInfo == null) {
+        print("Browser.getWindowForTarget завершился ошибкой: " + coalesce(browser.lastError, ""));
+        browser.closeconn();
+        return false;
+    }
+
+    var windowId = windowInfo.get("windowId");
+    var bounds = #{
+        "windowId": windowId,
+        "bounds": #{"left": 40, "top": 40, "width": 1400, "height": 900, "windowState": "normal"}
+    };
+    var restored = browser.call("Browser.setWindowBounds", bounds);
+    if (restored == null) {
+        print("Не удалось восстановить окно браузера: " + coalesce(browser.lastError, ""));
+        browser.closeconn();
+        return false;
+    }
+
+    var maximized = browser.call(
+        "Browser.setWindowBounds",
+        #{"windowId": windowId, "bounds": #{"windowState": "maximized"}}
+    );
+    browser.closeconn();
+
+    var page = attachToPage(target);
+    if (page != null) {
+        page.call("Page.bringToFront", "{}");
+        closeConnSafely(page);
+    }
+
+    if (maximized == null) {
+        print("Окно восстановлено, но не удалось развернуть его: " + coalesce(browser.lastError, ""));
+        return false;
+    }
+
+    print("Окно браузера восстановлено и вкладка выведена на передний план.");
+    return true;
+}
+
+// Подключается к вкладке Яндекс Маркета, не порождая лишние вкладки:
+// сначала ищет вишлист, иначе берёт любую существующую страницу и переходит
+// по favUrl; новую вкладку открывает только если страниц нет.
+function reconnectYandexMarket(port, favUrl) export {
+    var t = findYandexMarketTarget(port);
+    if (t != null)
+        return attachToPage(t);
+
+    var anyTab = findTarget(port, "", null);
+    if (anyTab != null) {
+        var p = attachToPage(anyTab);
+        if (p != null) {
+            navigate(p, favUrl);
+            return p;
+        }
+    }
+
+    t = openTab(port, favUrl);
+    system.sleep(2);
+    t = findYandexMarketTarget(port);
     if (t == null) return null;
     return attachToPage(t);
 }
@@ -448,12 +578,26 @@ function refreshFavorites(page, port, favUrl) export {
     return reconnectFavorites(port, favUrl);
 }
 
+// Не перезагружает живую страницу избранного: повторная навигация сбрасывает
+// ручную авторизацию и может повторно вызвать антибот-проверку. Переподключение
+// выполняется только после потери CDP-соединения.
 function refreshFavoritesForce(page, port, favUrl) export {
-    if (page != null) {
-        navigate(page, favUrl);
-        closeConnSafely(page);
-    }
+    if (page != null and pageAlive(page))
+        return page;
+
+    closeConnSafely(page);
     return reconnectFavorites(port, favUrl);
+}
+
+// Для Wildberries сохраняет живую страницу без навигации: антибот-защита
+// реагирует на повторные перезагрузки. Переподключение делаем только
+// при потере CDP-соединения.
+function refreshWildberriesForce(page, port, favUrl) export {
+    if (page != null and pageAlive(page)) {
+        return page;
+    }
+    closeConnSafely(page);
+    return reconnectWildberries(port, favUrl);
 }
 
 function waitPageComplete(page, timeoutSeconds) export {
@@ -531,9 +675,12 @@ function boolLit(v) {
     return "false";
 }
 
-// Восстановить куки из файла в браузер; возвращает количество или 0
-function restoreCookiesFromFile(page, path) export {
+// Восстановить куки из файла в браузер; возвращает количество или 0.
+// defaultDomain — домен для записей без собственного поля domain
+// (для Ozon ".ozon.ru", для Wildberries ".wildberries.ru").
+function restoreCookiesFromFile(page, path, defaultDomain) export {
     if (page == null or path == null or path == "") return 0;
+    if (defaultDomain == null or defaultDomain == "") defaultDomain = ".ozon.ru";
     var raw = null;
     try { raw = file.read(path, file.ENC_UTF8_BOM); } catch (e) { raw = null; }
     if (raw == null) {
@@ -572,7 +719,7 @@ function restoreCookiesFromFile(page, path) export {
         var one = "{";
         one = one + "\"name\":" + json.stringify(str.toString(nm));
         one = one + ",\"value\":" + json.stringify(str.toString(vl));
-        one = one + ",\"domain\":" + json.stringify(str.toString(coalesce(c.get("domain"), ".ozon.ru")));
+        one = one + ",\"domain\":" + json.stringify(str.toString(coalesce(c.get("domain"), defaultDomain)));
         one = one + ",\"path\":" + json.stringify(str.toString(coalesce(c.get("path"), "/")));
         one = one + ",\"secure\":" + boolLit(c.get("secure"));
         one = one + ",\"httpOnly\":" + boolLit(c.get("httpOnly"));

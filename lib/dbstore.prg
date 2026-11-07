@@ -7,6 +7,14 @@ uses math;
 var dbPath = file.absolute(file.join("private_data", "ozon", "ozon.sqlite"));
 var source = "ozon";
 
+// Устанавливает источник (магазин) для всех операций с базой.
+// Вызывается перед storeConnect в скриптах сканирования:
+//   storeSetSource("wildberries")
+function storeSetSource(src) export {
+    if (src != null and src != "") source = src;
+    return source;
+}
+
 function storeConnect(path) export {
     if (path != null and path != "") dbPath = file.absolute(path);
     file.mkdirrecursive(file.dirname(dbPath));

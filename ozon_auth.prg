@@ -1,7 +1,7 @@
 // Шаг 1. Авторизация: открывает браузер с профилем проекта.
 // Пользователь входит на Ozon, после чего скрипт сохраняет куки в private_data/ozon/ozon_cookies.json.
 // Запуск из корня проекта: bin\qodeqt.exe ozon_auth.prg
-// Куки сохраняются только если страница избранного действительно загрузилась (карточек > 0).
+// Куки сохраняются только если найдены товары именно в блоке избранного.
 // loadModule регистрирует экспортированные функции модулей глобально,
 // поэтому loadConfig, cdpSetup и другие функции вызываются напрямую.
 
@@ -51,9 +51,11 @@ function main() {
     }
     if (target == null) {
         error("Страница Ozon не открылась за \(str.toString(waitLoginSeconds)) секунд. Попробуйте ещё раз.");
-        closeBrowser(port);
         system.exit(2);
     }
+
+    if (!showTargetWindow(target))
+        print("Не удалось автоматически вывести окно Ozon на передний план. Проверьте окно браузера на панели задач.");
 
     var page = attachToPage(target);
     if (page == null) {
@@ -62,53 +64,71 @@ function main() {
         system.exit(3);
     }
 
-    // Ждём фактической загрузки страницы избранного (карточек > 0): проверка антибота
-    // может показать страницу-заглушку вместо избранного.
+    // Дожидаемся начальной загрузки, после чего оставляем страницу пользователю
+    // для ручной проверки и входа. Во время ожидания её нельзя перезагружать.
+    waitPageComplete(page, 30);
+
     var readyDeadline = system.gettickcount() + waitLoginSeconds * 1000;
-    var tiles = -1;
+    var favoriteState = -1;
+    var lastStatusLog = 0;
+    var lastTitle = "";
     while (system.gettickcount() < readyDeadline) {
         if (!pageAlive(page)) {
-            print("Соединение CDP потеряно — подключаюсь к вкладке повторно...");
-            page = reconnectFavorites(port, favUrl);
+            print("Соединение CDP потеряно — ищу уже открытую вкладку Ozon...");
+            var currentTarget = findOzonTarget(port);
+            if (currentTarget != null)
+                page = attachToPage(currentTarget);
             if (page == null) {
                 system.sleep(2);
                 continue;
             }
         }
-        waitPageComplete(page, 20);
-        tiles = favCount(page);
+        favoriteState = favAuthState(page);
         var ttl = coalesce(pageTitle(page), "");
-        if (tiles > 0) break;
-        print("Ожидание страницы избранного: карточек=\(str.toString(tiles)), заголовок=[\(ttl)]");
-        if (isChallengeTitle(ttl)) {
-            print("  Открыта проверочная страница Ozon — ожидаю 8 секунд...");
-            system.sleep(8);
-            var c2 = favCount(page);
-            if (c2 > 0) {
-                tiles = c2;
-                break;
+        if (favoriteState > 0 and !isChallengeTitle(ttl)) break;
+
+        if (ttl != lastTitle) {
+            lastTitle = ttl;
+            if (isChallengeTitle(ttl)) {
+                print("Открыта проверочная страница Ozon. Пройдите её в браузере; страницу не перезагружаю.");
             }
         }
-        page = refreshFavoritesForce(page, port, favUrl);
+
+        if (system.gettickcount() - lastStatusLog >= 5000) {
+            lastStatusLog = system.gettickcount();
+            var statusText = "Ожидание входа/избранного: товаров=" + str.toString(favoriteState);
+            if (favoriteState == 0)
+                statusText = statusText + " (избранное пусто или показаны только рекомендации)";
+            print(
+                statusText + ", заголовок=[" + ttl + "]"
+            );
+        }
+
+        system.sleep(1);
     }
 
-    if (tiles <= 0) {
+    if (favoriteState <= 0 or isChallengeTitle(coalesce(pageTitle(page), ""))) {
         var dl = dumpPageHtml(page, "private_data/ozon/ozon_auth_dump.html", 40000);
-        error("Страница избранного не загрузилась (карточек: 0, размер дампа: \(str.toString(dl)) символов). Куки не сохранены; войдите в аккаунт и повторите попытку.");
+        error(
+            "Не удалось подтвердить вход в аккаунт Ozon или найти товары в избранном " +
+            "(заголовок: [" + coalesce(pageTitle(page), "") +
+            "], состояние: " + str.toString(favoriteState) +
+            ", размер дампа: " + str.toString(dl) +
+            " символов). Куки не сохранены; браузер оставлен открытым."
+        );
         closeConnSafely(page);
-        closeBrowser(port);
         system.exit(4);
     }
 
-    print("Страница избранного загружена: карточек=\(str.toString(tiles))");
+    print("Страница избранного подтверждена: товаров=\(str.toString(favoriteState))");
     var saved = saveCookiesToFile(page, "private_data/ozon/ozon_cookies.json");
     if (saved == 1) print("Куки сохранены.");
     else print("Не удалось сохранить куки. Проверьте private_data/ozon/ozon_cookies.json.");
     var check = restoreCookiesFromFile(page, "private_data/ozon/ozon_cookies.json");
     print("Проверка: восстановлено кук из файла — \(str.toString(check))");
-    system.notify.show("ScanMarket", "Авторизация Ozon сохранена; карточек избранного: \(str.toString(tiles))");
+    system.notify.show("ScanMarket", "Авторизация Ozon сохранена; товаров в избранном: \(str.toString(favoriteState))");
     closeConnSafely(page);
-    print("Корректно закрываю браузер, чтобы сохранить профиль на диск...");
+    print("Закрываю браузер после сохранения авторизации и профиля...");
     closeBrowser(port);
     print("Готово. Теперь можно запустить сканирование: bin\qodeqt.exe ozon_scan.prg");
 }

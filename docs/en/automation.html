@@ -149,17 +149,35 @@ and comments is ignored. Changes are made only at the found boundaries. <code>so
 
 <div class="doc-section">
 <h2>JSON forms (jsonedit)</h2>
-<p>Works with a JSON string (usually the content of a <code>*.json</code> form). <b>Returns a NEW string</b> — the source is not modified.</p>
+<p>A form resource is more than JSON: it contains <code>code.text</code>, a Qt widget tree, and <code>rxl[]</code> tables. Targeted edits preserve JSON <code>true/false</code> values rather than converting them to <code>1/0</code> through ScriptValue. Operations return a <b>new string</b>.</p>
 <table>
 <tr><th>Function</th><th>Description</th></tr>
 <tr><td><code>jsonedit.format(jsonText, [indent])</code></td><td>Reformat JSON (4 spaces by default)</td></tr>
 <tr><td><code>jsonedit.getText(jsonText, path, [def])</code></td><td>Value by path (paths like <code>a.b[0].c</code>)</td></tr>
 <tr><td><code>jsonedit.setText(jsonText, path, value, [indent])</code></td><td>JSON string after changing the value by path</td></tr>
-<tr><td><code>jsonedit.validateForm(jsonText)</code></td><td>Validate the RuntimeForm structure → <code>#{"ok","errors"}</code></td></tr>
+<tr><td><code>jsonedit.setTextRaw(jsonText, path, jsonValueText)</code> / <code>setBool(...)</code></td><td>Set a raw JSON fragment / a real JSON boolean</td></tr>
+<tr><td><code>jsonedit.validateForm(jsonText)</code></td><td>Validate form and QRXL structure → <code>#{"ok","errors"}</code></td></tr>
+<tr><td><code>jsonedit.validateHandlers(jsonText)</code></td><td>Check that event handlers are declared in <code>code.text</code> (requires <code>funcedit.prg</code>)</td></tr>
+<tr><td><code>jsonedit.validateCode(jsonText)</code></td><td>Syntax-check <code>code.text</code> without executing the script or <code>formCreate</code></td></tr>
+<tr><td><code>jsonedit.validateResource(jsonText, [checkHandlers])</code></td><td>Full resource validation, optionally including handler references</td></tr>
+<tr><td><code>jsonedit.inspect(jsonText)</code></td><td>Summary of form, widgets, events, and QRXL table dimensions</td></tr>
 <tr><td><code>jsonedit.collectEvents(jsonText)</code></td><td>All form/widget events → array of <code>#{"entity","event","handler"}</code></td></tr>
 <tr><td><code>jsonedit.findWidgetPath(jsonText, name)</code></td><td>Path to a widget (e.g. <code>form.widgets[2]</code>) or <code>null</code></td></tr>
 <tr><td><code>jsonedit.handlerFor(jsonText, entityPath, event)</code></td><td>Name of the event handler</td></tr>
+<tr><td><code>jsonedit.setWidgetProperty / setWidgetEvent(...)</code></td><td>Edit a widget property or event handler by widget name</td></tr>
+<tr><td><code>jsonedit.renameWidget / renameTable(...)</code></td><td>Rename with collision checks</td></tr>
+<tr><td><code>jsonedit.getCell / setCell(jsonText, table, row, col[, value])</code></td><td>Read/write QRXL cells (0-based); setCell does not silently resize the table</td></tr>
+<tr><td><code>jsonedit.resizeTable(jsonText, table, rows, cols)</code></td><td>Explicitly resize a table and its empty cells</td></tr>
+<tr><td><code>jsonedit.planFile(path, transformFn) / applyFile(plan, [opts])</code></td><td>Plan → diff → validate → atomic write; requires <code>fileedit.prg</code></td></tr>
 </table>
+<p>Validation covers resource structure, unique names, events, cells, style/font indices, merges, and table objects. It does not execute user code or replace compilation/integration tests.</p>
+<pre><code>loadModule(file.join(scriptlib, "fileedit.prg"));
+loadModule(file.join(scriptlib, "funcedit.prg"));
+var plan = jsonedit.planFile("form.json", function(text) {
+    return jsonedit.setWidgetProperty(text, "btnSave", "text", "Save");
+});
+print(plan.diff);  <span class="cmt">// inspect before writing</span>
+jsonedit.applyFile(plan, #{"backup": 1});</code></pre>
 </div>
 
 <div class="doc-section">

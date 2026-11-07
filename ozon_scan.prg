@@ -18,6 +18,7 @@ var thumbnailDiagCount = 0;
 
 var cfg = loadConfig("");
 var runId = 0;
+var scanTarget = null;
 
 function shortName(s) {
     if (s == null) return "";
@@ -260,6 +261,7 @@ function main() {
         closeBrowser(port);
         system.exit(3);
     }
+    scanTarget = target;
 
     if (haveCookies) {
         print("Шаг 3/6: восстановление куки и переход к избранному...");
@@ -286,9 +288,11 @@ function main() {
     while (system.gettickcount() < deadline) {
         var t = findTarget(port, "ozon.ru", null);
         if (t != null) {
+            scanTarget = t;
             var u = str.lower(coalesce(t.get("url"), ""));
             if (str.pos(u, "my/favorites") >= 0) {
                 target = t;
+                scanTarget = t;
                 print("Страница избранного найдена: " + coalesce(t.get("url"), ""));
                 break;
             }
@@ -301,6 +305,7 @@ function main() {
                 var realUrl = currentPageLowerUrl(page);
                 if (str.pos(realUrl, "my/favorites") >= 0) {
                     target = t;
+                    scanTarget = t;
                     print("Страница избранного найдена (по location.href): " + realUrl);
                     break;
                 }
@@ -523,6 +528,7 @@ try {
     if (runId > 0) {
         try { finishRun(runId, 0, 0, "error_exception"); } catch (e2) { }
     }
+    try { closeBrowser(cfgGet(cfg, "browser.debugPort", 9222)); } catch (e3) { }
     system.exit(1);
 }
 return 0;

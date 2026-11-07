@@ -9,17 +9,22 @@ loadModule("lib/config.prg");
 loadModule("lib/cdp.prg");
 loadModule("lib/dbstore.prg");
 loadModule("lib/ozon.prg");
+loadModule("lib/wildberries.prg");
 
 var cfg = loadConfig("");
 print("config browser.proxy = [" + str.toString(cfgGet(cfg, "browser.proxy", "")) + "]");
+print("config wildberries.favoritesUrl = [" + str.toString(cfgGet(cfg, "wildberries.favoritesUrl", "")) + "]");
 
 print("currentPageLowerUrl(null)=" + str.toString(currentPageLowerUrl(null)));
 print("pageAlive(null)=" + str.toString(pageAlive(null)));
 closeConnSafely(null);
 print("closeConnSafely(null)=ok");
 print("refreshFavoritesForce(null)= " + str.toString(refreshFavoritesForce(null, 1, "x")));
+print("refreshWildberriesForce(null)= " + str.toString(refreshWildberriesForce(null, 1, "x")));
 print("isChallengeTitle(chl)=" + str.toString(isChallengeTitle("Похоже, нет_connections")));
+print("isWbChallengeTitle(chl)=" + str.toString(isWbChallengeTitle("Что-то не так...")));
 print("favCount(null)=" + str.toString(favCount(null)));
+print("wbFavCount(null)=" + str.toString(wbFavCount(null)));
 print("dumpPageHtml(null)=" + str.toString(dumpPageHtml(null, "x", 1)));
 
 storeConnect(cfgGet(cfg, "db.path", "private_data/ozon/ozon.sqlite"));

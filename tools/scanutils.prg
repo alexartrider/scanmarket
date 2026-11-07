@@ -4,10 +4,10 @@
 //   tail [n] [path]        — last n lines of newest log
 //   clean [n] [path]       — last n lines, noise collapsed
 //   grep <pattern> [path]  — lines containing pattern
-//   db                     — DB summary
-//   runs [n]               — scan_runs listing
-//   points [n]             — recent price_points with names
-//   fixstale               — close dangling scan_runs as stale
+//   db [dbPath]            — DB summary (default private_data/ozon/ozon.sqlite)
+//   runs [n] [dbPath]      — scan_runs listing
+//   points [n] [dbPath]    — recent price_points with names
+//   fixstale [dbPath]      — close dangling scan_runs as stale
 //   cookies [path]         — cookies.json summary
 //   dump [path]            — HTML dump anti-bot markers
 //   procs [marker]         — browser processes
@@ -40,6 +40,15 @@ function toInt(v, def) {
     return n == null ? def : n;
 }
 
+function dbArgPath(a1, a2) {
+    if (a2 != null and a2 != "") return a2;
+    if (a1 != null and a1 != "") {
+        if (a1.regexmatch("^[0-9]+$")) return null;
+        return a1;
+    }
+    return null;
+}
+
 if (cmd == "tail") {
     print(tailLog(a2, toInt(a1, 40)));
 } else if (cmd == "clean") {
@@ -48,19 +57,19 @@ if (cmd == "tail") {
     if (a1 == "") { print("usage: grep <pattern> [path]"); }
     else print(grepLog(a2, a1));
 } else if (cmd == "db") {
-    var db = dbOpen(null);
+    var db = dbOpen(dbArgPath(a1, a2));
     print(dbSummary(db));
     if (db != null) db.close();
 } else if (cmd == "runs") {
-    var db2 = dbOpen(null);
+    var db2 = dbOpen(dbArgPath(a1, a2));
     print(dbRunsList(db2, toInt(a1, 20)));
     if (db2 != null) db2.close();
 } else if (cmd == "points") {
-    var db3 = dbOpen(null);
+    var db3 = dbOpen(dbArgPath(a1, a2));
     print(dbPointsList(db3, toInt(a1, 20)));
     if (db3 != null) db3.close();
 } else if (cmd == "fixstale") {
-    var db4 = dbOpen(null);
+    var db4 = dbOpen(dbArgPath(a1, a2));
     if (db4 == null) print("DB missing");
     else {
         var n = dbCloseDangling(db4);

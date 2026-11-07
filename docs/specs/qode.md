@@ -365,7 +365,7 @@ str.fromCharCode(code)  — Unicode code point (0..0x10FFFF) → строка
 ### Поиск и проверка
 ```
 str.pos(s, sub)         — позиция первого вхождения или -1
-str.rpos(s, sub)        — позиция последнего вхождения или -1
+str.rpos(s, sub)        — позиция последнего вхождения или -1 (синоним str.rfind)
 str.count(s, sub)       — количество вхождений подстроки
 str.startswith(s, prefix) — начинается ли строка с prefix
 str.endswith(s, suffix)   — заканчивается ли строка на suffix
