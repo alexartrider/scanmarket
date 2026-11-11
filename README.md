@@ -1,291 +1,355 @@
 # ScanMarket
 
-ScanMarket периодически читает товары из избранного Ozon, Wildberries и Яндекс Маркета и сохраняет в SQLite сведения о товарах и историю изменения цен. Сейчас реализован этап сбора данных; приложение для просмотра графиков цен — отдельный будущий этап.
+[English](README.en.md) · [Русский](README.md)
 
-## Требования
+ScanMarket периодически читает товары из избранного Ozon, Wildberries и Яндекс
+Маркета и сохраняет в SQLite сведения о товарах и историю изменения цен.
+Просмотр товаров, истории цен и графиков выполняется в локальном GUI.
 
-- Windows.
-- Qode: `bin/qodeqt.exe` для сканирования и `bin/qode.exe` для консольных диагностических утилит.
-- Поддерживаемый Chromium-браузер: Yandex Browser, Microsoft Edge или Google Chrome.
-- Авторизованная учётная запись Ozon для доступа к [Избранному](https://www.ozon.ru/my/favorites).
-- Авторизованная учётная запись Wildberries для доступа к [Избранному](https://www.wildberries.ru/lk/favorites).
-- Авторизованная учётная запись Яндекс для доступа к [Вишлисту](https://market.yandex.ru/my/wishlist).
+Проект написан на языке сценариев Qode (Script) и поставляется вместе с
+Qode Runtime, поэтому готов к запуску сразу после клонирования — отдельная
+установка чего-либо не требуется.
 
-Исполняемые файлы, Qt DLL и плагины находятся в `bin/`. Команды ниже запускаются из корня ScanMarket, чтобы относительные пути к конфигурации, данным и профилю браузера разрешались внутри проекта.
+## Содержание
 
-GUI открывается через `scanmarket.bat`; BAT-файл сам задаёт корневой рабочий каталог проекта. В окне доступен выпадающий список магазинов (Ozon / Wildberries / Яндекс Маркет) — выбор переключает активную базу и обновляет таблицы товаров, истории цен, карточку и график.
+- [Возможности](#возможности)
+- [Требования к системе](#требования-к-системе)
+- [Qode Runtime](#qode-runtime)
+- [Структура проекта](#структура-проекта)
+- [Установка и первый запуск](#установка-и-первый-запуск)
+- [Настройка config.json](#настройка-configjson)
+- [Авторизация и cookies](#авторизация-и-cookies)
+- [Запуск сканирования](#запуск-сканирования)
+- [Планировщик Windows](#планировщик-windows)
+- [GUI](#gui)
+- [База данных и история цен](#база-данных-и-история-цен)
+- [Диагностика](#диагностика)
+- [Лицензия](#лицензия)
 
-Если GUI был обновлён вручную и нужно вернуть переключатель магазинов, выполните `bin\qodeqt.exe tools\update_gui_stores.prg` (идемпотентно).
+## Возможности
 
-## Быстрый запуск
+- Сбор карточек избранного с Ozon, Wildberries и Яндекс Маркета через
+  управляемый браузер и Chrome DevTools Protocol (CDP).
+- Сохранение товаров, миниатюр и истории изменения цен в SQLite.
+- Новая точка цены создаётся только при изменении цены — история не засоряется.
+- Фильтрация рекламных и рекомендательных карточек, учёт антибот-проверок.
+- Авторизация с сохранением cookies и профиля браузера в `private_data/`.
+- Настройка автоматического запуска через планировщик Windows (schtasks).
+- Локальный GUI: таблицы товаров и истории цен, карточка товара, график
+  динамики цен, переключатель магазинов.
 
-### 1. Авторизовать Ozon
+## Требования к системе
+
+- Windows 10/11 (x64).
+- Поддерживаемый Chromium-браузер: Yandex Browser, Microsoft Edge или Google
+  Chrome (для авторизации и сканирования).
+- Авторизованные учётные записи:
+  - Ozon — [Избранное](https://www.ozon.ru/my/favorites);
+  - Wildberries — [Избранное](https://www.wildberries.ru/lk/favorites);
+  - Яндекс — [Вишлист](https://market.yandex.ru/my/wishlist).
+- Свободное место для базы данных и профиля браузера (сотни МБ и более).
+- Права на создание задач планировщика (для автозапуска).
+
+## Qode Runtime
+
+ScanMarket написан на собственном языке сценариев Qode (Script), по
+возможностям сопоставимом с Python. Для выполнения скриптов нужна среда
+выполнения Qode Runtime, которая поставляется в каталоге `bin/`:
+
+- `qode.exe` — консольный движок без Qt (для диагностических утилит);
+- `qodeqt.exe` — консольный движок с Qt-адаптером и модулем `db` (для
+  сканирования и авторизации);
+- `qodegui.exe` — движок с GUI (запуск формы `scanmarket_gui.json`);
+- `qodedesigner.exe` — редактор JSON-форм;
+- `plugins/` — плагины Qode (http, websocket и др.);
+- `platforms/`, `imageformats/`, `sqldrivers/`, `styles/`, `tls/`,
+  `iconengines/`, `generic/`, `networkinformation/`, `translations/` —
+  плагины Qt, DLL Qt 6.11.2.
+
+Ядро Qode — закрытое проприетарное ПО; скомпилированная среда выполнения
+входит в поставку как необходимый компонент. Лицензии сторонних компонентов
+описаны в [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+## Структура проекта
+
+```text
+.
+├── ozon_auth.prg              # вход в Ozon и сохранение cookies
+├── ozon_check_session.prg     # проверка авторизованного избранного
+├── ozon_scan.prg              # сканирование и запись истории цен
+├── ozon_setup_cron.prg        # создание задачи планировщика Windows
+├── wildberries_auth.prg       # вход в Wildberries и сохранение cookies
+├── wildberries_check_session.prg # проверка избранного Wildberries
+├── wildberries_scan.prg       # сканирование Wildberries
+├── wildberries_setup_cron.prg # задача планировщика для Wildberries
+├── yandexmarket_auth.prg      # вход в Яндекс Маркет и сохранение cookies
+├── yandexmarket_check_session.prg # проверка вишлиста Яндекс Маркета
+├── yandexmarket_scan.prg      # сканирование Яндекс Маркета
+├── yandexmarket_setup_cron.prg # задача планировщика для Яндекс Маркета
+├── scanmarket.bat             # запуск GUI
+├── scan_ozon.bat              # запуск сканирования Ozon (для планировщика)
+├── scan_wildberries.bat       # запуск сканирования Wildberries
+├── scan_yandexmarket.bat      # запуск сканирования Яндекс Маркета
+├── auth_ozon.bat              # запуск авторизации Ozon
+├── auth_wildberries.bat       # запуск авторизации Wildberries
+├── auth_yandexmarket.bat      # запуск авторизации Яндекс Маркета
+├── config.json                # настройки браузера, магазинов, базы и расписания
+├── config.example.json        # образец конфигурации (без персональных данных)
+├── scanmarket_gui.json        # описание GUI-формы
+├── bin/                       # Qode Runtime, Qt DLL и плагины
+├── lib/                       # библиотеки проекта (Script)
+│   ├── config.prg             # загрузка конфигурации
+│   ├── cdp.prg                # браузер и Chrome DevTools Protocol
+│   ├── dbstore.prg            # схема SQLite и операции с данными
+│   ├── ozon.prg               # разбор страницы Ozon
+│   ├── wildberries.prg        # разбор страницы Wildberries
+│   ├── yandexmarket.prg       # разбор страницы Яндекс Маркета
+│   └── scanutil.prg           # функции диагностической утилиты
+├── scriptlib/                 # общие библиотеки Script/Qode (автоматизация)
+├── tools/                     # утилиты
+│   ├── scanutils.prg          # диагностика и обслуживание
+│   ├── export_gui_data.prg    # экспорт данных Ozon в JSON
+│   ├── update_gui_stores.prg  # восстановление переключателя магазинов в GUI
+│   └── gui_store_block.prg    # блок Script для update_gui_stores.prg
+├── test/                      # проверочные скрипты
+├── docs/                      # документация языка Script/Qode
+├── Redist/                    # распространительные компоненты (VC++, ODBC)
+├── LICENSES/                  # тексты лицензий сторонних компонентов
+├── THIRD_PARTY_NOTICES.md     # перечень сторонних компонентов и лицензий
+└── private_data/              # ПРИВАТНЫЕ данные: базы, cookies, профиль
+```
+
+Каталог `private_data/` создаётся при первом запуске и исключён из Git. В него
+складываются базы SQLite, cookies, профиль браузера и диагностические снимки.
+
+## Установка и первый запуск
+
+1. Клонируйте репозиторий или скопируйте каталог проекта в любое место
+   (путь без пробелов предпочтителен, но не обязателен).
+
+   ```bat
+   git clone git@github.com:alexartrider/scanmarket.git
+   cd scanmarket
+   ```
+
+2. Проверьте, что Qode Runtime на месте:
+
+   ```bat
+   bin\qode.exe tools\scanutils.prg caps
+   ```
+
+   Команда выводит возможности движка; код возврата `0` означает успех.
+   Вывод утилит Qode пишется в `bin\log\` — при необходимости смотрите логи.
+
+3. При первом запуске скрипты создадут `config.json` со значениями по
+   умолчанию, либо скопируйте `config.example.json` в `config.json` и
+   отредактируйте под себя.
+
+4. Авторизуйте магазины (см. ниже) и выполните первое сканирование.
+
+## Настройка config.json
+
+Файл `config.json` создаётся автоматически при первом запуске с параметрами
+по умолчанию. Образец со всеми настройками — `config.example.json`.
+
+Основные параметры:
+
+| Параметр | Назначение |
+| --- | --- |
+| `browser.headless` | Запуск без окна браузера (`0`/`1`). |
+| `browser.execPath` | Путь к `browser.exe`/`msedge.exe`/`chrome.exe`; пустое значение — автоопределение. |
+| `browser.debugPort` | Локальный порт Chrome DevTools Protocol, по умолчанию `9222`. |
+| `browser.profileDir` | Каталог профиля браузера, по умолчанию `private_data/browser_profile`. |
+| `browser.proxy` | Прокси: пусто — системные настройки, `direct` — без прокси, иначе адрес. |
+| `ozon.favoritesUrl` | URL страницы избранного Ozon. |
+| `ozon.waitLoginSeconds` | Максимальное ожидание входа/готовности страницы. |
+| `ozon.pageWaitSeconds` | Ожидание загрузки страницы. |
+| `ozon.maxScrollSteps` | Максимальное число шагов прокрутки списка. |
+| `ozon.stopTrailing` | Порог последовательных карточек без признака избранного. |
+| `ozon.chunk` | Число карточек в одном запросе к DOM. |
+| `wildberries.*` | Аналогичные параметры для Wildberries (включая `dbPath`). |
+| `yandexmarket.*` | Аналогичные параметры для Яндекс Маркета (включая `dbPath`). |
+| `db.path` | Путь к базе Ozon, по умолчанию `private_data/ozon/ozon.sqlite`. |
+| `cron.taskName` | Имя задачи планировщика для Ozon. |
+| `cron.mode` | `daily` или `hourly`. |
+| `cron.start` | Время запуска для `daily`, формат `HH:MM`. |
+| `cron.everyHours` | Интервал в часах для `hourly`. |
+| `cron.exe` | Исполняемый файл задачи, обычно `bin/qodeqt.exe`. |
+| `cron.script` | Запускаемый скрипт, обычно `ozon_scan.prg`. |
+| `cron.bat` | BAT-файл запуска задачи. |
+| `cronWb.*`, `cronYm.*` | Те же параметры для Wildberries и Яндекс Маркета. |
+
+Скрипты дополняют отсутствующие параметры значениями по умолчанию.
+
+## Авторизация и cookies
+
+Каждый магазин авторизуется отдельно. Cookies и профиль браузера хранятся в
+`private_data/` и не попадают в репозиторий.
+
+### Ozon
 
 ```bat
 bin\qodeqt.exe ozon_auth.prg
 ```
 
-В открывшемся браузере войдите в Ozon и дождитесь отображения списка избранного. Скрипт сохранит cookies в `private_data/ozon/ozon_cookies.json` и штатно закроет браузер.
+Откроется окно браузера. Войдите в Ozon и дождитесь отображения списка
+избранного. Скрипт сохранит cookies в `private_data/ozon/ozon_cookies.json`
+и штатно закроет браузер.
 
-### 2. Выполнить сканирование
-
-```bat
-bin\qodeqt.exe ozon_scan.prg
-```
-
-Скрипт открывает браузер с сохранённым профилем, читает карточки избранного, обновляет базу `private_data/ozon/ozon.sqlite`, сохраняет последний снимок в `private_data/ozon/ozon_last_scan.json` и закрывает браузер. Если Ozon запросил повторный вход, выполните авторизацию ещё раз.
-
-### 3. Установить расписание
-
-```bat
-bin\qodeqt.exe ozon_setup_cron.prg
-```
-
-Скрипт создаёт BAT-файл запуска и задачу планировщика Windows. Параметры задачи находятся в разделе `cron` файла `config.json`. Запустить задачу вручную:
-
-```bat
-schtasks /run /tn "ScanMarketOzon"
-```
-
-Имя задачи можно изменить через `cron.taskName`.
-
-## Wildberries
-
-Для Wildberries те же шаги, что и для Ozon, но со своими скриптами и настройками.
-
-### 1. Авторизовать Wildberries
+### Wildberries
 
 ```bat
 bin\qodeqt.exe wildberries_auth.prg
 ```
 
-В открывшемся браузере войдите на Wildberries и дождитесь отображения списка избранного. Скрипт сохранит cookies в `private_data/wildberries/wildberries_cookies.json` и штатно закроет браузер. Куки пишутся только если страница избранного действительно загрузилась (карточек больше нуля).
+Войдите на Wildberries и дождитесь избранного. Cookies сохранятся в
+`private_data/wildberries/wildberries_cookies.json` только если страница
+избранного действительно загрузилась (карточек больше нуля).
 
-### 2. Выполнить сканирование
-
-```bat
-bin\qodeqt.exe wildberries_scan.prg
-```
-
-Скрипт открывает браузер с сохранённым профилем, читает карточки избранного, обновляет базу `private_data/wildberries/wildberries.sqlite`, сохраняет последний снимок в `private_data/wildberries/wildberries_last_scan.json` и закрывает браузер. Если Wildberries запросил повторный вход, выполните авторизацию ещё раз.
-
-### 3. Установить расписание
-
-```bat
-bin\qodeqt.exe wildberries_setup_cron.prg
-```
-
-Параметры задачи находятся в разделе `cronWb` файла `config.json`. Запустить задачу вручную:
-
-```bat
-schtasks /run /tn "ScanMarketWildberries"
-```
-
-### Проверка сессии Wildberries
-
-```bat
-bin\qodeqt.exe wildberries_check_session.prg
-```
-
-Проверяет, что страница избранного загружается (карточек больше нуля), и сохраняет свежие куки.
-
-## Яндекс Маркет
-
-Для Яндекс Маркета те же шаги, что и для Ozon и Wildberries, но со своими скриптами и настройками. Избранное находится на странице [Вишлист](https://market.yandex.ru/my/wishlist).
-
-### 1. Авторизовать Яндекс Маркет
+### Яндекс Маркет
 
 ```bat
 bin\qodeqt.exe yandexmarket_auth.prg
 ```
 
-В открывшемся браузере войдите на Яндекс. Скрипт сохранит cookies в `private_data/yandexmarket/yandexmarket_cookies.json` и штатно закроет браузер. После входа Яндекс перенаправляет обратно на страницу вишлиста; куки пишутся только если вишлист действительно загрузился (в избранном есть товары либо страница явно показывает пустой вишлист без кнопки «Войти»).
+Войдите на Яндекс. Cookies сохранятся в
+`private_data/yandexmarket/yandexmarket_cookies.json` только если вишлист
+действительно загрузился.
 
-### 2. Выполнить сканирование
-
-```bat
-bin\qodeqt.exe yandexmarket_scan.prg
-```
-
-Скрипт открывает браузер с сохранённым профилем, читает карточки вишлиста, обновляет базу `private_data/yandexmarket/yandexmarket.sqlite`, сохраняет последний снимок в `private_data/yandexmarket/yandexmarket_last_scan.json` и закрывает браузер. Если Яндекс запросил повторный вход, выполните авторизацию ещё раз.
-
-### 3. Установить расписание
+Проверка действующей сессии:
 
 ```bat
-bin\qodeqt.exe yandexmarket_setup_cron.prg
-```
-
-Параметры задачи находятся в разделе `cronYm` файла `config.json`. Запустить задачу вручную:
-
-```bat
-schtasks /run /tn "ScanMarketYandexMarket"
-```
-
-### Проверка сессии Яндекс Маркета
-
-```bat
+bin\qodeqt.exe ozon_check_session.prg
+bin\qodeqt.exe wildberries_check_session.prg
 bin\qodeqt.exe yandexmarket_check_session.prg
 ```
 
-Проверяет, что вишлист загружается (в избранном есть товары либо открыт пустой вишлист авторизованного пользователя), и сохраняет свежие куки. Окно браузера остаётся открытым, чтобы в случае антибот-проверки вы могли завершить переход вручную, не теряя вкладку.
+## Запуск сканирования
 
-## Настройки
+```bat
+bin\qodeqt.exe ozon_scan.prg
+bin\qodeqt.exe wildberries_scan.prg
+bin\qodeqt.exe yandexmarket_scan.prg
+```
 
-Основные параметры `config.json`:
+Скрипты открывают браузер с сохранённым профилем, читают карточки избранного,
+обновляют базу в `private_data/<магазин>/`, сохраняют снимок результата в
+`<магазин>_last_scan.json` и закрывают браузер. Если магазин запросил повторный
+вход — выполните авторизацию заново.
 
-| Параметр | Назначение |
-| --- | --- |
-| `browser.headless` | Запуск без окна. По умолчанию `false`; для Ozon рекомендуется обычный режим браузера. |
-| `browser.execPath` | Путь к `browser.exe`, `msedge.exe` или `chrome.exe`; пустое значение включает автоопределение. |
-| `browser.debugPort` | Локальный порт Chrome DevTools Protocol, по умолчанию `9222`. |
-| `browser.profileDir` | Каталог профиля браузера, по умолчанию `private_data/browser_profile`. |
-| `browser.proxy` | Прокси: пусто — настройки системы, `direct` — обход прокси, другое значение — адрес прокси. |
-| `ozon.favoritesUrl` | URL страницы избранного. |
-| `ozon.waitLoginSeconds` | Максимальное ожидание входа/готовности страницы. |
-| `ozon.pageWaitSeconds` | Ожидание загрузки страницы. |
-| `ozon.maxScrollSteps` | Максимальное количество шагов прокрутки списка. |
-| `ozon.stopTrailing` | Порог последовательных карточек без признака избранного для завершения списка. |
-| `ozon.chunk` | Число карточек в одном запросе к DOM. |
-| `wildberries.favoritesUrl` | URL страницы избранного Wildberries. |
-| `wildberries.dbPath` | Путь к базе Wildberries, по умолчанию `private_data/wildberries/wildberries.sqlite`. |
-| `wildberries.waitLoginSeconds` | Максимальное ожидание входа/готовности страницы Wildberries. |
-| `wildberries.pageWaitSeconds` | Ожидание загрузки страницы Wildberries. |
-| `wildberries.maxScrollSteps` | Максимальное количество шагов прокрутки списка Wildberries. |
-| `wildberries.stopTrailing` | Порог последовательных карточек без признака избранного для завершения списка. |
-| `wildberries.chunk` | Число карточек Wildberries в одном запросе к DOM. |
-| `yandexmarket.favoritesUrl` | URL страницы вишлиста Яндекс Маркета. |
-| `yandexmarket.dbPath` | Путь к базе Яндекс Маркета, по умолчанию `private_data/yandexmarket/yandexmarket.sqlite`. |
-| `yandexmarket.waitLoginSeconds` | Максимальное ожидание входа/готовности страницы Яндекс Маркета. |
-| `yandexmarket.pageWaitSeconds` | Ожидание загрузки страницы Яндекс Маркета. |
-| `yandexmarket.maxScrollSteps` | Максимальное количество шагов прокрутки списка Яндекс Маркета. |
-| `yandexmarket.stopTrailing` | Порог последовательных карточек без признака избранного для завершения списка. |
-| `yandexmarket.chunk` | Число карточек Яндекс Маркета в одном запросе к DOM. |
-| `db.path` | Путь к базе Ozon, по умолчанию `private_data/ozon/ozon.sqlite`. |
-| `cron.taskName` | Имя задачи планировщика Windows для Ozon. |
-| `cron.mode` | Частота: `daily` или `hourly`. |
-| `cron.start` | Время запуска для `daily`, формат `HH:MM`. |
-| `cron.everyHours` | Интервал в часах для режима `hourly`. |
-| `cron.exe` | Исполняемый файл задачи, обычно `bin/qodeqt.exe`. |
-| `cron.script` | Запускаемый скрипт, обычно `ozon_scan.prg`. |
-| `cron.bat` | Путь создаваемого BAT-файла. |
-| `cron.runLevel`, `cron.np` | Дополнительные параметры уровня запуска и неинтерактивного режима планировщика. |
-| `cronWb.*` | Те же параметры планировщика для задачи Wildberries (`taskName`, `mode`, `start`, `everyHours`, `exe`, `script`, `bat`). |
-| `cronYm.*` | Те же параметры планировщика для задачи Яндекс Маркета (`taskName`, `mode`, `start`, `everyHours`, `exe`, `script`, `bat`). |
+> Не запускайте несколько сканирований одновременно с одним профилем браузера
+> и одной базой.
 
-Скрипт дополняет отсутствующие параметры значениями по умолчанию.
+## Планировщик Windows
 
-## Данные и диагностика
+Для автоматического запуска выполните (для каждого магазина):
 
-### SQLite
+```bat
+bin\qodeqt.exe ozon_setup_cron.prg
+bin\qodeqt.exe wildberries_setup_cron.prg
+bin\qodeqt.exe yandexmarket_setup_cron.prg
+```
 
-База Ozon — `private_data/ozon/ozon.sqlite`, база Wildberries — `private_data/wildberries/wildberries.sqlite`, база Яндекс Маркета — `private_data/yandexmarket/yandexmarket.sqlite`:
+Скрипты создают BAT-файл запуска и задачу планировщика Windows (schtasks).
+Параметры задачи берутся из разделов `cron`, `cronWb`, `cronYm` файла
+`config.json`. Запустить задачу вручную:
 
-- `products` — карточки товаров, источник, идентификатор, название, бренд, ссылка, наличие и даты обновления;
-- `price_points` — история цен, старая цена, валюта, наличие и время фиксации;
-- `scan_runs` — журнал запусков, количество найденных товаров, число новых точек цены и статус.
+```bat
+schtasks /run /tn "ScanMarketOzon"
+```
 
-Источник (магазин) хранится в колонке `source` и равен `ozon`, `wildberries` или `yandexmarket`. Новая запись в `price_points` создаётся только при изменении цены. Первое наблюдение товара создаёт первую точку. Времена записываются по локальным часам компьютера.
+## GUI
 
-### Файлы
+```bat
+scanmarket.bat
+```
 
-- `private_data/ozon/ozon_last_scan.json` — результат последнего успешного разбора Ozon.
-- `private_data/wildberries/wildberries_last_scan.json` — результат последнего успешного разбора Wildberries.
-- `private_data/yandexmarket/yandexmarket_last_scan.json` — результат последнего успешного разбора Яндекс Маркета.
-- `bin/log/` — журналы Qode; кодировка журналов может быть CP1251. Старые журналы до переноса движка могут оставаться в `log/`.
-- `private_data/ozon/*_dump.html`, `private_data/wildberries/*_dump.html`, `private_data/yandexmarket/*_dump.html` — диагностические HTML-файлы, создаваемые при некоторых ошибках.
-- Все приватные данные (базы, куки, профиль браузера) собраны в `private_data/`. Не публикуйте и не передавайте эти файлы.
+GUI открывает `scanmarket_gui.json` через `bin\qodegui.exe`. В окне доступны
+таблицы товаров и истории цен, карточка выбранного товара с миниатюрой,
+график динамики цен и переключатель магазинов (Ozon / Wildberries /
+Яндекс Маркет). Если GUI был обновлён вручную и нужно вернуть переключатель
+магазинов, выполните:
+
+```bat
+bin\qodeqt.exe tools\update_gui_stores.prg
+```
+
+## База данных и история цен
+
+Базы SQLite находятся в `private_data/`:
+
+- `private_data/ozon/ozon.sqlite`;
+- `private_data/wildberries/wildberries.sqlite`;
+- `private_data/yandexmarket/yandexmarket.sqlite`.
+
+Основные таблицы:
+
+- `products` — товары: источник (`source`), идентификатор, название, бренд,
+  ссылка, статус, миниатюра, состояние избранного и отслеживания;
+- `price_points` — история цен: цена, старая цена, валюта, наличие, время;
+- `scan_runs` — журнал запусков: число найденных товаров, новых точек, статус.
+
+Новая точка в `price_points` создаётся только при изменении цены. Первое
+наблюдение товара создаёт первую точку. Времена записываются по локальным
+часам компьютера.
+
+Экспорт товаров Ozon и истории цен в JSON:
+
+```bat
+bin\qodeqt.exe tools\export_gui_data.prg
+```
+
+Файл `private_data/scanmarket_view.json` содержит названия, ссылки, статусы и
+историю цен.
+
+## Диагностика
 
 ### Утилита `scanutils`
-
-Диагностические команды выполняются чистым Qode:
 
 ```bat
 bin\qode.exe tools\scanutils.prg db
 bin\qode.exe tools\scanutils.prg db private_data\wildberries\wildberries.sqlite
 bin\qode.exe tools\scanutils.prg runs 20
-bin\qode.exe tools\scanutils.prg runs 20 private_data\wildberries\wildberries.sqlite
 bin\qode.exe tools\scanutils.prg points 20
 bin\qode.exe tools\scanutils.prg tail 60
-bin\qode.exe tools\scanutils.prg clean 60
 bin\qode.exe tools\scanutils.prg grep "auth_required"
 bin\qode.exe tools\scanutils.prg cookies private_data\ozon\ozon_cookies.json
 bin\qode.exe tools\scanutils.prg dump private_data\ozon\fav_challenge_dump.html
 bin\qode.exe tools\scanutils.prg caps
 ```
 
-Команды `db`, `runs`, `points` и `fixstale` принимают необязательным последним аргументом путь к базе (по умолчанию — база Ozon).
+Команды `db`, `runs`, `points` и `fixstale` принимают необязательным последним
+аргументом путь к базе (по умолчанию — база Ozon). Также доступны `fixstale`,
+`procs`, `readmeinfo`, `cleanroot` и `movefile`.
 
-Также доступны команды `fixstale`, `procs`, `readmeinfo`, `cleanroot` и `movefile`. Перед командами, изменяющими данные или перемещающими файлы, проверьте их аргументы в `tools/scanutils.prg`.
+### Тесты загрузки модулей
 
-## Разбор страницы Ozon
-
-Парсер находится в `lib/ozon.prg` и читает DOM страницы. Он проверяет маркер красного сердечка у карточки, останавливается у блока рекомендаций и ограничивает прокрутку параметрами `ozon.maxScrollSteps` и `ozon.stopTrailing`. Рекламные и рекомендательные карточки отфильтровываются.
-
-Разметка Ozon может измениться. Если товары не распознаны, проверьте авторизацию и антибот-проверку, затем изучите диагностический HTML и журналы. Нулевой результат не следует считать успешным сканированием.
-
-## Разбор страницы Wildberries
-
-Парсер находится в `lib/wildberries.prg` и читает DOM страницы избранного. Карточки списка WB выделяются атрибутом `data-testid="favorite-product-<id>"` и классом `goodsCardFavorites`; номер товара берётся из `data-nm-id`, ссылка — `/catalog/.../detail.aspx`. Карточки из этого контейнера считаются избранными, в том числе недоступные товары без кнопки-сердечка. Прокрутка завершается по стабильности числа таких карточек и не ждёт конца бесконечной ленты рекомендаций. Параметры прокрутки — `wildberries.maxScrollSteps` и `wildberries.stopTrailing`.
-
-Антибот Wildberries может временно показывать страницу «Проверяем браузер» или «Что-то не так...». В этом случае скрипт ждёт и перезагружает страницу. Если товары не распознаны, проверьте авторизацию, затем изучите диагностический HTML в `private_data/wildberries/`. Нулевой результат не следует считать успешным сканированием.
-
-## Разбор страницы Яндекс Маркета
-
-Парсер находится в `lib/yandexmarket.prg` и читает DOM страницы вишлиста. Карточка товара определяется по `[data-auto="snippet-title"]`; идентификатор берётся из ссылки `/card/<slug>/<id>`; цена — из `[data-auto="snippet-price-current"]`. Признак избранного — активное сердечко `[data-auto="wishlist-active"]` внутри карточки (у рекомендаций сердечко неактивное). Блок рекомендаций начинается с заголовка «Достойны сердечка»; карточки после него не считаются избранными. Лента под вишлистом бесконечная, поэтому прокрутка завершается по стабильности числа карточек, как у Wildberries.
-
-Антибот Яндекс Маркета может показывать страницы «Подтвердите, что вы не робот», «Заметили подозрительную активность» или перенаправлять на `passport.yandex.ru`. В этих случаях скрипт ждёт, пока пользователь завершит проверку/вход в открытом окне, без повторных перезагрузок страницы. Сканирование стартует только при подтверждённом входе: в избранном есть товары с активным сердечком либо открыт пустой вишлист без кнопки «Войти» (иначе гостевые рекомендации могли бы быть ошибочно приняты за избранное). Если товары не распознаны, проверьте авторизацию, затем изучите диагностический HTML в `private_data/yandexmarket/` и `yandexmarket_dom_diag.json`.
-
-## Структура проекта
-
-```text
-.
-├── ozon_auth.prg             # вход в Ozon и сохранение cookies
-├── ozon_check_session.prg    # проверка авторизованного избранного
-├── ozon_scan.prg             # сканирование и запись истории цен
-├── ozon_setup_cron.prg       # создание задачи планировщика Windows
-├── wildberries_auth.prg      # вход в Wildberries и сохранение cookies
-├── wildberries_check_session.prg # проверка авторизованного избранного Wildberries
-├── wildberries_scan.prg      # сканирование Wildberries и запись истории цен
-├── wildberries_setup_cron.prg # задача планировщика для Wildberries
-├── yandexmarket_auth.prg     # вход в Яндекс Маркет и сохранение cookies
-├── yandexmarket_check_session.prg # проверка авторизованного вишлиста Яндекс Маркета
-├── yandexmarket_scan.prg    # сканирование Яндекс Маркета и запись истории цен
-├── yandexmarket_setup_cron.prg # задача планировщика для Яндекс Маркета
-├── config.json               # настройки браузера, магазинов, базы и расписания
-├── bin/                      # Qode, Qt DLL, Qt-плагины и плагины Qode
-│   ├── qodeqt.exe
-│   ├── qode.exe
-│   ├── plugins/
-│   └── platforms/
-├── scriptlib/                # общие библиотеки Script/Qode
-├── private_data/             # приватные данные (базы, куки, профиль браузера)
-│   ├── ozon/                 # данные магазина Ozon
-│   ├── wildberries/          # данные магазина Wildberries
-│   ├── yandexmarket/         # данные магазина Яндекс Маркета
-│   ├── browser_profile/      # профиль браузера и авторизация
-│   └── <новый_магазин>/      # добавляется при подключении нового магазина
-├── lib/
-│   ├── cdp.prg               # браузер и Chrome DevTools Protocol
-│   ├── config.prg            # загрузка конфигурации
-│   ├── dbstore.prg           # схема SQLite и операции с данными (source = магазин)
-│   ├── ozon.prg              # разбор страницы Ozon
-│   ├── wildberries.prg       # разбор страницы Wildberries
-│   ├── yandexmarket.prg      # разбор страницы Яндекс Маркета
-│   └── scanutil.prg          # функции диагностической утилиты
-└── tools/scanutils.prg       # диагностика на qode.exe
+```bat
+bin\qodeqt.exe test\check_yandexmarket.prg
+bin\qodeqt.exe test\run_tests.prg
 ```
 
-## Ограничения и безопасность
+### Логи
 
-- Не удаляйте `private_data/browser_profile/`: он нужен для состояния браузера и авторизации.
-- Предпочитайте штатное закрытие браузера. Принудительное завершение процесса может помешать сохранению профиля.
-- Если сессия Ozon истекла, из корня проекта запустите `bin\qodeqt.exe ozon_auth.prg` и войдите снова.
-- Если сессия Wildberries истекла, из корня проекта запустите `bin\qodeqt.exe wildberries_auth.prg` и войдите снова.
-- Если сессия Яндекс истекла, из корня проекта запустите `bin\qodeqt.exe yandexmarket_auth.prg` и войдите снова.
-- Антибот-защита магазинов может временно блокировать доступ; работа парсера зависит от актуальной разметки сайта.
-- Не запускайте одновременно несколько сканирований с одним профилем браузера и одной базой.
-- Проверяйте cookies, профиль, базу и HTML-дампы на личные данные перед передачей или публикацией, а лучше вообще не публикуйте.
+Журналы движка пишутся в `bin\log\` (кодировка может быть CP1251). Старые
+журналы могут оставаться в `log/`.
 
-## План
+### Частые проблемы
 
-Текущий этап — сбор товаров и запись изменений цен в SQLite по расписанию. Визуализация истории цен в GUI планируется отдельно.
+| Проблема | Решение |
+| --- | --- |
+| Магазин запросил повторный вход | Выполните авторизацию (`*_auth.prg`) заново. |
+| Антибот-проверка при сканировании | Завершите проверку в открытом окне браузера; скрипт продолжит сам. |
+| Товары не распознаются | Проверьте авторизацию, изучите `<магазин>_last_scan.json` и логи. Нулевой результат — не успех. |
+| Код возврата утилиты отличен от 0 | Ошибка в скрипте; смотрите логи в `bin\log\`. |
+
+## Лицензия
+
+Сам проект (скрипты, библиотеки, документация) распространяется по лицензии
+MIT — см. [LICENSE](LICENSE).
+
+Qode Runtime — проприетарное ПО, включённое в поставку как необходимая среда
+выполнения. Сторонние компоненты (Qt 6.11.2, OpenSSL 3.5.4, libc++/libunwind,
+Mesa llvmpipe, Microsoft-дистрибутивы и др.) распространяются под собственными
+лицензиями. Полный перечень — в [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md),
+тексты лицензий — в [LICENSES/](LICENSES/).

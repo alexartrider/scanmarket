@@ -1,0 +1,71 @@
+{
+    "browser": {
+        "debugPort": 9222,
+        "execPath": "",
+        "headless": 0,
+        "proxy": "",
+        "profileDir": "private_data/browser_profile"
+    },
+    "cron": {
+        "bat": "scan_ozon.bat",
+        "everyHours": 6,
+        "exe": "bin/qodeqt.exe",
+        "mode": "daily",
+        "np": 0,
+        "runLevel": "",
+        "script": "ozon_scan.prg",
+        "start": "06:00",
+        "taskName": "ScanMarketOzon"
+    },
+    "db": {
+        "path": "private_data/ozon/ozon.sqlite"
+    },
+    "ozon": {
+        "chunk": 12,
+        "favoritesUrl": "https://www.ozon.ru/my/favorites",
+        "maxScrollSteps": 40,
+        "pageWaitSeconds": 25,
+        "stopTrailing": 5,
+        "waitLoginSeconds": 300
+    },
+    "wildberries": {
+        "chunk": 12,
+        "dbPath": "private_data/wildberries/wildberries.sqlite",
+        "favoritesUrl": "https://www.wildberries.ru/lk/favorites",
+        "maxScrollSteps": 40,
+        "pageWaitSeconds": 25,
+        "stopTrailing": 5,
+        "waitLoginSeconds": 300
+    },
+    "yandexmarket": {
+        "chunk": 12,
+        "dbPath": "private_data/yandexmarket/yandexmarket.sqlite",
+        "favoritesUrl": "https://market.yandex.ru/my/wishlist",
+        "maxScrollSteps": 40,
+        "pageWaitSeconds": 25,
+        "stopTrailing": 5,
+        "waitLoginSeconds": 300
+    },
+    "cronYm": {
+        "bat": "scan_yandexmarket.bat",
+        "everyHours": 6,
+        "exe": "bin/qodeqt.exe",
+        "mode": "daily",
+        "np": 0,
+        "runLevel": "",
+        "script": "yandexmarket_scan.prg",
+        "start": "06:00",
+        "taskName": "ScanMarketYandexMarket"
+    },
+    "cronWb": {
+        "bat": "scan_wildberries.bat",
+        "everyHours": 6,
+        "exe": "bin/qodeqt.exe",
+        "mode": "daily",
+        "np": 0,
+        "runLevel": "",
+        "script": "wildberries_scan.prg",
+        "start": "06:00",
+        "taskName": "ScanMarketWildberries"
+    }
+}
