@@ -2,6 +2,11 @@
 
 [English](README.en.md) · [Русский](README.md)
 
+> **Project status: active development.** The repository is large and still
+> being finalized: parts of the source code and documentation are published in
+> stages, and the structure and commands may change. Verify the instructions
+> are current before use.
+
 ScanMarket periodically reads items from your Ozon, Wildberries and Yandex
 Market favorites and stores product information plus price history in SQLite.
 A local GUI shows products, price history and charts.
@@ -52,7 +57,7 @@ installation is required.
 
 ## Qode Runtime
 
-ScanMarket is written in the proprietary Qode scripting language (Script), whose
+ScanMarket is written in the Qode scripting language (Script), whose
 capabilities are comparable to Python. Scripts need the Qode Runtime, which is
 shipped in the `bin/` directory:
 
@@ -66,8 +71,10 @@ shipped in the `bin/` directory:
   `iconengines/`, `generic/`, `networkinformation/`, `translations/` —
   Qt plugins and Qt 6.11.2 DLLs.
 
-The Qode core is closed proprietary software; the compiled runtime is bundled as
-a required component. Third-party licenses are listed in
+The Qode core is a component of this project; the compiled runtime is bundled,
+and the source code is published as it becomes ready. Licensing: scripts,
+libraries and the Qode Runtime use the MIT License (`LICENSE`); third-party
+components are listed in
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## Project layout
@@ -342,11 +349,10 @@ remain in `log/`.
 
 ## License
 
-The project itself (scripts, libraries, documentation) is licensed under the
-MIT License — see [LICENSE](LICENSE).
+The ScanMarket project (scripts, libraries, Qode Runtime, documentation) is
+licensed under the MIT License — see [LICENSE](LICENSE).
 
-The Qode Runtime is proprietary software bundled as a required runtime.
 Third-party components (Qt 6.11.2, OpenSSL 3.5.4, libc++/libunwind, Mesa
-llvmpipe, Microsoft redistributables, etc.) are distributed under their own
-licenses. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the full
-list and [LICENSES/](LICENSES/) for license texts.
+llvmpipe, etc.) are distributed under their own licenses. See
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the full list and
+[LICENSES/](LICENSES/) for license texts.
