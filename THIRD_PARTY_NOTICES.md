@@ -89,7 +89,13 @@ OpenSSL распространяется по лицензии **Apache License 
 распространительных наборов Microsoft. Распространение разрешено в составе
 приложения согласно условиям Microsoft.
 
-## Дистрибутивы в каталоге Redist/
+## Дистрибутивы Microsoft (вне поставки)
+
+Изначально в проекте присутствовал каталог `Redist/` с распространительными
+компонентами Microsoft (Visual C++ Redistributable, драйверы ODBC для SQL
+Server, PostgreSQL ODBC). В публичную поставку эти файлы не входят. При
+необходимости пользователь может скачать их из официальных источников
+Microsoft и проекта PostgreSQL.
 
 | Файл | Назначение | Лицензия |
 | --- | --- | --- |
@@ -98,10 +104,6 @@ OpenSSL распространяется по лицензии **Apache License 
 | `msoledbsql_x64.msi` | Microsoft OLE DB Driver for SQL Server | Microsoft (распространительная лицензия) |
 | `sqlncli_x64.msi` | SQL Server Native Client | Microsoft (распространительная лицензия) |
 | `psqlodbc_x64.msi` | PostgreSQL ODBC Driver | PostgreSQL License |
-
-Microsoft-дистрибутивы распространяются в составе приложения в соответствии
-с распространительными условиями Microsoft для соответствующих компонентов.
-Текст лицензии PostgreSQL: `LICENSES/PostgreSQL.txt`.
 
 ## Итог
 

@@ -113,7 +113,6 @@ a required component. Third-party licenses are listed in
 │   └── gui_store_block.prg    # Script block for update_gui_stores.prg
 ├── test/                      # verification scripts
 ├── docs/                      # Script/Qode language documentation
-├── Redist/                    # redistributables (VC++, ODBC)
 ├── LICENSES/                  # third-party license texts
 ├── THIRD_PARTY_NOTICES.md     # third-party components and licenses
 └── private_data/              # PRIVATE data: databases, cookies, profile

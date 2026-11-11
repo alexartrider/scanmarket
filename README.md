@@ -113,7 +113,6 @@ ScanMarket написан на собственном языке сценари�
 │   └── gui_store_block.prg    # блок Script для update_gui_stores.prg
 ├── test/                      # проверочные скрипты
 ├── docs/                      # документация языка Script/Qode
-├── Redist/                    # распространительные компоненты (VC++, ODBC)
 ├── LICENSES/                  # тексты лицензий сторонних компонентов
 ├── THIRD_PARTY_NOTICES.md     # перечень сторонних компонентов и лицензий
 └── private_data/              # ПРИВАТНЫЕ данные: базы, cookies, профиль
