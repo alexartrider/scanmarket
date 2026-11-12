@@ -97,6 +97,7 @@ components are listed in
 ├── scan_ozon.bat              # starts the Ozon scan (for the scheduler)
 ├── scan_wildberries.bat       # starts the Wildberries scan
 ├── scan_yandexmarket.bat      # starts the Yandex Market scan
+├── scan_all.prg               # sequential scan of all stores
 ├── auth_ozon.bat              # starts Ozon authorization
 ├── auth_wildberries.bat       # starts Wildberries authorization
 ├── auth_yandexmarket.bat      # starts Yandex Market authorization
@@ -117,7 +118,9 @@ components are listed in
 │   ├── scanutils.prg          # diagnostics and maintenance
 │   ├── export_gui_data.prg    # exports Ozon data to JSON
 │   ├── update_gui_stores.prg  # restores the store switcher in the GUI
-│   └── gui_store_block.prg    # Script block for update_gui_stores.prg
+│   ├── gui_store_block.prg    # Script block for update_gui_stores.prg
+│   ├── add_gui_scan_buttons.prg # scan-start buttons in the GUI
+│   └── gui_scan_block.prg     # Script block for add_gui_scan_buttons.prg
 ├── test/                      # verification scripts
 ├── docs/                      # Script/Qode language documentation
 ├── LICENSES/                  # third-party license texts
@@ -272,11 +275,23 @@ scanmarket.bat
 The GUI opens `scanmarket_gui.json` via `bin\qodegui.exe`. The window shows
 product and price-history tables, a card for the selected product with a
 thumbnail, a price chart and a store switcher (Ozon / Wildberries / Yandex
-Market). If the GUI was edited manually and the store switcher needs to be
-restored, run:
+Market). Two buttons in the top row (next to the store selector) start scanning:
+
+![ScanMarket interface screenshot](images/mainScreen.png)
+
+- **Scan** — scans the selected store (`bin\qodeqt.exe <store>_scan.prg`);
+- **Scan all** — scans all stores one by one via `scan_all.prg`.
+
+While a scan runs, the buttons are disabled and after it finishes the product
+and price-history tables refresh automatically. Scan progress is visible in a
+separate console window.
+
+If the GUI was edited manually and the store switcher or the scan buttons need
+to be restored, run:
 
 ```bat
 bin\qodeqt.exe tools\update_gui_stores.prg
+bin\qodeqt.exe tools\add_gui_scan_buttons.prg
 ```
 
 ## Database and price history
