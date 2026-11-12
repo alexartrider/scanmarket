@@ -16,6 +16,8 @@
 <div class="doc-section">
 <h2>Loading the Plugin</h2>
 <p>Two ways to use it:</p>
+<p>In scripts, functions are available as methods on a <code>Crypto()</code> object. The plugin also registers <code>crypto.*</code> services for inter-plugin calls through the C++ host API; this is not a script namespace.
+For example, <code>c.sha1("")</code> returns the SHA-1 of the empty string, and <code>c.rsaGenerate()</code> returns a tuple with <code>private</code> and <code>public</code> keys.</p>
 <pre><code><span class="cmt">// Method 1: via the object</span>
 <span class="kw">if</span> (!loadPlugin(<span class="str">"plugins/crypto.dll"</span>)) { system.exit(<span class="num">1</span>); }
 <span class="kw">var</span> c = Crypto();

@@ -167,9 +167,12 @@ and comments is ignored. Changes are made only at the found boundaries. <code>so
 <tr><td><code>jsonedit.setWidgetProperty / setWidgetEvent(...)</code></td><td>Edit a widget property or event handler by widget name</td></tr>
 <tr><td><code>jsonedit.renameWidget / renameTable(...)</code></td><td>Rename with collision checks</td></tr>
 <tr><td><code>jsonedit.getCell / setCell(jsonText, table, row, col[, value])</code></td><td>Read/write QRXL cells (0-based); setCell does not silently resize the table</td></tr>
-<tr><td><code>jsonedit.resizeTable(jsonText, table, rows, cols)</code></td><td>Explicitly resize a table and its empty cells</td></tr>
+<tr><td><code>jsonedit.resizeTable(jsonText, table, rows, cols)</code></td><td>Explicitly resize a table and its empty cells; existing JSON types are preserved</td></tr>
 <tr><td><code>jsonedit.planFile(path, transformFn) / applyFile(plan, [opts])</code></td><td>Plan → diff → validate → atomic write; requires <code>fileedit.prg</code></td></tr>
 </table>
+<p><code>resizeTable</code> changes only the boundaries and adds empty cell objects; existing cells are copied as raw JSON fragments.
+This keeps adjacent <code>true/false</code> values as booleans instead of converting them to <code>1/0</code>.
+The old implementation re-serialized the table through ScriptValue and could change JSON types.</p>
 <p>Validation covers resource structure, unique names, events, cells, style/font indices, merges, and table objects. It does not execute user code or replace compilation/integration tests.</p>
 <pre><code>loadModule(file.join(scriptlib, "fileedit.prg"));
 loadModule(file.join(scriptlib, "funcedit.prg"));

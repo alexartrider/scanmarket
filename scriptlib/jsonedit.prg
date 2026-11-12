@@ -449,14 +449,23 @@ jsonedit.resizeTable = function(jsonText, tableName, rows, cols) {
     var i = __jec_findTableIndex(obj, tableName);
     if (i == null) throw "jsonedit.resizeTable: таблица не найдена: " + tableName;
     var cells = obj.rxl[i].data.cells;
-    if (cells == null || typeName(cells) != "array") cells = #[];
-    while (cells.size() > rows) cells.pop();
-    while (cells.size() < rows) cells.push(#[]);
-    for (var r = 0; r < cells.size(); r++) {
-        while (cells[r].size() > cols) cells[r].pop();
-        while (cells[r].size() < cols) cells[r].push(#tuple{});
+    var oldRows = (cells != null && typeName(cells) == "array") ? cells.size() : 0;
+    var cellPath = "rxl[" + str.toString(i) + "].data.cells";
+    var jsonCells = "[";
+    for (var r = 0; r < rows; r++) {
+        if (r > 0) jsonCells += ",";
+        jsonCells += "[";
+        var oldCols = (r < oldRows && typeName(cells[r]) == "array") ? cells[r].size() : 0;
+        for (var c = 0; c < cols; c++) {
+            if (c > 0) jsonCells += ",";
+            if (r < oldRows && c < oldCols)
+                jsonCells += json.getText(jsonText, cellPath + "[" + str.toString(r) + "][" + str.toString(c) + "]");
+            else
+                jsonCells += "{}";
+        }
+        jsonCells += "]";
     }
-    var jsonCells = json.stringify(cells);
+    jsonCells += "]";
     var next = json.replaceText(jsonText, "rxl[" + str.toString(i) + "].data.cells", jsonCells, true, 4);
     next = json.replaceText(next, "rxl[" + str.toString(i) + "].info.maxRow", str.toString(rows), true, 4);
     return json.replaceText(next, "rxl[" + str.toString(i) + "].info.maxCol", str.toString(cols), true, 4);

@@ -42,6 +42,12 @@
 <tr><td><code>ba.empty</code></td><td>true if empty</td></tr>
 <tr><td><code>ba[i]</code></td><td>Index access (read/write)</td></tr>
 </table>
+<p><code>for (var byte : ba)</code> iterates bytes in order as integers 0-255. To get both the index and byte, put the variables in square brackets:</p>
+<pre><code><span class="kw">for</span> (<span class="kw">var</span> [index, byte] : ba) {
+    print(index);
+    print(byte);
+}</code></pre>
+<p>ByteArray is iterated as a sequence, not by its properties like ordinary objects.</p>
 </div>
 
 <div class="doc-section">

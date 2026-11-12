@@ -167,9 +167,12 @@ print("files=" + json.stringify(r.args));</code></pre>
 <tr><td><code>jsonedit.setWidgetProperty / setWidgetEvent(...)</code></td><td>Изменение свойства/обработчика виджета по имени</td></tr>
 <tr><td><code>jsonedit.renameWidget / renameTable(...)</code></td><td>Переименование с проверкой коллизий имён</td></tr>
 <tr><td><code>jsonedit.getCell / setCell(jsonText, table, row, col[, value])</code></td><td>Чтение/запись QRXL-ячеек (индексы 0-based); setCell не меняет размер таблицы неявно</td></tr>
-<tr><td><code>jsonedit.resizeTable(jsonText, table, rows, cols)</code></td><td>Явное изменение размера таблицы и пустых ячеек</td></tr>
+<tr><td><code>jsonedit.resizeTable(jsonText, table, rows, cols)</code></td><td>Явное изменение размера таблицы и пустых ячеек; JSON-типы сохранённых ячеек остаются без изменений</td></tr>
 <tr><td><code>jsonedit.planFile(path, transformFn) / applyFile(plan, [opts])</code></td><td>План → diff → валидация → атомарная запись; требуют <code>fileedit.prg</code></td></tr>
 </table>
+<p><code>resizeTable</code> меняет только границы и добавляет пустые объекты ячеек; существующие ячейки копируются как исходные JSON-фрагменты.
+Это важно, например, для соседних <code>true/false</code>: они остаются boolean и не превращаются в <code>1/0</code>.
+В старой реализации resize повторно сериализовывал таблицу через ScriptValue и мог менять типы JSON.</p>
 <p>Валидатор проверяет структуру, уникальность имён, события, ячейки, диапазоны стилей/шрифтов, объединения и объекты таблиц. Он не выполняет пользовательский код и не заменяет компиляцию/интеграционный запуск формы.</p>
 <pre><code>loadModule(file.join(scriptlib, "fileedit.prg"));
 loadModule(file.join(scriptlib, "funcedit.prg"));

@@ -42,6 +42,12 @@
 <tr><td><code>ba.empty</code></td><td>true если пуст</td></tr>
 <tr><td><code>ba[i]</code></td><td>Доступ по индексу (чтение/запись)</td></tr>
 </table>
+<p><code>for (var byte : ba)</code> обходит байты по порядку как целые числа 0–255. Чтобы получить индекс вместе с байтом, укажите переменные в квадратных скобках:</p>
+<pre><code><span class="kw">for</span> (<span class="kw">var</span> [index, byte] : ba) {
+    print(index);
+    print(byte);
+}</code></pre>
+<p>ByteArray обходится как последовательность, а не по свойствам, как обычные объекты.</p>
 </div>
 
 <div class="doc-section">

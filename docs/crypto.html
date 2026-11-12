@@ -16,6 +16,8 @@
 <div class="doc-section">
 <h2>Загрузка плагина</h2>
 <p>Два способа использования:</p>
+<p>В скриптах функции доступны как методы объекта <code>Crypto()</code>. Плагин также регистрирует сервисы <code>crypto.*</code> для межплагинных вызовов через C++ host API — это не скриптовое пространство имён.
+Например, <code>c.sha1("")</code> возвращает SHA-1 пустой строки, а <code>c.rsaGenerate()</code> — tuple с ключами <code>private</code> и <code>public</code>.</p>
 <pre><code><span class="cmt">// Способ 1: через объект</span>
 <span class="kw">if</span> (!loadPlugin(<span class="str">"plugins/crypto.dll"</span>)) { system.exit(<span class="num">1</span>); }
 <span class="kw">var</span> c = Crypto();
