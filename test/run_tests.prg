@@ -10,6 +10,12 @@
 // пути с пробелами/Unicode безопасны). PASS = exit code 0, иначе FAIL.
 // Код возврата раннера: 0 = все прошли, 1 = есть падения.
 // Вывод тестов идёт в общий лог qt/bind/log; итог раннера — в конце.
+//
+// ПРАВИЛО ДЛЯ ТЕСТОВ (код возврата qodeqt = значение return N;):
+//   - конец теста: явное "return 0;" — НЕ полагаться на значение последнего
+//     выражения (print/check/метод возвращают своё значение, оно утечёт
+//     в exit-код и тест "упадёт" без причины);
+//   - при падении: system.exit(1) или throw (даст код 2).
 
 var testDir   = file.join(file.dirname(system.getcommandline().args[0]), "..", "sample");
 var qodeqt    = file.normalize(system.getcommandline().app);   // текущий исполняемый файл qodeqt/qodegui

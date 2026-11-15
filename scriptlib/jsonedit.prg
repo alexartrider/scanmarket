@@ -54,7 +54,7 @@ jsonedit.setBool = function(jsonText, path, value, indent) {
 
 jsonedit.validateForm = function(jsonText) {
     var parsed = json.parseEx(jsonText);
-    if (!parsed.ok) return #{"ok": 0, "errors": #["JSON: " + parsed.error.message + " (" + str.toString(parsed.error.line) + ":" + str.toString(parsed.error.column) + ")"]};
+    if (!parsed.ok) return #{"ok": false, "errors": #["JSON: " + parsed.error.message + " (" + str.toString(parsed.error.line) + ":" + str.toString(parsed.error.column) + ")"]};
     var obj = parsed.value;
     var errors = #[];
     if (typeName(obj) != "tuple") errors.push("$: ожидался объект ресурса");
@@ -478,7 +478,7 @@ jsonedit.validateHandlers = function(jsonText) {
     for (var i = 0; i < events.size(); i++) {
         var handler = events[i].handler;
         if (handler == null || handler == "") continue;
-        if (funcedit.isUnique(obj.code.text, handler) != 1)
+        if (!funcedit.isUnique(obj.code.text, handler))
             errors.push(events[i].path + ".events." + events[i].event + ": обработчик '" + handler + "' не найден ровно один раз в code.text");
     }
     var form = obj.form;
@@ -499,7 +499,7 @@ function __jec_validateActionHandlers(list, base, code, errors) {
             var names = propertyNames(item.events);
             for (var k = 0; k < names.size(); k++) {
                 var handler = item.events[names[k]];
-                if (handler != null && handler != "" && funcedit.isUnique(code, handler) != 1)
+                if (handler != null && handler != "" && !funcedit.isUnique(code, handler))
                     errors.push(p + ".events." + names[k] + ": обработчик '" + handler + "' не найден ровно один раз в code.text");
             }
         }
@@ -510,12 +510,12 @@ function __jec_validateActionHandlers(list, base, code, errors) {
 
 jsonedit.validateCode = function(jsonText) {
     var parsed = json.parseEx(jsonText);
-    if (!parsed.ok) return #{"ok": 0, "errors": #["JSON: " + parsed.error.message]};
+    if (!parsed.ok) return #{"ok": false, "errors": #["JSON: " + parsed.error.message]};
     if (parsed.value.code == null || typeName(parsed.value.code.text) != "string")
-        return #{"ok": 0, "errors": #["code.text: обязательная строка"]};
+        return #{"ok": false, "errors": #["code.text: обязательная строка"]};
     if (!json.validateScript(parsed.value.code.text))
-        return #{"ok": 0, "errors": #["code.text: ошибка синтаксиса Script"]};
-    return #{"ok": 1, "errors": #[]};
+        return #{"ok": false, "errors": #["code.text: ошибка синтаксиса Script"]};
+    return #{"ok": true, "errors": #[]};
 };
 
 jsonedit.validateResource = function(jsonText, checkHandlers) {

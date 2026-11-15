@@ -149,7 +149,7 @@ print("files=" + json.stringify(r.args));</code></pre>
 
 <div class="doc-section">
 <h2>JSON-формы (jsonedit)</h2>
-<p>Ресурс — это не просто JSON: в нём есть <code>code.text</code>, дерево Qt-формы и таблицы <code>rxl[]</code>. Точечные операции сохраняют JSON boolean <code>true/false</code> (они не проходят через ScriptValue, где bool представлен int). Все операции возвращают <b>новую строку</b>.</p>
+<p>Ресурс — это не просто JSON: в нём есть <code>code.text</code>, дерево Qt-формы и таблицы <code>rxl[]</code>. Точечные операции сохраняют JSON boolean <code>true/false</code>. Все операции возвращают <b>новую строку</b>.</p>
 <table>
 <tr><th>Функция</th><th>Описание</th></tr>
 <tr><td><code>jsonedit.format(jsonText, [indent])</code></td><td>Переформатировать JSON (по умолчанию 4 пробела)</td></tr>

@@ -30,7 +30,7 @@
 <tr><td><code>open</code></td><td><code>path, [encoding]</code></td><td>int (1/0)</td><td>Открытие DBF-файла. encoding: 1251 (по умолчанию) или 866</td></tr>
 <tr><td><code>close</code></td><td>—</td><td>—</td><td>Закрытие файла и очистка данных</td></tr>
 <tr><td><code>create</code></td><td><code>path, fields, [encoding]</code></td><td>int (1/0)</td><td>Создание нового DBF-файла</td></tr>
-<tr><td><code>save</code></td><td><code>[path]</code></td><td>int (1/0)</td><td>Сохранение в файл. path — опционально (по умолчанию текущий файл)</td></tr>
+<tr><td><code>save</code></td><td><code>[path]</code></td><td>int (1/0)</td><td>Сохранение в файл. path — опционально (по умолчанию текущий файл). Запись выполняется во временный файл с последующей заменой целевого</td></tr>
 <tr><td><code>isOpen</code></td><td>—</td><td>int (0/1)</td><td>Открыт ли файл</td></tr>
 <tr><td><code>isModified</code></td><td>—</td><td>int (0/1)</td><td>Были ли изменения с момента открытия/сохранения</td></tr>
 </table>
@@ -43,6 +43,7 @@
 <tr><td><code>length</code></td><td>int</td><td>Длина поля в байтах</td></tr>
 <tr><td><code>decimals</code></td><td>int</td><td>Количество десятичных знаков (для N)</td></tr>
 </table>
+<p>Для схемы поддерживаются типы <code>C</code>, <code>N</code>, <code>D</code>, <code>L</code>; имя поля — не длиннее 10 символов. Длина поля должна помещаться в однобайтовый дескриптор DBF; для <code>D</code> нужна длина 8, для <code>L</code> — 1. У <code>N</code> число десятичных знаков должно быть меньше длины поля и не превышать 18.</p>
 <pre><code><span class="cmt">// Открытие существующего файла</span>
 <span class="kw">var</span> db = dbffile();
 <span class="kw">var</span> ok = db.open(<span class="str">"C:/data/employees.dbf"</span>);
@@ -125,8 +126,9 @@ print(<span class="str">"BOF: "</span> + db.bof());</code></pre>
 <tr><td><code>N</code> (Numeric, decimals=0)</td><td>int</td><td><code>30</code></td></tr>
 <tr><td><code>N</code> (Numeric, decimals&gt;0)</td><td>double</td><td><code>50000.00</code></td></tr>
 <tr><td><code>D</code> (Date)</td><td>datetime</td><td><code>datetime</code></td></tr>
-<tr><td><code>L</code> (Logical)</td><td>int (0/1)</td><td><code>1</code> или <code>0</code></td></tr>
+<tr><td><code>L</code> (Logical)</td><td>bool / null</td><td><code>true</code>, <code>false</code> или <code>null</code></td></tr>
 </table>
+<p>Для логического поля <code>T/t/Y/y</code> читаются как <code>true</code>, <code>F/f/N/n</code> — как <code>false</code>, а <code>?</code> — как <code>null</code> (неизвестное значение). Пустые числовые и датовые поля читаются как <code>null</code>; некорректная дата или числовое поле также возвращается как <code>null</code>. Конечные пробелы текстовых полей удаляются при чтении. Загрузка отклоняет файл, если оценённый объём материализуемых записей превышает 512 MiB.</p>
 <pre><code><span class="kw">var</span> db = dbffile();
 db.open(<span class="str">"C:/data/employees.dbf"</span>);
 

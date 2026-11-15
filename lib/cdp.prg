@@ -359,11 +359,11 @@ class CdpClient {
         return null;
     }
 
-    // Выполнить JS на странице, вернуть значение
+    // Выполнить JS на странице, вернуть значение.
+    // returnByValue не передаём: для примитивов value и так приходит в RemoteObject,
+    // а нативный bool Script теперь сериализует в CDP-литералы корректно.
     function evaluate(expr) {
-    // в Script нет bool (только 0/1), а CDP ждёт литерал true — не передаём returnByValue;
-    // для примитивов value возвращается в RemoteObject и так
-    var r = this.call("Runtime.evaluate", #{"expression": expr});
+        var r = this.call("Runtime.evaluate", #{"expression": expr});
         if (r == null) return null;
         var rr = r.get("result");
         if (rr == null) return null;
@@ -667,11 +667,17 @@ function saveCookiesToFile(page, path) export {
     return true;
 }
 
-// JSON-литерал bool: 1 -> "true", иначе "false" (в Script нет bool, CDP требует литералы)
+// JSON-литерал bool: нативный bool или int 1/0 -> "true"/"false".
+// json.parse теперь возвращает нативный bool, поэтому int-сравнение оставлено
+// только для старых данных, где куки могли быть записаны как 1/0.
 function boolLit(v) {
-    var t = false;
-    if (v != null) t = (v == 1);
-    if (t) return "true";
+    if (v != null) {
+        if (v.isbool()) {
+            if (v) return "true";
+            return "false";
+        }
+        if (v == 1) return "true";
+    }
     return "false";
 }
 
@@ -752,13 +758,69 @@ function restoreCookiesFromFile(page, path, defaultDomain) export {
     return parts.size();
 }
 
-// Закрыть весь браузер
+// Закрыть все открытые вкладки (targets type=page) работающего браузера.
+// Нужно и при старте сканирования (там остаются вкладки прошлых запусков),
+// и перед закрытием браузера (чтобы после сбоя не копились мусорные страницы).
+// waitExitMs > 0 — сколько ждать фактического завершения процесса браузера
+// после закрытия последней вкладки (нужно перед запуском нового браузера,
+// чтобы не конфликтовать за блокировку профиля).
+// Возвращает количество закрытых вкладок (0 — браузер не запущен или вкладок нет).
+// Yandex Browser держит скрытые page-target с пустым URL (внутренние страницы) —
+// их не трогаем: закрыть их нельзя, а видимыми вкладками они не являются.
+function closeAllPages(port, waitExitMs) export {
+    if (port == null) port = debugPort;
+    if (waitExitMs == null) waitExitMs = 0;
+    var v = versionInfo(port);
+    if (v == null) return 0;
+    var wsurl = coalesce(v.get("webSocketDebuggerUrl"), "");
+    if (wsurl == "") return 0;
+    var b = CdpClient();
+    if (!b.connect(wsurl)) return 0;
+    var closed = 0;
+    var r = b.call("Target.getTargets", "{}");
+    if (r != null) {
+        var infos = r.get("targetInfos");
+        if (infos != null and infos.isarray()) {
+            for (var t : infos) {
+                if (!t.istuple()) continue;
+                if (t.get("type") != "page") continue;
+                if (str.toString(coalesce(t.get("url"), "")) == "") continue;
+                var tid = coalesce(t.get("targetId"), "");
+                if (tid == "") continue;
+                var cr = b.call("Target.closeTarget", #{"targetId": tid});
+                if (cr != null) closed++;
+            }
+        }
+    }
+    b.closeconn();
+    if (closed > 0) {
+        print("Закрыты вкладки браузера: \(str.toString(closed)) шт.");
+        if (waitExitMs > 0) {
+            // Закрытие последней вкладки может завершить процесс браузера —
+            // ждём освобождения блокировки профиля перед новым запуском.
+            var deadline = system.gettickcount() + waitExitMs;
+            while (system.gettickcount() < deadline) {
+                if (versionInfo(port) == null) break;
+                system.sleep(0.5);
+            }
+        }
+    }
+    return closed;
+}
+
+// Закрыть весь браузер: сначала вкладки, затем процесс.
 function closeBrowser(port) export {
     if (port == null) port = debugPort;
     var v = versionInfo(port);
     if (v == null) return false;
     var wsurl = coalesce(v.get("webSocketDebuggerUrl"), "");
     if (wsurl == "") return false;
+    // Сначала вкладки: при сбое следующего шага браузер не останется с мусором.
+    closeAllPages(port);
+    if (versionInfo(port) == null) {
+        print("Браузер закрыт");
+        return true;
+    }
     var b = CdpClient();
     if (!b.connect(wsurl)) return false;
     b.call("Browser.close", "{}");

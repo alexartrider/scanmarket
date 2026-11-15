@@ -208,8 +208,8 @@ function __fec_require_unique(source, name) {
 funcedit.find = function(source, name) { return __fec_require_unique(source, name); };
 funcedit.exists = function(source, name) {
     var all = __fec_find_all(source);
-    for (var k = 0; k < all.size(); k++) if (all[k].name == name) return 1;
-    return 0;
+    for (var k = 0; k < all.size(); k++) if (all[k].name == name) return true;
+    return false;
 };
 funcedit.isUnique = function(source, name) {
     var all = __fec_find_all(source);
@@ -252,10 +252,10 @@ funcedit.balanced = function(source) {
         var c = str.mid(source, i, 1);
         if (c == "(" || c == "[" || c == "{") { stack.push(c); continue; }
         if (c == ")" || c == "]" || c == "}") {
-            if (stack.size() == 0) return 0;
+            if (stack.size() == 0) return false;
             var top = stack.pop();
             var exp = (top == "(") ? ")" : (top == "[") ? "]" : "}";
-            if (exp != c) return 0;
+            if (exp != c) return false;
         }
     }
     return stack.size() == 0;

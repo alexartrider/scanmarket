@@ -56,10 +56,10 @@
 <tr><td><code>string</code></td><td>string</td><td></td></tr>
 <tr><td><code>number (int)</code></td><td>int</td><td></td></tr>
 <tr><td><code>number (float)</code></td><td>double</td><td></td></tr>
-<tr><td><code>true</code> / <code>false</code></td><td>int (1 / 0)</td><td>Булевы значения хранятся как int</td></tr>
+<tr><td><code>true</code> / <code>false</code></td><td>bool</td><td>Отдельный логический тип</td></tr>
 <tr><td><code>null</code></td><td>null</td><td></td></tr>
 </table>
-<p>⚠ Булевы значения (<code>true</code>/<code>false</code>) при сериализации выводятся как <code>1</code>/<code>0</code>, поскольку в скрипте нет отдельного типа bool — они хранятся как int.</p>
+<p>JSON-значения <code>true</code>/<code>false</code> разбираются как отдельный тип <code>bool</code> и при сериализации остаются JSON boolean-литералами. Числа <code>1</code>/<code>0</code> остаются целыми.</p>
 </div>
 
 <div class="doc-section">

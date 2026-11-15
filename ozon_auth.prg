@@ -26,6 +26,8 @@ function main() {
     print("=== ScanMarket: авторизация Ozon ===");
     print("Профиль браузера: " + profile);
     stopExisting();
+    // Счищаем вкладки, оставшиеся от прошлых запусков, чтобы не копились.
+    closeAllPages(port, 5000);
 
     var proc = openBrowser(false, favUrl, cfgGet(cfg, "browser.proxy", ""));
     if (!waitForDevTools(port, 60)) {

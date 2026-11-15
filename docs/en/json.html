@@ -44,10 +44,10 @@
 <tr><td><code>string</code></td><td>string</td><td></td></tr>
 <tr><td><code>number (int)</code></td><td>int</td><td></td></tr>
 <tr><td><code>number (float)</code></td><td>double</td><td></td></tr>
-<tr><td><code>true</code> / <code>false</code></td><td>int (1 / 0)</td><td>Boolean values are stored as int</td></tr>
+<tr><td><code>true</code> / <code>false</code></td><td>bool</td><td>Separate boolean type</td></tr>
 <tr><td><code>null</code></td><td>null</td><td></td></tr>
 </table>
-<p>⚠ Boolean values (<code>true</code>/<code>false</code>) are output as <code>1</code>/<code>0</code> on serialization, because the script has no separate bool type — they are stored as int.</p>
+<p>JSON <code>true</code>/<code>false</code> values are parsed as the separate <code>bool</code> type and remain JSON boolean literals when serialized. Numbers <code>1</code>/<code>0</code> remain integers.</p>
 </div>
 
 <div class="doc-section">

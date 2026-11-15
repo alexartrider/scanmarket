@@ -86,7 +86,7 @@ print(hash.size());  <span class="cmt">// 32 bytes</span></code></pre>
 <tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
 <tr><td><code>hmac</code></td><td><code>key, data, [algo], [asHex]</code></td><td>string / bytes</td><td>HMAC signature. algo: sha256 (default), sha512, sha1, md5</td></tr>
 <tr><td><code>hmacVerify</code></td><td><code>key, data, signature, [algo]</code></td><td>int (0/1)</td><td>HMAC signature verification</td></tr>
-<tr><td><code>pbkdf2</code></td><td><code>password, salt, [iterations], [keyLen], [algo]</code></td><td>bytes</td><td>Key derivation. iterations=100000, keyLen=32, algo=sha256</td></tr>
+<tr><td><code>pbkdf2</code></td><td><code>password, salt, [iterations], [keyLen], [algo]</code></td><td>bytes</td><td>Key derivation; defaults: 100,000 iterations, 32 bytes, SHA-256</td></tr>
 </table>
 <pre><code><span class="cmt">// HMAC signature</span>
 <span class="kw">var</span> key = <span class="str">"secret_key"</span>;
@@ -106,33 +106,35 @@ print(ok);  <span class="cmt">// 0</span>
 <span class="kw">var</span> key1 = crypto.pbkdf2(<span class="str">"password"</span>, salt, <span class="num">100000</span>, <span class="num">32</span>);
 <span class="kw">var</span> key2 = crypto.pbkdf2(<span class="str">"password"</span>, salt, <span class="num">100000</span>, <span class="num">32</span>);
 print(key1.toString() == key2.toString());  <span class="cmt">// 1 (deterministic)</span></code></pre>
+<p><code>pbkdf2</code> is a general-purpose key derivation primitive. For AES, pass the password directly to <code>aesEncrypt</code>/<code>aesDecrypt</code>: the AES API derives its own key using the salt and parameters in its format. Do not pass a manually PBKDF2-derived key as the password.</p>
 </div>
 
 <div class="doc-section">
 <h2>AES Encryption (GCM)</h2>
 <table>
 <tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
-<tr><td><code>aesEncrypt</code></td><td><code>data, key, [iv], [aad]</code></td><td>bytes</td><td>AES-GCM encryption. Format: IV(12) + Tag(16) + Ciphertext</td></tr>
-<tr><td><code>aesDecrypt</code></td><td><code>data, key, [aad], [asString]</code></td><td>bytes / string</td><td>Decryption. asString=true — return a string</td></tr>
+<tr><td><code>aesEncrypt</code></td><td><code>data, password, [aad]</code></td><td>bytes</td><td>Password encryption using AES-256-GCM with a fresh salt and nonce</td></tr>
+<tr><td><code>aesDecrypt</code></td><td><code>data, password, [aad], [asString]</code></td><td>bytes / string</td><td>Returns bytes by default, or a string when <code>asString=true</code>; errors/wrong password return null</td></tr>
 </table>
-<p>Keys that are not 16/24/32 bytes long are automatically hashed with SHA-256.</p>
+<p>Input data may be a string or a <code>ByteArray</code>; output is always a <code>ByteArray</code>. This API accepts only a non-empty string password; raw AES keys and caller-supplied IVs are not supported. Use a long, unique password: short or common passwords may be guessed offline. The AES-256 key is derived with PBKDF2-HMAC-SHA-256 (600,000 iterations and a random 16-byte salt). A fresh cryptographically random 12-byte GCM nonce is generated for every encryption. Salt and nonce are stored in the envelope; the key is re-derived from the password when decrypting.</p>
+<p>Output format: <code>"QAES" + version(1) + salt(16) + nonce(12) + tag(16) + ciphertext</code> (the fixed header and tag occupy 49 bytes). The envelope header is GCM-authenticated. A wrong password, modified data, unsupported version, or mismatching AAD returns <code>null</code>. Do not provide an IV: reusing a nonce with the same key is dangerous. <code>aad</code> is optional external context (empty by default) and must be supplied with the same value during decryption. Use <code>asString=true</code> only for textual plaintext.</p>
 <pre><code><span class="cmt">// Encryption</span>
-<span class="kw">var</span> key = <span class="str">"my_secret_key"</span>;
-<span class="kw">var</span> encrypted = crypto.aesEncrypt(<span class="str">"Secret message"</span>, key);
-print(encrypted.size());  <span class="cmt">// IV(12) + Tag(16) + data</span>
+<span class="kw">var</span> password = <span class="str">"a long password"</span>;
+<span class="kw">var</span> encrypted = crypto.aesEncrypt(<span class="str">"Secret message"</span>, password);
+print(encrypted.size());  <span class="cmt">// 49-byte envelope + ciphertext</span>
 
 <span class="cmt">// Decryption</span>
-<span class="kw">var</span> decrypted = crypto.aesDecrypt(encrypted, key, <span class="str">""</span>, <span class="kw">true</span>);
+<span class="kw">var</span> decrypted = crypto.aesDecrypt(encrypted, password, <span class="str">""</span>, <span class="kw">true</span>);
 print(decrypted);  <span class="cmt">// "Secret message"</span>
 
 <span class="cmt">// With AAD (Additional Authenticated Data)</span>
 <span class="kw">var</span> aad = <span class="str">"header_context"</span>;
-<span class="kw">var</span> enc = crypto.aesEncrypt(<span class="str">"data"</span>, key, <span class="str">""</span>, aad);
-<span class="kw">var</span> dec = crypto.aesDecrypt(enc, key, aad, <span class="kw">true</span>);
+<span class="kw">var</span> enc = crypto.aesEncrypt(<span class="str">"data"</span>, password, aad);
+<span class="kw">var</span> dec = crypto.aesDecrypt(enc, password, aad, <span class="kw">true</span>);
 print(dec);  <span class="cmt">// "data"</span>
 
-<span class="cmt">// Decryption with a wrong key — an error</span>
-<span class="kw">var</span> bad = crypto.aesDecrypt(enc, <span class="str">"wrong_key"</span>, aad);
+<span class="cmt">// Wrong password or AAD — null</span>
+<span class="kw">var</span> bad = crypto.aesDecrypt(enc, <span class="str">"wrong password"</span>, aad);
 print(bad.isnull());  <span class="cmt">// true</span></code></pre>
 </div>
 
@@ -142,7 +144,7 @@ print(bad.isnull());  <span class="cmt">// true</span></code></pre>
 <tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
 <tr><td><code>rsaGenerate</code></td><td><code>[bits]</code></td><td>tuple</td><td>Key generation. bits: 2048 (default), 4096. Returns {private, public} PEM</td></tr>
 <tr><td><code>rsaEncrypt</code></td><td><code>data, publicKey</code></td><td>bytes</td><td>Encryption with the public key (PKCS1 OAEP)</td></tr>
-<tr><td><code>rsaDecrypt</code></td><td><code>data, privateKey</code></td><td>string</td><td>Decryption with the private key</td></tr>
+<tr><td><code>rsaDecrypt</code></td><td><code>data, privateKey, [asBytes]</code></td><td>string / bytes</td><td>Decrypt with the private key; returns binary plaintext as bytes when <code>asBytes=true</code></td></tr>
 <tr><td><code>rsaSign</code></td><td><code>data, privateKey, [algo]</code></td><td>bytes</td><td>Digital signature. algo: sha256 (default)</td></tr>
 <tr><td><code>rsaVerify</code></td><td><code>data, signature, publicKey, [algo]</code></td><td>int (0/1)</td><td>Signature verification</td></tr>
 </table>
@@ -226,14 +228,14 @@ print(code);  <span class="cmt">// "123456" (6 digits)</span>
 <table>
 <tr><th>Method</th><th>Arguments</th><th>Returns</th><th>Description</th></tr>
 <tr><td><code>jwtCreate</code></td><td><code>payload, key, [algo], [header]</code></td><td>string</td><td>JWT token generation</td></tr>
-<tr><td><code>jwtVerify</code></td><td><code>token, key, [algo]</code></td><td>string / null</td><td>Signature verification + exp/nbf check. Returns the payload or null</td></tr>
+<tr><td><code>jwtVerify</code></td><td><code>token, key, algo</code></td><td>string / null</td><td>Verifies using the caller-selected algorithm, then checks exp/nbf. Returns the payload or null</td></tr>
 <tr><td><code>jwtDecode</code></td><td><code>token</code></td><td>tuple</td><td>Decoding without verification. Returns {header, payload, signature}</td></tr>
 </table>
 <p><b>Arguments:</b></p>
 <ul>
 <li><code>payload</code> — a JSON string or tuple (automatically serialized to JSON)</li>
 <li><code>key</code> — the secret (string/bytes) for HMAC, the PEM private key for RSA/ECDSA/EdDSA</li>
-<li><code>algo</code> — the signature algorithm (default HS256)</li>
+<li><code>algo</code> — the expected signature algorithm; required for verification and must be allowed by the application policy</li>
 <li><code>header</code> — a tuple with additional header fields (optional)</li>
 </ul>
 <p><b>Supported algorithms:</b></p>
@@ -244,6 +246,7 @@ print(code);  <span class="cmt">// "123456" (6 digits)</span>
 <tr><td>ECDSA</td><td>ES256, ES384, ES512</td><td>PEM private key (creation) / PEM public key (verification)</td></tr>
 <tr><td>EdDSA</td><td>EdDSA</td><td>PEM private key (creation) / PEM public key (verification)</td></tr>
 </table>
+<p>During verification, the token header algorithm must match the explicitly supplied <code>algo</code>; choose it from trusted application policy rather than from an unverified token. PEM keys are not accepted as HMAC secrets. Tokens with critical <code>crit</code> extensions or <code>b64=false</code> are rejected because these options are not supported. The JSON payload passed to <code>jwtCreate</code> must be an object; duplicate JSON member names are rejected.</p>
 <p><b>CLAIMS validation:</b> during verification the following are checked automatically:</p>
 <ul>
 <li><code>exp</code> (expiration time) — the token is rejected if the current time is greater than exp</li>
@@ -257,11 +260,11 @@ print(code);  <span class="cmt">// "123456" (6 digits)</span>
 print(token);  <span class="cmt">// "eyJhbGciOiJI..."</span>
 
 <span class="cmt">// Verification</span>
-<span class="kw">var</span> payload = crypto.jwtVerify(token, <span class="str">"my_secret"</span>);
+var payload = crypto.jwtVerify(token, <span class="str">"my_secret"</span>, <span class="str">"HS256"</span>);
 print(payload);  <span class="cmt">// '{"sub":"user1","name":"Ivan"}'</span>
 
 <span class="cmt">// Wrong key — null</span>
-print(crypto.jwtVerify(token, <span class="str">"wrong_key"</span>).isnull());  <span class="cmt">// true</span>
+print(crypto.jwtVerify(token, <span class="str">"wrong_key"</span>, <span class="str">"HS256"</span>).isnull());  <span class="cmt">// true</span>
 
 <span class="cmt">// === Payload as a tuple (auto-serialization) ===</span>
 <span class="kw">var</span> token2 = crypto.jwtCreate(
@@ -307,7 +310,7 @@ print(crypto.jwtVerify(token, <span class="str">"wrong_key"</span>).isnull());  
     #{"sub": <span class="str">"user1"</span>, "exp": now + <span class="num">3600</span>},
     <span class="str">"secret"</span>
 );
-print(crypto.jwtVerify(token, <span class="str">"secret"</span>).isnull());  <span class="cmt">// false (not expired yet)</span>
+print(crypto.jwtVerify(token, <span class="str">"secret"</span>, <span class="str">"HS256"</span>).isnull());  <span class="cmt">// false (not expired yet)</span>
 
 <span class="cmt">// === Decoding without verification ===</span>
 <span class="kw">var</span> parts = crypto.jwtDecode(token);
@@ -320,13 +323,13 @@ print(parts.signature);  <span class="cmt">// "base64url_signature"</span></code
 <h2>Example: File Encryption</h2>
 <pre><code><span class="kw">if</span> (!loadPlugin(<span class="str">"plugins/crypto.dll"</span>)) { system.exit(<span class="num">1</span>); }
 
-<span class="kw">var</span> key = <span class="str">"my_secret_key"</span>;
+<span class="kw">var</span> password = <span class="str">"a long password"</span>;
 
 <span class="cmt">// Reading the file</span>
 <span class="kw">var</span> data = file.readbytes(<span class="str">"document.pdf"</span>);
 
 <span class="cmt">// Encryption</span>
-<span class="kw">var</span> encrypted = crypto.aesEncrypt(data, key);
+<span class="kw">var</span> encrypted = crypto.aesEncrypt(data, password);
 
 <span class="cmt">// Saving the encrypted data</span>
 file.writebytes(<span class="str">"document.pdf.enc"</span>, encrypted);
@@ -334,7 +337,7 @@ print(<span class="cmt">"Encrypted: "</span> + encrypted.size() + <span class="s
 
 <span class="cmt">// Decryption</span>
 <span class="kw">var</span> loaded = file.readbytes(<span class="str">"document.pdf.enc"</span>);
-<span class="kw">var</span> decrypted = crypto.aesDecrypt(loaded, key);
+<span class="kw">var</span> decrypted = crypto.aesDecrypt(loaded, password);
 file.writebytes(<span class="str">"document_restored.pdf"</span>, decrypted);
 print(<span class="str">"Decrypted!"</span>);</code></pre>
 </div>

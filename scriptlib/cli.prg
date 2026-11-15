@@ -34,7 +34,7 @@
 // Возвращаемое значение cli.parse:
 //   opts  — кортеж значений параметров (ключ = name из схемы),
 //   args  — массив позиционных аргументов,
-//   help  — 1, если был --help/-h (и схема не объявляет свои "help"/"h").
+//   help  — bool: true, если был --help/-h (и схема не объявляет свои "help"/"h").
 //
 // Ошибки разбора (неизвестный параметр, неполный/повторный/некорректное
 // значение) — исключение с понятным сообщением; файлы не создаются и не меняются.
@@ -102,7 +102,7 @@ function __cli_coerce(spec, rawVal) {
 function __cli_parse_tokens(schema, parsed) {
     var opts = #tuple{};
     var args = #[];
-    var help = 0;
+    var help = false;
     var seen = #tuple{};
 
     var i = 1;   // 0 — путь к скрипту (соглашение qodeqt)
@@ -119,7 +119,7 @@ function __cli_parse_tokens(schema, parsed) {
             var spec = __cli_find_spec(schema, fname);
             if (spec == null) {
                 // --help / -h обрабатываются, только если схема не объявляет их сама
-                if (fname == "help" || fname == "h") { help = 1; i++; continue; }
+                if (fname == "help" || fname == "h") { help = true; i++; continue; }
                 throw "cli: неизвестный параметр '--" + fname + "'";
             }
             var key = str.toString(spec.name);
@@ -141,7 +141,7 @@ function __cli_parse_tokens(schema, parsed) {
             seen.set(key, 1);
 
             if (typ == "bool") {
-                var b = 1;
+                var b = true;
                 if (inline) b = __cli_coerce(spec, str.toString(t.value));
                 opts.set(key, b);
                 i++;

@@ -132,9 +132,9 @@ loadPlugin(<span class="str">"archive7zip"</span>, <span class="str">"zip"</span
 <tr><td><code>sha3_256/sha3_512(data)</code></td><td>SHA3 (Keccak)</td></tr>
 <tr><td><code>hmac(key, data, [algo])</code></td><td>HMAC signature</td></tr>
 <tr><td><code>hmacVerify(key, data, sig)</code></td><td>HMAC verification</td></tr>
-<tr><td><code>pbkdf2(pass, salt, [iter], [len])</code></td><td>Key derivation</td></tr>
-<tr><td><code>aesEncrypt(data, key)</code></td><td>AES-GCM encryption</td></tr>
-<tr><td><code>aesDecrypt(data, key)</code></td><td>AES-GCM decryption</td></tr>
+<tr><td><code>pbkdf2(password, salt, [iterations], [keyLen], [algo])</code></td><td>Key derivation; defaults: 100,000 iterations, 32 bytes, SHA-256</td></tr>
+<tr><td><code>aesEncrypt(data, password, [aad])</code></td><td>Password-based AES-256-GCM encryption; salt and nonce are included in the envelope</td></tr>
+<tr><td><code>aesDecrypt(data, password, [aad], [asString])</code></td><td>Authenticated decryption (returns bytes by default); wrong password/data returns null</td></tr>
 <tr><td><code>rsaGenerate/Encrypt/Decrypt/Sign/Verify</code></td><td>RSA operations</td></tr>
 <tr><td><code>ed25519Generate/Sign/Verify</code></td><td>Ed25519 operations</td></tr>
 <tr><td><code>base64Encode/Decode</code></td><td>Base64 encoding</td></tr>

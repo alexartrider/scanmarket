@@ -30,7 +30,7 @@
 <tr><td><code>open</code></td><td><code>path, [encoding]</code></td><td>int (1/0)</td><td>Opens a DBF file. encoding: 1251 (default) or 866</td></tr>
 <tr><td><code>close</code></td><td>—</td><td>—</td><td>Closes the file and clears the data</td></tr>
 <tr><td><code>create</code></td><td><code>path, fields, [encoding]</code></td><td>int (1/0)</td><td>Creates a new DBF file</td></tr>
-<tr><td><code>save</code></td><td><code>[path]</code></td><td>int (1/0)</td><td>Saves to a file. path is optional (defaults to the current file)</td></tr>
+<tr><td><code>save</code></td><td><code>[path]</code></td><td>int (1/0)</td><td>Saves to a file. path is optional (defaults to the current file). Data is written to a temporary file and then replaces the target</td></tr>
 <tr><td><code>isOpen</code></td><td>—</td><td>int (0/1)</td><td>Whether the file is open</td></tr>
 <tr><td><code>isModified</code></td><td>—</td><td>int (0/1)</td><td>Whether there have been changes since the last open/save</td></tr>
 </table>
@@ -43,6 +43,7 @@
 <tr><td><code>length</code></td><td>int</td><td>Field length in bytes</td></tr>
 <tr><td><code>decimals</code></td><td>int</td><td>Number of decimal places (for N)</td></tr>
 </table>
+<p>Supported schema types are <code>C</code>, <code>N</code>, <code>D</code>, and <code>L</code>; field names are limited to 10 characters. Field lengths must fit the one-byte DBF descriptor; <code>D</code> requires length 8 and <code>L</code> length 1. For <code>N</code>, the decimal count must be less than the field length and no greater than 18.</p>
 <pre><code><span class="cmt">// Opening an existing file</span>
 <span class="kw">var</span> db = dbffile();
 <span class="kw">var</span> ok = db.open(<span class="str">"C:/data/employees.dbf"</span>);
@@ -125,8 +126,9 @@ print(<span class="str">"BOF: "</span> + db.bof());</code></pre>
 <tr><td><code>N</code> (Numeric, decimals=0)</td><td>int</td><td><code>30</code></td></tr>
 <tr><td><code>N</code> (Numeric, decimals&gt;0)</td><td>double</td><td><code>50000.00</code></td></tr>
 <tr><td><code>D</code> (Date)</td><td>datetime</td><td><code>datetime</code></td></tr>
-<tr><td><code>L</code> (Logical)</td><td>int (0/1)</td><td><code>1</code> or <code>0</code></td></tr>
+<tr><td><code>L</code> (Logical)</td><td>bool / null</td><td><code>true</code>, <code>false</code>, or <code>null</code></td></tr>
 </table>
+<p>For logical fields, <code>T/t/Y/y</code> read as <code>true</code>, <code>F/f/N/n</code> as <code>false</code>, and <code>?</code> as <code>null</code> (unknown). Blank numeric and date fields read as <code>null</code>; malformed numeric values and dates also return <code>null</code>. Trailing spaces are removed from character fields when read. Loading rejects a file if the estimated materialized record data exceeds 512 MiB.</p>
 <pre><code><span class="kw">var</span> db = dbffile();
 db.open(<span class="str">"C:/data/employees.dbf"</span>);
 
